@@ -5,13 +5,13 @@ using System.Runtime.InteropServices;
 // 有关程序集的一般信息由以下
 // 控制。更改这些特性值可修改
 // 与程序集关联的信息。
-[assembly: AssemblyTitle("TestDemo")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("LOVE")]
+[assembly: AssemblyDescription("FIND SOMEONE TO LOVE")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("TestDemo")]
-[assembly: AssemblyCopyright("Copyright ©  2018")]
-[assembly: AssemblyTrademark("")]
+[assembly: AssemblyCompany("FIND SOMEONE TO LOVE")]
+[assembly: AssemblyProduct("LOVE")]
+[assembly: AssemblyCopyright("Copyright ©TIMO 2019-2099")]
+[assembly: AssemblyTrademark("LOVE")]
 [assembly: AssemblyCulture("")]
 
 //将 ComVisible 设置为 false 将使此程序集中的类型

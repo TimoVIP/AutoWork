@@ -1,4 +1,5 @@
 ﻿using HtmlAgilityPack;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
@@ -31,16 +32,6 @@ namespace TimoControl
                 acc = s2.Split('|')[0];
                 pwd = s2.Split('|')[1];
                 url_betBase = s2.Split('|')[2];
-
-                //string[] sa = appSittingSet.readAppsettings("RollTimes").Split(new char[] { '|', '@' }, StringSplitOptions.RemoveEmptyEntries);
-                //for (int i = 0; i < sa.Length; i++)
-                //{
-                //    rolltimes[i] = int.Parse(sa[i]);
-                //}
-
-                //gameName_Arr = appSittingSet.readAppsettings("gameName").Split('|');
-
-
             }
             catch (Exception ex)
             {
@@ -53,31 +44,105 @@ namespace TimoControl
             try
             {
 
+                CookieContainer cookie = new CookieContainer();
+                //request.CookieContainer = cookie;
+
+
+                //先获取cookie
+                request = WebRequest.Create(url_betBase) as HttpWebRequest;
+                request.Method = "GET";
+                request.UserAgent = "Mozilla/4.0";
+                request.KeepAlive = true;
+                request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
+                request.ContentType = "application/x-www-form-urlencoded; charset=utf-8";
+                request.Host = url_betBase.Replace("https://", "").Replace("/", "");
+                request.Headers.Add("DNT", "1");
+                request.Headers.Add("Upgrade-Insecure-Requests", "1");
+                //证书错误
+                ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
+                request.ProtocolVersion = HttpVersion.Version11;
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+
+                //解决502错误的网关
+                //request.Proxy = GlobalProxySelection.GetEmptyWebProxy();
+
+                //WebProxy proxy = new WebProxy("http://127.0.0.1:8888", true);
+                //proxy.Credentials = new NetworkCredential("user", "pwd", "ADomain");
+                //request.Proxy = proxy;
+                //request.Credentials = System.Net.CredentialCache.DefaultNetworkCredentials;
+
+                //cookie.Add(new Cookie("T0_IPL_AVRbbbbbbbbbbbbbbbb", "MNOOFMKDHBHCAMEKCNLEPIDGAOCKOCNCCJHEINNAEMJIJJBHDEOHNLINDKNMDEDOHPCEBNGIKNEDKPIMDFOLFBBFMDMAGMAJDINMBMMNKKJDELNMKMDKMEOLEJKIONNL", "/", "."+request.Host));
+                //cookie.Add(new Cookie("dtCookie", "1$46210DB143BBD25913E039035E6B51D5|RUM+Default+Application|1", "/", "."+request.Host));
+                //cookie.Add(new Cookie("T0_IPL_AVRbbbbbbbbbbbbbbbb", "MNOOFMKDHBHCAMEKCNLEPIDGAOCKOCNCCJHEINNAEMJIJJBHDEOHNLINDKNMDEDOHPCEBNGIKNEDKPIMDFOLFBBFMDMAGMAJDINMBMMNKKJDELNMKMDKMEOLEJKIONNL", "/", "."+request.Host));
+                cookie.Add(new Cookie("dtSa", "-", "/", "." + request.Host));
+                //request.CookieContainer = cookie;
+                request.CookieContainer = cookie;
+                response = (HttpWebResponse)request.GetResponse();
+                //reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
+                //string s = reader.ReadToEnd();
+                cookie.Add(response.Cookies);
+                ct_bb = cookie;
+                response.Close();
+                request.Abort();
+
+                
+
+
                 request = WebRequest.Create(url_betBase + "user/login") as HttpWebRequest;
                 request.Method = "POST";
                 request.UserAgent = "Mozilla/4.0";
-                //request.KeepAlive = true;
-                //request.Accept = "application/json, text/plain, */*";
+                request.KeepAlive = true;
+                request.Accept = "application/json, text/plain, */*";
                 request.ContentType = "application/x-www-form-urlencoded; charset=utf-8";
-                string postdata = string.Format("username={0}&passwd={1}", acc, pwd);
+                string postdata = string.Format("lang=zh-cn&username={0}&passwd={1}", acc, pwd);
 
-                appSittingSet.Init();//证书错误
+                request.ProtocolVersion = HttpVersion.Version11;
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+                //证书错误
+                ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
+                //下面三个必须要 不然一直是更改密码
+                request.Headers.Add("DNT", "1");
+                request.Headers.Add("X-DevTools-Emulate-Network-Conditions-Client-Id", "F07BF0CC-7DA2-4F85-BA71-B82D0DD0CF19");
+                request.Headers.Add("X-Requested-With", "XMLHttpRequest");
+
                 byte[] bytes = Encoding.UTF8.GetBytes(postdata);
                 request.ContentLength = bytes.Length;
                 Stream newStream = request.GetRequestStream();
                 newStream.Write(bytes, 0, bytes.Length);
                 newStream.Close();
 
-                CookieContainer cookie = new CookieContainer();
-                request.CookieContainer = cookie;
+                //CookieContainer cookie = new CookieContainer();
+                request.CookieContainer = ct_bb;
 
                 response = (HttpWebResponse)request.GetResponse();
-
                 reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
-
-                string ret_html = reader.ReadToEnd();
                 cookie.Add(response.Cookies);
                 ct_bb = cookie;
+                /*
+                 {"code":200,"status":"OK","data":{"result":true,"session_id":"810c09c9f56ba0b6922446b61e66b5eba01a5a8f","userinfo":{"id":463488589,"parent_id":"94489788","all_parents":[94489788,33746282,33746237,33746121,3819831],"alias":"q","domain":3819831,"role":2,"username":"dqazw","enable":true,"block":false,"sub":true},"redirect":"\/user\/home\/note"}}
+                 */
+                string ret_html = reader.ReadToEnd();
+
+                JsonSerializerSettings js = new JsonSerializerSettings();
+                js.DateParseHandling = DateParseHandling.DateTime;
+                js.DateTimeZoneHandling = DateTimeZoneHandling.Local;
+                JObject jo = (JObject)JsonConvert.DeserializeObject(ret_html.ToString(), js);
+                if (jo["data"]!=null)
+                {
+                    if ((bool)jo["data"]["result"])
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+                /*
                 if (ret_html.Contains("局查询"))
                 {
                     return true;
@@ -105,7 +170,7 @@ namespace TimoControl
                     appSittingSet.txtLog(string.Format("BB登录失败：{0}    错误：{1}", postdata, ret_html));
                     return false;
                 }
-
+                */
             }
             catch (WebException ex)
             {
@@ -369,7 +434,7 @@ namespace TimoControl
         */
 
         /// <summary>
-        /// 获取注单旋转次数
+        /// 获取注单旋转次数 GET
         /// </summary>
         /// <param name="bb"></param>
         /// <returns></returns>
@@ -473,7 +538,11 @@ namespace TimoControl
                 request.ContentType = "application/x-www-form-urlencoded; charset=utf-8";
                 request.CookieContainer = ct_bb;
 
-                appSittingSet.Init();//证书错误
+                request.ProtocolVersion = HttpVersion.Version11;
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+
+                ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
+
                 HttpWebResponse response = (HttpWebResponse)request.GetResponse();
                 StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
                 string ret_html = reader.ReadToEnd();
@@ -597,7 +666,11 @@ namespace TimoControl
                 request.ContentType = "application/x-www-form-urlencoded; charset=utf-8";
                 string postdata = string.Format("old={0}&pwd={1}&rep={1}", pwd, pwd_new);
 
-                appSittingSet.Init();//证书错误
+                request.ProtocolVersion = HttpVersion.Version11;
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+                //证书错误
+                ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
+
                 byte[] bytes = Encoding.UTF8.GetBytes(postdata);
                 request.ContentLength = bytes.Length;
                 Stream newStream = request.GetRequestStream();

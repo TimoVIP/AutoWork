@@ -160,19 +160,6 @@ namespace TimoControl
             }
         }
 
-        /// <summary>
-        /// 解决证书错误BB后台
-        /// </summary>
-        public static void Init()
-        {
-            ServicePointManager.ServerCertificateValidationCallback += RemoteCertificateValidate;
-        }
-
-        private static bool RemoteCertificateValidate(object sender, X509Certificate cert, X509Chain chain, SslPolicyErrors error)
-        {
-            //为了通过证书验证，总是返回true
-            return true;
-        }
 
         private static SQLiteConnection get_dbConnection()
         {

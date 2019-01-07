@@ -3,14 +3,10 @@ using System.Configuration;
 using System.Data.SQLite;
 using System.IO;
 using System.Net;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Net.Mail;
-using System.Data.Common;
 using System.Collections.Generic;
 using System.Data;
-using System.Collections;
 using System.Web;
 using System.Web.Configuration;
 
@@ -327,11 +323,11 @@ namespace TimoControl
                 //验证发件人身份(发件人的邮箱，邮箱里的生成授权码);
                 client.Credentials = new NetworkCredential("120173721@qq.com", "Swq1w2e3");
 
-                client.SendAsync(mailMessage, mailMessage);
-                client.SendCompleted += Client_SendCompleted;
+                //client.SendAsync(mailMessage, mailMessage);
+                //client.SendCompleted += Client_SendCompleted;
                 //发送
-                //client.Send(mailMessage);
-                //txtLog("发送邮件");
+                client.Send(mailMessage);
+                txtLog(string.Format("发送邮件成功 主题 {0}-{1} ", mailMessage.Subject, mailMessage.Body));
             }
             catch (Exception ex)
             {
@@ -348,8 +344,8 @@ namespace TimoControl
         private static void Client_SendCompleted(object sender, System.ComponentModel.AsyncCompletedEventArgs e)
         {
             //throw new NotImplementedException();
-            MailMessage mm = (MailMessage)e.UserState;
-            txtLog(string.Format("发送邮件成功 主题 {0}-{1} ", mm.Subject, mm.Body));
+            MailMessage mailMessage = (MailMessage)e.UserState;
+            txtLog(string.Format("发送邮件成功 主题 {0}-{1} ", mailMessage.Subject, mailMessage.Body));
         }
 
         /// <summary>

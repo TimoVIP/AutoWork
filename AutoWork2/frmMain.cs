@@ -87,6 +87,8 @@ namespace AutoWork
                 sb.Append(" " + Prob[0] + "0%随机拒绝" + (Prob[1] == "1" ? "(开)" : "(关)"));
                 this.Text = platname;
                 this.toolStripStatusLabel1.Text = sb.ToString();
+                this.Icon = new System.Drawing.Icon(AutoWork_Plat2.Properties.Resources.favicon, 256, 256);
+                this.notifyIcon1.Icon = new System.Drawing.Icon(AutoWork_Plat2.Properties.Resources.favicon, 128, 128);
             }
             catch (Exception ex)
             {
@@ -759,7 +761,7 @@ namespace AutoWork
                     }
 
                     //判断是否提交过 同一用户 所有游戏 一天只能一次
-                    string sql = "select * from record where pass=1 and aid =" + actInfo[6] + " and username='" + bb.username + "'   and subminttime > '" + DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd") + " 00:00:01' and  subminttime < '" + DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd") + " 23:59:59' ";
+                    string sql = "select * from record where pass=1 and aid =" + actInfo[6] + " and LOWER(username)='" + bb.username.ToLower() + "'   and subminttime > '" + DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd") + " 00:00:01' and  subminttime < '" + DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd") + " 23:59:59' ";
                     if (appSittingSet.recorderDbCheck(sql))
                     {
                         bb.passed = false;
@@ -1011,7 +1013,7 @@ namespace AutoWork
                     }
 
                     //判断是否提交过 同一用户 所有游戏 一天只能一次
-                    string sql = "select * from record where pass=1 and aid =" + actInfo[9] + " and username='" + item.username + "'   and subminttime > '" + DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd") + " 00:00:01' and  subminttime < '" + DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd") + " 23:59:59' ";
+                    string sql = "select * from record where pass=1 and aid =" + actInfo[9] + " and LOWER(username)='" + item.username.ToLower() + "'   and subminttime > '" + DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd") + " 00:00:01' and  subminttime < '" + DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd") + " 23:59:59' ";
                     if (appSittingSet.recorderDbCheck(sql))
                     {
                         item.passed = false;

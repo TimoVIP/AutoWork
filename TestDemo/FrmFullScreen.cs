@@ -1,12 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace TestDemo
@@ -63,7 +57,7 @@ namespace TestDemo
             //    //btnFullScreen.PerformClick();
             //    e.Handled = true;
             //}
-            if (e.KeyCode == Keys.F11 || e.KeyCode == Keys.Escape)//esc键盘退出全屏
+            if (e.KeyCode == Keys.F11)//esc键盘退出全屏
             {
                 if (m_IsFullScreen)
                 {
@@ -72,13 +66,12 @@ namespace TestDemo
                     this.FormBorderStyle = FormBorderStyle.Sizable;
                     SetFormFullScreen(false);
                 }
-
-                //改为退出
-                if (e.KeyCode == Keys.Escape)
-                {
-                    Application.Exit();
-                }
-
+            }
+            //改为退出
+            if (e.KeyCode == Keys.Escape)
+            {
+                SetFormFullScreen(false);
+                Application.Exit();
             }
         }
         /// <summary>  

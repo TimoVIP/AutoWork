@@ -36,12 +36,12 @@
             this.label1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.label1.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.label1.ForeColor = System.Drawing.SystemColors.Control;
-            this.label1.Image = global::TestDemo.Properties.Resources._01252f5752f1106ac72525aec1a444;
+            this.label1.Image = global::TestDemo.Properties.Resources._464f258056f1a01b29001414217d0fac__1_;
             this.label1.Location = new System.Drawing.Point(0, 0);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(284, 261);
             this.label1.TabIndex = 0;
-            this.label1.Text = "Timo 装逼专用啊\r\n按F11退出全屏\r\n按ESC退出程序\r\n";
+            this.label1.Text = "Timo 装逼专用\r\n按F11退出全屏\r\n按ESC退出程序\r\n";
             // 
             // FrmFullScreen
             // 

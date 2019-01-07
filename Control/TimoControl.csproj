@@ -66,7 +66,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AMESTime.cs" />
-    <Compile Include="AppCheck.cs" />
     <Compile Include="appSittingSet.cs" />
     <Compile Include="AsynFileHelp.cs" />
     <Compile Include="betData.cs" />

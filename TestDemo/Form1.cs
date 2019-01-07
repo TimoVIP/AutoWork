@@ -1,15 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using TimoControl;
 
 namespace TestDemo
 {
@@ -18,9 +9,9 @@ namespace TestDemo
         public Form1()
         {
             InitializeComponent();
+            this.Icon =new System.Drawing.Icon(Properties.Resources.favicon__2_,256,256);
         }
-        string[] Prob = new string[] { "2", "1" };
-        static List<betData> list_temp = new List<betData>();
+
         private void Form1_Load(object sender, EventArgs e)
         {
         }
@@ -36,7 +27,7 @@ namespace TestDemo
         bool agree = false;
         private void button1_Click(object sender, EventArgs e)
         {
-            DialogResult d = MessageBox.Show("就知道你会同意的", "呵呵哒", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            //DialogResult d = MessageBox.Show("就知道你会同意的", "呵呵哒", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             //if (d== DialogResult.OK)
             //{
             //    Application.Exit();
@@ -51,8 +42,8 @@ namespace TestDemo
         {
             if (!agree)
             {
-                DialogResult d = MessageBox.Show("这么狠心吗？┭┮﹏┭┮", "错误的操作", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                d = MessageBox.Show("没有这个选择额，亲", "错误的操作", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                DialogResult d = MessageBox.Show("这么狠心吗？┭┮﹏┭┮\n不过亲，没有这个选择的额", "错误的操作", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                //d = MessageBox.Show("没有这个选择额，亲", "错误的操作", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 //if (d == DialogResult.OK)
                 //{
 

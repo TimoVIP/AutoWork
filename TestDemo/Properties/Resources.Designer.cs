@@ -63,9 +63,9 @@ namespace TestDemo.Properties {
         /// <summary>
         ///   查找 System.Drawing.Bitmap 类型的本地化资源。
         /// </summary>
-        internal static System.Drawing.Bitmap _01252f5752f1106ac72525aec1a444 {
+        internal static System.Drawing.Bitmap _464f258056f1a01b29001414217d0fac__1_ {
             get {
-                object obj = ResourceManager.GetObject("01252f5752f1106ac72525aec1a444", resourceCulture);
+                object obj = ResourceManager.GetObject("_464f258056f1a01b29001414217d0fac__1_", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -73,9 +73,19 @@ namespace TestDemo.Properties {
         /// <summary>
         ///   查找类似于 (图标) 的 System.Drawing.Icon 类型的本地化资源。
         /// </summary>
-        internal static System.Drawing.Icon favicon {
+        internal static System.Drawing.Icon favicon__1_ {
             get {
-                object obj = ResourceManager.GetObject("favicon", resourceCulture);
+                object obj = ResourceManager.GetObject("favicon__1_", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似于 (图标) 的 System.Drawing.Icon 类型的本地化资源。
+        /// </summary>
+        internal static System.Drawing.Icon favicon__2_ {
+            get {
+                object obj = ResourceManager.GetObject("favicon__2_", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
             }
         }
@@ -83,9 +93,9 @@ namespace TestDemo.Properties {
         /// <summary>
         ///   查找 System.Drawing.Bitmap 类型的本地化资源。
         /// </summary>
-        internal static System.Drawing.Bitmap logo {
+        internal static System.Drawing.Bitmap XltU7Cyv {
             get {
-                object obj = ResourceManager.GetObject("logo", resourceCulture);
+                object obj = ResourceManager.GetObject("XltU7Cyv", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

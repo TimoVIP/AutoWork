@@ -174,12 +174,12 @@ namespace TimoControl
             }
             catch (WebException ex)
             {
-                //if (ex.HResult== -2146233079 || ex.Message== "操作超时")
-                //{
-                //    //需要重新登录
-                //    loginActivity();
-                //    return null;
-                //}
+                if (ex.HResult == -2146233079 || ex.Message == "操作超时")
+                {
+                    //需要重新登录
+                    loginActivity();
+                    return null;
+                }
                 appSittingSet.txtLog("获取活动列表失败：" + ex.Message);
                 return null;
             }

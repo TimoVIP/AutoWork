@@ -6,9 +6,9 @@ using System.Runtime.InteropServices;
 // 控制。更改这些特性值可修改
 // 与程序集关联的信息。
 [assembly: AssemblyTitle("AutoWork")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("请联系作者QQ29857287")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("请联系作者QQ29857287")]
 [assembly: AssemblyProduct("AutoWork")]
 [assembly: AssemblyCopyright("Copyright ©  2018")]
 [assembly: AssemblyTrademark("")]

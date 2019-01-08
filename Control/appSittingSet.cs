@@ -181,13 +181,14 @@ namespace TimoControl
         }
 
         /// <summary>
-        /// 记录到SQLite数据库 记录的是提交时间 需要考虑是否正确
+        /// 记录到SQLite数据库 记录的是提交时间 需要考虑是否正确 MSG
+        /// MSG 记录提交到活动站的时间
         /// </summary>
         /// <param name="bb"></param>
         public static void recorderDb(betData bb,string aid)
         {
             SQLiteConnection m_dbConnection = get_dbConnection();
-            string sql1 = "insert into record (username, gamename,betno,chargeMoney,pass,msg,subminttime,aid) values ('" + bb.username + "', '" + bb.gamename + "','" + bb.betno + "'," + bb.betMoney + "," + (bb.passed == true ? 1 : 0) + ",'" + bb.msg + "','"+ DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd HH:mm:ss") + "' , "+aid+")";
+            string sql1 = "insert into record (username, gamename,betno,chargeMoney,pass,msg,subminttime,aid) values ('" + bb.username + "', '" + bb.gamename + "','" + bb.betno + "'," + bb.betMoney + "," + (bb.passed == true ? 1 : 0) + ",'" + bb.betTime + "','"+ DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd HH:mm:ss") + "' , "+aid+")";
             SQLiteCommand command1 = new SQLiteCommand(sql1, m_dbConnection);
             command1.ExecuteNonQuery();
             m_dbConnection.Close();

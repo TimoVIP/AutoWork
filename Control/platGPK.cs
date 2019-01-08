@@ -125,7 +125,7 @@ namespace TimoControl
             
         }
         /// <summary>
-        /// 获取 ConnectionId 等信息
+        /// 获取 ConnectionId 等信息 GET
         /// </summary>
         /// <returns></returns>
         public static List<string> getNegotiate()
@@ -185,80 +185,43 @@ namespace TimoControl
 
             try
             {
-
-                //获取deposit_token
-                HttpWebRequest request = WebRequest.Create(url_gpk_base + "Member/Search") as HttpWebRequest;
-
-                //request.ProtocolVersion = HttpVersion.Version11;
-                //ServicePointManager.SecurityProtocol =SecurityProtocolType.Tls12 ;//SecurityProtocolType.Tls1.2;
-
-                request.Method = "POST";
-                request.UserAgent = "Mozilla/4.0";
-                request.KeepAlive = true;
-                request.Accept = "application/json, text/plain, */*";
-                request.ContentType = "application/json; charset=utf-8";//发送的是json数据 注意
-                request.Host = url_gpk_base.Replace("http://", "").Replace("/", "");
-                //request.Referer = url_gpk_base + string.Format("Member?search=true&account={0}&bbAccount={1}&_=1542780952420", bb.username, bb.wallet);
-                request.Referer = url_gpk_base;
-                request.Headers.Add("Origin", url_gpk_base);
-                request.Headers.Add("X-Requested-With", "XMLHttpRequest");
-                //设置请求头、cookie
-                request.CookieContainer = ct_gpk;
-
-                request.ServicePoint.Expect100Continue = false;
-                request.Timeout = 4000;
-
-                string postdata = "{\"Account\":\"" + bb.username + "\",\"BbAccount\":\"" + bb.wallet + "\",\"connectionId\":\"" + GPKconnectionId + "\"}";
-                //发送数据
-                byte[] bytes = Encoding.UTF8.GetBytes(postdata);
-                request.ContentLength = bytes.Length;
-                Stream newStream = request.GetRequestStream();
-                newStream.Write(bytes, 0, bytes.Length);
-                newStream.Flush();
-                newStream.Close();
-
-                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
-                string ret_html = reader.ReadToEnd();
-
-                //如果为空 
-                reader.Close();
-                reader.Dispose();
-                response.Close();
-                response.Dispose();
-
-                if (ret_html.Contains("Account"))
+                string postUrl = "Member/Search";
+                string postData = JsonConvert.SerializeObject(new { Account = bb.username, BbAccount = bb.wallet, connectionId = GPKconnectionId });
+                string postRefere = url_gpk_base;
+                JObject jo = GetResponse<JObject>(postUrl, postData, "POST", postRefere);
+                if ((bool)jo["IsSuccess"])
                 {
-                    //获取 层级
-                    int i1 = ret_html.IndexOf("MemberLevelSettingId") + 22;
-                    int i2 = ret_html.IndexOf("MemberLevelSettingName") - 2;
-                    string level = ret_html.Substring(i1, i2 - i1);
-                    bb.level = level;
-                    bb.passed = true;
-
+                    JArray ja = JArray.FromObject(jo["PageData"]);
+                    if (ja.Count>0)
+                    {
+                        bb.level = jo["PageData"][0]["MemberLevelSettingId"].ToString();
+                        bb.passed = true;
+                    }
+                    else
+                    {
+                        bb.passed = false;
+                        bb.msg = "请提供正确的账号 R";
+                    }
                 }
                 else
                 {
-                    //账号 钱包 对不上
                     bb.passed = false;
                     bb.msg = "请提供正确的账号 R";
-
                 }
 
                 return bb;
 
             }
-            catch (WebException ex)
+            catch (Exception ex)
             {
                 string msg = string.Format("用户 {0} 注单{1}  GPK查询账号、钱包失败 {2}", bb.username, bb.betno, ex.Message);
                 //如果 操作超时 重新登录一下GPK
-                if (ex.HResult == -2146233079 || ex.Message == "操作超时")
-                {
-                    //需要重新登录
-                    loginGPK();
-                    msg = string.Format("用户 {0} 注单{1}  GPK查询账号、钱包失败 {2} 已经重新登录账号", bb.username, bb.betno, ex.Message);
-                }
-
+                //if (ex.HResult == -2146233079 || ex.Message == "操作超时")
+                //{
+                //    //需要重新登录
+                //    loginGPK();
+                //    msg = string.Format("用户 {0} 注单{1}  GPK查询账号、钱包失败 {2} 已经重新登录账号", bb.username, bb.betno, ex.Message);
+                //}
                 appSittingSet.txtLog(msg);
                 return null;
             }
@@ -328,15 +291,21 @@ namespace TimoControl
                 request.Referer = url_gpk_base + "MemberDeposit";
                 request.Headers.Add("Origin", url_gpk_base);
                 request.Headers.Add("X-Requested-With", "XMLHttpRequest");
-                string postdata2 = "{\"AccountsString\":\"" + bb.username + "\",\"Type\":5,\"DepositToken\":\"" + ret_html + "\",\"AuditType\":\"None\",\"Amount\":" + bb.betMoney + ",\"IsReal\":false,\"PortalMemo\":\"" + aname+"-" + bb.gamename + "-" + bb.betno + "\",\"Memo\":\"" + aname+ "-" + bb.gamename + "-" + bb.betno + "\",\"Password\":\"" + pwd + "\",\"TimeStamp\":" + (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000 + "}";
+                string postdata = "";
+                var obj1 = new { AccountsString = bb.username, Amount = bb.betMoney, AuditType = "None", DepositToken = ret_html, Memo = aname, Password = pwd, PortalMemo = aname, TimeStamp = (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000, Type = 4 };
+                //postdata = "{\"AccountsString\":\"" + bb.username + "\",\"Type\":5,\"DepositToken\":\"" + ret_html + "\",\"AuditType\":\"None\",\"Amount\":" + bb.betMoney + ",\"IsReal\":false,\"PortalMemo\":\"" + aname + "-" + bb.gamename + "-" + bb.betno + "\",\"Memo\":\"" + aname + "-" + bb.gamename + "-" + bb.betno + "\",\"Password\":\"" + pwd + "\",\"TimeStamp\":" + (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000 + "}";
+                postdata = JsonConvert.SerializeObject(obj1);
+                if (aname.Contains("消除") || aname.Contains("幸运")  || aname.Contains("APP"))
+                {
+                    var obj2 = new { AccountsString = bb.username, Amount = bb.betMoney, Audit = bb.betMoney, AuditType = "Discount", DepositToken = ret_html, Memo = aname, Password = pwd, PortalMemo = aname, TimeStamp = (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000, Type = 4 };
+                    postdata = JsonConvert.SerializeObject(obj2);
+                }
 
                 //设置请求头、cookie
                 request.CookieContainer = ct_gpk;
 
-                //Init();//证书错误
-
                 //发送数据
-                byte[] bytes = Encoding.UTF8.GetBytes(postdata2);
+                byte[] bytes = Encoding.UTF8.GetBytes(postdata);
                 request.ContentLength = bytes.Length;
                 Stream newStream = request.GetRequestStream();
                 newStream.Write(bytes, 0, bytes.Length);
@@ -668,7 +637,8 @@ namespace TimoControl
 
             try
             {
-                string postdata =string.Format( "?account={0}&begin={1}&end={2}&isMember=true&orderBy=Commissionable&reverse=true&skip=0&take=100&types=BBINprobability&types=BBINFish30&types=BBINFish38&types=AgEbr&types=AgHsr&types=AgYoPlay&types=Mg2Slot&types=Mg2Html5&types=Pt2Slot&types=GpiSlot3D&types=GpiSlotR&types=GnsSlot&types=PrgSlot&types=SgSlot&types=Rg2Fish&types=Rg2Slot&types=JdbSlot&types=JdbFish&types=HabaSlot&types=Cq9Slot&types=Cq9Fish&types=NetEntSlot&types=GdSlot&types=Pt3Slot&types=RedTigerSlot&types=GameArtSlot&types=Mw2Slot&types=PgSlot&types=RedTiger2Slot&types=LgVirtualSport&types=Mg3Slot&types=IsbSlot&types=PtsSlot&types=PngSlot&types=City761Fish&types=FsSlot&types=FsFish&types=FsArcade&types=KaSlot&types=JsSlot&types=JsFish&types=GtiSlot&types=PlsSlot&types=AeSlot",bb.username, DateTime.Now.AddDays(-DateTime.Now.Day + 1).ToString("yyyy/MM/dd"),DateTime.Now.Date.ToString("yyyy/MM/dd"));
+                //                string postdata =string.Format( "?account={0}&begin={1}&end={2}&isMember=true&orderBy=Commissionable&reverse=true&skip=0&take=100&types=BBINprobability&types=BBINFish30&types=BBINFish38&types=AgEbr&types=AgHsr&types=AgYoPlay&types=Mg2Slot&types=Mg2Html5&types=Pt2Slot&types=GpiSlot3D&types=GpiSlotR&types=GnsSlot&types=PrgSlot&types=SgSlot&types=Rg2Fish&types=Rg2Slot&types=JdbSlot&types=JdbFish&types=HabaSlot&types=Cq9Slot&types=Cq9Fish&types=NetEntSlot&types=GdSlot&types=Pt3Slot&types=RedTigerSlot&types=GameArtSlot&types=Mw2Slot&types=PgSlot&types=RedTiger2Slot&types=LgVirtualSport&types=Mg3Slot&types=IsbSlot&types=PtsSlot&types=PngSlot&types=City761Fish&types=FsSlot&types=FsFish&types=FsArcade&types=KaSlot&types=JsSlot&types=JsFish&types=GtiSlot&types=PlsSlot&types=AeSlot",bb.username, DateTime.Now.AddDays(-DateTime.Now.Day + 1).ToString("yyyy/MM/dd"),DateTime.Now.Date.ToString("yyyy/MM/dd"));                                                                                                     
+                string postdata =string.Format("?account={0}&begin={1}&end={2}&isMember=true&orderBy=Commissionable&reverse=true&skip=0&take=100&types=BBINprobability&types=BBINFish30&types=BBINFish38&types=AgEbr&types=AgHsr&types=AgYoPlay&types=Mg2Slot&types=Mg2Html5&types=Pt2Slot&types=GpiSlot3D&types=GpiSlotR&types=GnsSlot&types=PrgSlot&types=SgSlot&types=Rg2Fish&types=Rg2Slot&types=JdbSlot&types=JdbFish&types=HabaSlot&types=Cq9Slot&types=Cq9Fish&types=NetEntSlot&types=GdSlot&types=Pt3Slot&types=RedTigerSlot&types=GameArtSlot&types=Mw2Slot&types=PgSlot&types=RedTiger2Slot&types=LgVirtualSport&types=Mg3Slot&types=IsbSlot&types=PtsSlot&types=PngSlot&types=City761Fish&types=FsSlot&types=FsFish&types=FsArcade&types=KaSlot&types=JsSlot&types=JsFish&types=GtiSlot&types=PlsSlot&types=AeSlo", bb.username, DateTime.Now.AddDays(-DateTime.Now.Day + 1).ToString("yyyy/MM/dd"),DateTime.Now.Date.ToString("yyyy/MM/dd"));
                 request = WebRequest.Create(url_gpk_base + "Statistics/GetDetailInfo" +postdata) as HttpWebRequest;
                 request.Method = "GET";
                 request.UserAgent = "Mozilla/4.0";
@@ -737,6 +707,7 @@ namespace TimoControl
 
         /// <summary>
         /// 公共方法
+        /// JARRY 必须顶层 是数组才行
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="postUrl"></param>

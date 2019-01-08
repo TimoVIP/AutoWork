@@ -17,8 +17,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoWork_Plat_5hao", "AutoW
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoAppSign", "AutoAppSign\AutoAppSign.csproj", "{8C3BF7AB-1912-4C84-B1DE-FB12830B7788}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestDemo", "TestDemo\TestDemo.csproj", "{4635E7A5-C253-4001-803E-6779C386151F}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestDomo_console", "TestDomo_console\TestDomo_console.csproj", "{408B9BAD-5A15-48CB-B7B4-256AD0CF53CC}"
 EndProject
 Global
@@ -55,10 +53,6 @@ Global
 		{8C3BF7AB-1912-4C84-B1DE-FB12830B7788}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8C3BF7AB-1912-4C84-B1DE-FB12830B7788}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8C3BF7AB-1912-4C84-B1DE-FB12830B7788}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4635E7A5-C253-4001-803E-6779C386151F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4635E7A5-C253-4001-803E-6779C386151F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4635E7A5-C253-4001-803E-6779C386151F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4635E7A5-C253-4001-803E-6779C386151F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{408B9BAD-5A15-48CB-B7B4-256AD0CF53CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{408B9BAD-5A15-48CB-B7B4-256AD0CF53CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{408B9BAD-5A15-48CB-B7B4-256AD0CF53CC}.Release|Any CPU.ActiveCfg = Release|Any CPU

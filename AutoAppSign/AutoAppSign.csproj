@@ -108,13 +108,13 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\favicon.ico" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Control\TimoControl.csproj">
       <Project>{c47bdecb-d9e8-4723-80fb-d1b8d4f77423}</Project>
       <Name>TimoControl</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\favicon.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -88,7 +88,7 @@ namespace AutoWork_Plat1
                 this.Text = platname;
                 this.toolStripStatusLabel1.Text = sb.ToString();
                 this.Icon = new System.Drawing.Icon(AutoWork.Properties.Resources.favicon, 256, 256);
-                this.notifyIcon1.Icon = new System.Drawing.Icon(AutoWork_Plat2.Properties.Resources.favicon, 128, 128);
+                this.notifyIcon1.Icon = new System.Drawing.Icon(AutoWork.Properties.Resources.favicon, 128, 128);
             }
             catch (Exception ex)
             {

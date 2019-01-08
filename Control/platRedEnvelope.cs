@@ -49,7 +49,7 @@ namespace TimoControl
                 request = WebRequest.Create(url_base + "Public/login") as HttpWebRequest;
 
                 request.ProtocolVersion = HttpVersion.Version11;
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
                 request.Method = "POST";
                 request.UserAgent = "Mozilla/4.0";
                 request.ContentType = "application/x-www-form-urlencoded; charset=utf-8";
@@ -122,7 +122,7 @@ namespace TimoControl
                 request = WebRequest.Create(url_base + "Records/index") as HttpWebRequest;
 
                 request.ProtocolVersion = HttpVersion.Version11;
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
                 request.Method = "POST";
                 request.UserAgent = "Mozilla/5.0";
                 request.ContentType = "application/x-www-form-urlencoded;";
@@ -249,7 +249,7 @@ namespace TimoControl
                 request = WebRequest.Create(url_base + "Records/index") as HttpWebRequest;
 
                 request.ProtocolVersion = HttpVersion.Version11;
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
                 request.Method = "POST";
                 request.UserAgent = "Mozilla/5.0";
                 request.ContentType = "application/x-www-form-urlencoded;";
@@ -370,7 +370,7 @@ namespace TimoControl
                 request = WebRequest.Create(url_base + "Records/changeStatus") as HttpWebRequest;
 
                 request.ProtocolVersion = HttpVersion.Version11;
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
                 request.Method = "POST";
                 request.UserAgent = "Mozilla/5.0";
                 request.ContentType = "application/x-www-form-urlencoded;";
@@ -451,7 +451,7 @@ namespace TimoControl
                 request = WebRequest.Create(url_base + "Records/sendAct") as HttpWebRequest;
 
                 request.ProtocolVersion = HttpVersion.Version11;
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
                 request.Method = "POST";
                 request.UserAgent = "Mozilla/5.0";
                 request.ContentType = "application/x-www-form-urlencoded;";

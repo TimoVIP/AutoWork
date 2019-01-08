@@ -222,6 +222,7 @@ namespace AutoAppSign
                 //查询上次处理的ID
                 string sql = "select maxid from cs_max_id LIMIT 1;";
                 MaxID =MySQLHelper.GetScalar(sql).ToString();
+                MaxID = "234879";
                 //查询数据库 获取待处理的数据
                 sql = string.Format("select b.tel,a.score,a.id from cs_zhangdan a LEFT JOIN cs_user b on a.uid=  b.id where type='dh' and a.`status`=1 and a.id>{0} ORDER BY a.id DESC LIMIT 100;", MaxID);
                 DataTable dt = MySQLHelper.Query(sql).Tables[0];

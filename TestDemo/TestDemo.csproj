@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{4635E7A5-C253-4001-803E-6779C386151F}</ProjectGuid>
+    <ProjectGuid>{142D4930-A11B-4390-A045-44E03D14A9EB}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>TestDemo</RootNamespace>
-    <AssemblyName>LOVE-U</AssemblyName>
+    <AssemblyName>TestDemo</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -32,15 +32,18 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup>
-    <ApplicationIcon>Resources\favicon %281%29.ico</ApplicationIcon>
-  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
     <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Form1.cs">
@@ -49,19 +52,10 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
-    <Compile Include="FrmFullScreen.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FrmFullScreen.Designer.cs">
-      <DependentUpon>FrmFullScreen.cs</DependentUpon>
-    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FrmFullScreen.resx">
-      <DependentUpon>FrmFullScreen.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -87,16 +81,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\XltU7Cyv.jpg" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\favicon %281%29.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\favicon %282%29.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\464f258056f1a01b29001414217d0fac %281%29.GIF" />
+    <ProjectReference Include="..\Control\TimoControl.csproj">
+      <Project>{c47bdecb-d9e8-4723-80fb-d1b8d4f77423}</Project>
+      <Name>TimoControl</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

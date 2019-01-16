@@ -72,35 +72,7 @@ namespace AutoAppSign
             start();
 
         }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            //登录一遍
-            MyJob1 myjob1 = new MyJob1();
-            myjob1.Execute(null);
-            appSittingSet.txtLog("手动操作登录");
-        }
-
-        private void button2_Click(object sender, EventArgs e)
-        {
-            appSittingSet.showLogFile();
-        }
-
-        private void button3_Click(object sender, EventArgs e)
-        {
-            string filePath = Application.ExecutablePath + ".config";
-            System.Diagnostics.Process.Start("notepad.exe", filePath);
-        }
-
-        private void button4_Click(object sender, EventArgs e)
-        {
-            if (MessageBox.Show("应用程序重启", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button1) == DialogResult.OK)
-            {
-                notify.Dispose();
-                Application.Restart();
-            }
-        }
-
+        
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             if (sched != null)
@@ -222,7 +194,7 @@ namespace AutoAppSign
                 //查询上次处理的ID
                 string sql = "select maxid from cs_max_id LIMIT 1;";
                 MaxID =MySQLHelper.GetScalar(sql).ToString();
-                MaxID = "234879";
+
                 //查询数据库 获取待处理的数据
                 sql = string.Format("select b.tel,a.score,a.id from cs_zhangdan a LEFT JOIN cs_user b on a.uid=  b.id where type='dh' and a.`status`=1 and a.id>{0} ORDER BY a.id DESC LIMIT 100;", MaxID);
                 DataTable dt = MySQLHelper.Query(sql).Tables[0];
@@ -330,35 +302,86 @@ namespace AutoAppSign
                 }
             }
         }
-
-        private void button5_Click(object sender, EventArgs e)
+        private void menuStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
         {
-
-            //string[] UserInfo = appSittingSet.readAppsettings("UserInfo").Split('|');
-            //string s = appSittingSet.readAppsettings("GPK");
-            //ConfigurationOperator cc = new ConfigurationOperator();
-            //            string s = cc.ReadAppSetting("GPK");
-            //bool b = appSittingSet.recorderDbCheck(string.Format("SELECT id FROM User  WHERE  UserName = '{0}' AND  UserPwd = '{1}' AND  Status = '0' and date(ExpireDate) >  date('now');", UserInfo[0], UserInfo[1]));
-
-
-
-            //betData bb = new betData()
-            //{
-            //    bbid = "329267",
-            //    wallet = "100",
-            //    username = "yuegui123",
-            //    lastOprTime = DateTime.Now.AddDays(-DateTime.Now.Day + 1).ToString("yyyy/MM/dd") + " 12:00:00",
-            //    //betTime = DateTime.Now.AddHours(12).ToString("yyyy/MM/dd HH:mm:ss")
-            //};
-            //bb = platGPK.checkInGPK_transaction(bb);
-
-
-
-
+            ToolStripMenuItem tsmi = (ToolStripMenuItem)e.ClickedItem;
+            if (tsmi.Name == "toolStripMenuItem1")
+            {
+                //登录一遍
+                MyJob1 myjob1 = new MyJob1();
+                myjob1.Execute(null);
+                appSittingSet.txtLog("手动操作登录");
+            }
+            else if (tsmi.Name == "toolStripMenuItem2")
+            {
+                appSittingSet.showLogFile();
+            }
+            else if (tsmi.Name == "toolStripMenuItem3")
+            {
+                string filePath = Application.ExecutablePath + ".config";
+                System.Diagnostics.Process.Start("notepad.exe", filePath);
+            }
+            else if (tsmi.Name == "toolStripMenuItem4")
+            {
+                if (MessageBox.Show("应用程序重启", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button1) == DialogResult.OK)
+                {
+                    notify.Dispose();
+                    Application.Restart();
+                }
+            }
+            else if (tsmi.Name == "toolStripMenuItem5")
+            {
+                //查询上次处理的ID
+                string sql = "select maxid from cs_max_id LIMIT 1;";
+                string input = MySQLHelper.GetScalar(sql).ToString();
+                if (ShowInputDialog(ref input,"当前处理到的ID如下")== DialogResult.OK)
+                {
+                    //修改最大ID
+                    MySQLHelper.ExecuteSql("update cs_max_id set maxid=" + input + ";");
+                }
+            }
         }
 
+        private static DialogResult ShowInputDialog(ref string input,string title)
+        {
+            System.Drawing.Size size = new System.Drawing.Size(300, 70);
+            Form inputBox = new Form();
 
+            inputBox.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            inputBox.ClientSize = size;
+            inputBox.Text = title;
+
+            System.Windows.Forms.TextBox textBox = new TextBox();
+            textBox.Size = new System.Drawing.Size(size.Width - 10, 23);
+            textBox.Location = new System.Drawing.Point(5, 5);
+            textBox.Text = input;
+            inputBox.Controls.Add(textBox);
+
+            Button okButton = new Button();
+            okButton.DialogResult = System.Windows.Forms.DialogResult.OK;
+            okButton.Name = "okButton";
+            okButton.Size = new System.Drawing.Size(75, 23);
+            okButton.Text = "&OK";
+            okButton.Location = new System.Drawing.Point(size.Width - 80 - 80, 39);
+            inputBox.Controls.Add(okButton);
+
+            Button cancelButton = new Button();
+            cancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            cancelButton.Name = "cancelButton";
+            cancelButton.Size = new System.Drawing.Size(75, 23);
+            cancelButton.Text = "&Cancel";
+            cancelButton.Location = new System.Drawing.Point(size.Width - 80, 39);
+            inputBox.Controls.Add(cancelButton);
+
+            inputBox.AcceptButton = okButton;
+            inputBox.CancelButton = cancelButton;
+
+            DialogResult result = inputBox.ShowDialog();
+            input = textBox.Text;
+            return result;
+        }
         #endregion
+
 
     }
 

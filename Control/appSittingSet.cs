@@ -323,12 +323,12 @@ namespace TimoControl
                 client.UseDefaultCredentials = true;
                 //验证发件人身份(发件人的邮箱，邮箱里的生成授权码);
                 client.Credentials = new NetworkCredential("120173721@qq.com", "Swq1w2e3");
-
-                //client.SendAsync(mailMessage, mailMessage);
-                //client.SendCompleted += Client_SendCompleted;
-                //发送
-                client.Send(mailMessage);
-                txtLog(string.Format("发送邮件成功 主题 {0}-{1} ", mailMessage.Subject, mailMessage.Body));
+                //异步发送 
+                client.SendAsync(mailMessage, mailMessage);
+                client.SendCompleted += Client_SendCompleted;
+                //发送 关闭的时候会等待 程序假死
+                //client.Send(mailMessage);
+                //txtLog(string.Format("发送邮件成功 主题 {0}-{1} ", mailMessage.Subject, mailMessage.Body));
             }
             catch (Exception ex)
             {

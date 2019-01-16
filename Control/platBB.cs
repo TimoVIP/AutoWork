@@ -122,7 +122,17 @@ namespace TimoControl
                  {"code":200,"status":"OK","data":{"result":true,"session_id":"810c09c9f56ba0b6922446b61e66b5eba01a5a8f","userinfo":{"id":463488589,"parent_id":"94489788","all_parents":[94489788,33746282,33746237,33746121,3819831],"alias":"q","domain":3819831,"role":2,"username":"dqazw","enable":true,"block":false,"sub":true},"redirect":"\/user\/home\/note"}}
                  */
                 string ret_html = reader.ReadToEnd();
-
+                if (ret_html.Contains("top.window.location"))
+                {
+                    //维护
+                    appSittingSet.txtLog("BB维护");
+                    //尝试登陆新站
+                    bool b = LoginBB2();
+                    if (b)
+                        return true;
+                    else
+                        return false;
+                }
                 JsonSerializerSettings js = new JsonSerializerSettings();
                 js.DateParseHandling = DateParseHandling.DateTime;
                 js.DateTimeZoneHandling = DateTimeZoneHandling.Local;
@@ -725,6 +735,126 @@ namespace TimoControl
                 {
                     request.Abort();
                 }
+            }
+        }
+
+        public static bool LoginBB2()
+        {
+            try
+            {
+                string s2 = appSittingSet.readAppsettings("BB");
+
+                acc = s2.Split('|')[0];
+                pwd = s2.Split('|')[1];
+                url_betBase = s2.Split('|')[2];
+            }
+            catch (Exception ex)
+            {
+                appSittingSet.txtLog("获取配置文件失败" + ex.Message);
+                return false;
+            }
+            HttpWebRequest request = null;
+            HttpWebResponse response = null;
+            StreamReader reader = null;
+
+            try
+            {
+                CookieContainer cookie = new CookieContainer();
+                //先获取cookie
+                //request = WebRequest.Create(url_betBase + "vi/") as HttpWebRequest;
+                //request.Method = "GET";
+                //request.UserAgent = "Mozilla/4.0";
+                //request.KeepAlive = true;
+                //request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
+                //request.ContentType = "application/x-www-form-urlencoded; charset=utf-8";
+                //request.Host = url_betBase.Replace("https://", "").Replace("/", "");
+                //request.Headers.Add("DNT", "1");
+                //request.Headers.Add("Upgrade-Insecure-Requests", "1");
+                ////证书错误
+                //ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
+                //request.ProtocolVersion = HttpVersion.Version11;
+                //ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | SecurityProtocolType.Tls11;
+                //cookie.Add(new Cookie("T0_IPL_AVRbbbbbbbbbbbbbbbb", "DJHIACLIACKJMGICMAMNAFMEHAOCLFEHHGDEENPIHCMPBCBMOOLKJHPLFPEKEOKDJLFFIBDIHNLDEKBLAMKJPHOGEMOACNKACBBJOEDFBKICMJKOLMJAKGDHKFNODHDA", "/", "." + request.Host));
+                //request.CookieContainer = cookie;
+                //response = (HttpWebResponse)request.GetResponse();
+                //reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
+                //string s = reader.ReadToEnd();
+                //cookie.Add(response.Cookies);
+                //ct_bb = cookie;
+                //response.Close();
+                //request.Abort();
+
+
+
+
+                request = WebRequest.Create(url_betBase + "hex/login") as HttpWebRequest;
+                request.Method = "POST";
+                request.UserAgent = "Mozilla/4.0";
+                request.KeepAlive = true;
+                request.Accept = "application/json, text/plain, */*";
+                request.ContentType = "application/json;charset=UTF-8";
+                request.Referer = url_betBase + "vi/login";
+                request.Host = url_betBase.Replace("https://", "").Replace("/", "");
+                request.Headers.Add("Origin", url_betBase);
+                var obj = new { username = acc, password = pwd };
+                string postdata = JsonConvert.SerializeObject(obj);
+                //string  postdata = "{\"username\":\"" + acc + "\",\"password\":\"" + pwd + "\"}";
+                request.ProtocolVersion = HttpVersion.Version11;
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | SecurityProtocolType.Tls11;
+                //证书错误
+                ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
+                cookie.Add(new Cookie("T0_IPL_AVRbbbbbbbbbbbbbbbb", "DJHIACLIACKJMGICMAMNAFMEHAOCLFEHHGDEENPIHCMPBCBMOOLKJHPLFPEKEOKDJLFFIBDIHNLDEKBLAMKJPHOGEMOACNKACBBJOEDFBKICMJKOLMJAKGDHKFNODHDA", "/", "." + request.Host));
+                cookie.Add(new Cookie("langx","zh-cn", "/", "." + request.Host));
+                cookie.Add(new Cookie("langcode","zh-cn", "/", "." + request.Host));
+                request.CookieContainer = cookie;
+
+                byte[] bytes = Encoding.UTF8.GetBytes(postdata);
+                request.ContentLength = bytes.Length;
+                Stream newStream = request.GetRequestStream();
+                newStream.Write(bytes, 0, bytes.Length);
+                newStream.Close();
+
+                response = (HttpWebResponse)request.GetResponse();
+                reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
+                cookie.Add(response.Cookies);
+                ct_bb = cookie;
+                reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
+                string ret_html = reader.ReadToEnd();
+
+                JsonSerializerSettings js = new JsonSerializerSettings();
+                js.DateParseHandling = DateParseHandling.DateTime;
+                js.DateTimeZoneHandling = DateTimeZoneHandling.Local;
+                JObject jo = (JObject)JsonConvert.DeserializeObject(ret_html.ToString(), js);
+                //{"result":true,"data":{"user":{"id":458695702,"username":"dtimo","role":2},"session_id":"ec764cc7e02c6a4f8688a8b83fecf41e7bddb960","password_reset":false,"expire":false},"response_code":"Vb2mi1547621683"}
+                //{"result":false,"message":"Username is invalid","code":669001005,"response_code":"6YclV1547618491"}
+                if (!(bool)jo["result"])
+                {
+                    return false;
+                }
+
+                if (jo["data"] != null)
+                {
+                    if (jo["data"]["session_id"] != null)
+                    {
+                        ct_bb.Add(new Cookie("sid", jo["data"]["session_id"].ToString(), "/", "." + request.Host));
+                        ct_bb.Add(new Cookie("aglvl", jo["data"]["session_id"].ToString(), "/", "." + request.Host));
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+
+            }
+            catch (WebException ex)
+            {
+                appSittingSet.txtLog(string.Format("BB2站登录失败：{0}   ", ex.Message));
+                return false;
             }
         }
     }

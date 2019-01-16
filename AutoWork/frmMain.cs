@@ -31,6 +31,7 @@ namespace AutoWork_Plat1
         static string[] Prob;
         static string[] ComfirMsg;
         static List<betData> list_temp = new List<betData>();
+        NotifyIcon notify;
         public frmMain()
         {
             InitializeComponent();
@@ -88,7 +89,15 @@ namespace AutoWork_Plat1
                 this.Text = platname;
                 this.toolStripStatusLabel1.Text = sb.ToString();
                 this.Icon = new System.Drawing.Icon(AutoWork.Properties.Resources.favicon, 256, 256);
-                this.notifyIcon1.Icon = new System.Drawing.Icon(AutoWork.Properties.Resources.favicon, 128, 128);
+
+                notify = new NotifyIcon();
+                notify.BalloonTipTitle = "提示";
+                notify.BalloonTipText = "程序已经最小化";
+                notify.BalloonTipIcon = ToolTipIcon.Info;
+                notify.Text = "程序已经最小化";
+                notify.Click += Notify_Click;
+                notify.Icon = new System.Drawing.Icon(AutoWork.Properties.Resources.favicon, 256, 256);
+                notify.BalloonTipClicked += Notify_BalloonTipClicked;
             }
             catch (Exception ex)
             {
@@ -1183,6 +1192,20 @@ namespace AutoWork_Plat1
 
 
         #region 窗体事件
+        private void Notify_BalloonTipClicked(object sender, EventArgs e)
+        {
+            this.Show();
+            this.WindowState = FormWindowState.Normal;
+        }
+
+        private void Notify_Click(object sender, EventArgs e)
+        {
+            if (this.WindowState == FormWindowState.Minimized)
+            {
+                this.Show();
+                this.WindowState = FormWindowState.Normal;
+            }
+        }
         private void frmMain_Load(object sender, EventArgs e)
         {
             //Control.CheckForIllegalCrossThreadCalls = false;
@@ -1206,7 +1229,7 @@ namespace AutoWork_Plat1
                 sched.Shutdown();
             }
             appSittingSet.sendEmail(platname +" 程序关闭", "程序关闭 ");
-            notifyIcon1.Dispose();
+            notify.Dispose();
         }
 
         private void frmMain_SizeChanged(object sender, EventArgs e)
@@ -1214,8 +1237,8 @@ namespace AutoWork_Plat1
             if (this.WindowState == FormWindowState.Minimized)
             {
                 this.Hide();   //隐藏窗体
-                notifyIcon1.Visible = true; //使托盘图标可见
-                notifyIcon1.ShowBalloonTip(60000);
+                notify.Visible = true; //使托盘图标可见
+                notify.ShowBalloonTip(60000);
             }
         }
 
@@ -1259,7 +1282,7 @@ namespace AutoWork_Plat1
             {
                 if (MessageBox.Show("应用程序重启", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button1) == DialogResult.OK)
                 {
-                    notifyIcon1.Dispose();
+                    notify.Dispose();
                     Application.Restart();
                 }
             }

@@ -292,12 +292,12 @@ namespace TimoControl
                 request.Headers.Add("Origin", url_gpk_base);
                 request.Headers.Add("X-Requested-With", "XMLHttpRequest");
                 string postdata = "";
-                var obj1 = new { AccountsString = bb.username, Amount = bb.betMoney, AuditType = "None", DepositToken = ret_html, Memo = aname, Password = pwd, PortalMemo = aname, TimeStamp = (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000, Type = 4 };
+                var obj1 = new { AccountsString = bb.username, Amount = bb.betMoney, AuditType = "None", DepositToken = ret_html, Memo = aname, Password = pwd, PortalMemo = aname, TimeStamp = (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000, Type = 5 };
                 //postdata = "{\"AccountsString\":\"" + bb.username + "\",\"Type\":5,\"DepositToken\":\"" + ret_html + "\",\"AuditType\":\"None\",\"Amount\":" + bb.betMoney + ",\"IsReal\":false,\"PortalMemo\":\"" + aname + "-" + bb.gamename + "-" + bb.betno + "\",\"Memo\":\"" + aname + "-" + bb.gamename + "-" + bb.betno + "\",\"Password\":\"" + pwd + "\",\"TimeStamp\":" + (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000 + "}";
                 postdata = JsonConvert.SerializeObject(obj1);
                 if (aname.Contains("消除") || aname.Contains("幸运")  || aname.Contains("APP"))
                 {
-                    var obj2 = new { AccountsString = bb.username, Amount = bb.betMoney, Audit = bb.betMoney, AuditType = "Discount", DepositToken = ret_html, Memo = aname, Password = pwd, PortalMemo = aname, TimeStamp = (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000, Type = 4 };
+                    var obj2 = new { AccountsString = bb.username, Amount = bb.betMoney, Audit = bb.betMoney, AuditType = "Discount", DepositToken = ret_html, Memo = aname, Password = pwd, PortalMemo = aname, TimeStamp = (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000, Type = 5 };
                     postdata = JsonConvert.SerializeObject(obj2);
                 }
 

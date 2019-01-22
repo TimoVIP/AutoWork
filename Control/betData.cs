@@ -64,6 +64,8 @@ namespace TimoControl
         public string BankMemo { get; set; }
         public string RegisterDevice { get; set; }
         public string RegisterUrl { get; set; }
+        public string MemberLevelSettingId { get; set; }
+
     }
 
     /// <summary>

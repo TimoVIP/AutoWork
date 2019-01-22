@@ -23,7 +23,7 @@ namespace TimoControl
         /// 登录BB后台
         /// </summary>
         /// <returns></returns>
-        public static bool loginBB()
+        public static bool loginBB_old()
         {
             try
             {
@@ -126,12 +126,13 @@ namespace TimoControl
                 {
                     //维护
                     appSittingSet.txtLog("BB维护");
+                    return false;
                     //尝试登陆新站
-                    bool b = LoginBB2();
-                    if (b)
-                        return true;
-                    else
-                        return false;
+                    //bool b = LoginBB2();
+                    //if (b)
+                    //    return true;
+                    //else
+                    //    return false;
                 }
                 JsonSerializerSettings js = new JsonSerializerSettings();
                 js.DateParseHandling = DateParseHandling.DateTime;
@@ -738,7 +739,7 @@ namespace TimoControl
             }
         }
 
-        public static bool LoginBB2()
+        public static bool loginBB()
         {
             try
             {

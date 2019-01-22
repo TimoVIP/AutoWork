@@ -60,10 +60,20 @@ namespace TestDomo_console
             ////bool b = platBB.loginBB();
             //bb = platGPK.GetDetailInfo(bb);
 
-            b = platBB.LoginBB2();
-            bb = platBB.getBet_Details(bb);
-            bb = platBB.getBetDetail_Bet_Times(bb);
+
+
+            //b = platBB.loginBB();
+            //bb = platBB.getBet_Details(bb);
+            //bb = platBB.getBetDetail_Bet_Times(bb);
+
+            //b = platACT2.login();
+            //List<betData> list = platACT2.getActData();
+
+            string[] a4 = appSittingSet.readAppsettings("Act4Set").Split(new char[] { '|', '@' }, StringSplitOptions.RemoveEmptyEntries);
             Console.ReadLine();
+
+
+
         }
     }
 }

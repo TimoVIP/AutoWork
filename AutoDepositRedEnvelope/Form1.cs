@@ -65,34 +65,6 @@ namespace AutoDepositRedEnvelope
             start();
         }
 
-        private void button1_Click(object sender, EventArgs e)
-        {
-            //登录一遍
-            MyJob1 myjob1 = new MyJob1();
-            myjob1.Execute(null);
-            appSittingSet.txtLog("手动操作登录");
-        }
-
-        private void button2_Click(object sender, EventArgs e)
-        {
-            appSittingSet.showLogFile();
-        }
-
-        private void button3_Click(object sender, EventArgs e)
-        {
-            string filePath = Application.ExecutablePath + ".config";
-            System.Diagnostics.Process.Start("notepad.exe", filePath);
-        }
-
-        private void button4_Click(object sender, EventArgs e)
-        {
-            if (MessageBox.Show("应用程序重启", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button1) == DialogResult.OK)
-            {
-                notify.Dispose();
-                Application.Restart();
-            }
-        }
-
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             if (sched != null)
@@ -111,6 +83,36 @@ namespace AutoDepositRedEnvelope
                 this.Hide();   //隐藏窗体
                 notify.Visible = true; //使托盘图标可见
                 notify.ShowBalloonTip(6000);
+            }
+        }
+
+
+        private void menuStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        {
+            ToolStripMenuItem tsmi = (ToolStripMenuItem)e.ClickedItem;
+            if (tsmi.Name == "toolStripMenuItem1")
+            {
+                //登录一遍
+                MyJob1 myjob1 = new MyJob1();
+                myjob1.Execute(null);
+                appSittingSet.txtLog("手动操作登录");
+            }
+            else if (tsmi.Name == "toolStripMenuItem2")
+            {
+                appSittingSet.showLogFile();
+            }
+            else if (tsmi.Name == "toolStripMenuItem3")
+            {
+                string filePath = Application.ExecutablePath + ".config";
+                System.Diagnostics.Process.Start("notepad.exe", filePath);
+            }
+            else if (tsmi.Name == "toolStripMenuItem4")
+            {
+                if (MessageBox.Show("应用程序重启", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button1) == DialogResult.OK)
+                {
+                    notify.Dispose();
+                    Application.Restart();
+                }
             }
         }
 

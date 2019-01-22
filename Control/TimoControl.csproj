@@ -73,6 +73,7 @@
     <Compile Include="MySQLHelper.cs" />
     <Compile Include="plat5hao.cs" />
     <Compile Include="platACT.cs" />
+    <Compile Include="platACT2.cs" />
     <Compile Include="platAlipay.cs" />
     <Compile Include="platBB.cs" />
     <Compile Include="platGPK.cs" />

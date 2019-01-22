@@ -429,7 +429,20 @@ namespace AutoWork
                     //钱包 层级通过
 
 
-
+                    //大于 max 不处理
+                    if (bb.betMoney > maxValue)
+                    {
+                        bb.passed = false;
+                        bb.msg = "无法通过，请联系客服处理 R";
+                        bool b = platACT.confirmAct(bb);
+                        if (b)
+                        {
+                            string msg = string.Format("用户{0}处理完毕，注单号{1}，处理为 {2}，回复消息 {3}", bb.username, bb.betno, bb.passed ? "通过" : "不通过", bb.msg);
+                            MyWrite(msg);
+                            appSittingSet.txtLog(msg);
+                        }
+                        return;
+                    }
                     //次数符合
                     //提交充值 加钱 
                     bool fr = platGPK.submitToGPK(bb2,actInfo[1]);
@@ -663,8 +676,8 @@ namespace AutoWork
                             if (bb.betMoney > maxValue)
                             {
                                 bb.passed = false;
-                                bb.msg = "奖励金额大于"+maxValue+"，请联系客服处理 R";
-                                bool b = platACT.confirmAct(bb);
+                            bb.msg = "无法通过，请联系客服处理 R";
+                            bool b = platACT.confirmAct(bb);
                                 if (b)
                                 {
                                     string msg = string.Format("用户{0}处理完毕，注单号{1}，处理为 {2}，回复消息 {3}", bb.username, bb.betno, bb.passed ? "通过" : "不通过", bb.msg);

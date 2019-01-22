@@ -1115,6 +1115,9 @@ namespace AutoWork_Plat1
                             MyWrite(msg);
                             appSittingSet.txtLog(msg);
                         }
+                        //更新等级
+                        userinfo.MemberLevelSettingId = memberLevel[6];
+                        updateLevel(memberLevel[7], userinfo);
                         continue;
                     }
 
@@ -1131,6 +1134,9 @@ namespace AutoWork_Plat1
                             MyWrite(msg);
                             appSittingSet.txtLog(msg);
                         }
+                        //更新等级
+                        userinfo.MemberLevelSettingId = memberLevel[6];
+                        updateLevel(memberLevel[7], userinfo);
                         continue;
                     }
 
@@ -1152,16 +1158,19 @@ namespace AutoWork_Plat1
                     }
 
                     //更新等级
-                    if (memberLevel[3] == "1")
-                    {
-                        bool r4 = platGPK.UpadateMemberLevel(userinfo.Id, memberLevel[2]);
-                        if (!r4)
-                        {
-                            r4 = platGPK.UpadateMemberLevel(userinfo.Id, memberLevel[2]);
-                            string msg = string.Format("用户{0}更新等级失败，需要手动更新", bb1.username);
-                            appSittingSet.txtLog(msg);
-                        }
-                    }
+                    userinfo.MemberLevelSettingId = memberLevel[2];
+                    updateLevel(memberLevel[3], userinfo);
+                    //更新等级
+                    //if (memberLevel[3] == "1")
+                    //{
+                    //    bool r4 = platGPK.UpadateMemberLevel(userinfo.Id, memberLevel[2]);
+                    //    if (!r4)
+                    //    {
+                    //        r4 = platGPK.UpadateMemberLevel(userinfo.Id, memberLevel[2]);
+                    //        string msg = string.Format("用户{0}更新等级失败，需要手动更新", bb1.username);
+                    //        appSittingSet.txtLog(msg);
+                    //    }
+                    //}
 
                     //回填 操作结果
                     bb1.msg = "恭喜您，您申请的<" + actInfo[10] + ">已通过活动专员的检验 R";
@@ -1264,7 +1273,8 @@ namespace AutoWork_Plat1
                             appSittingSet.txtLog(msg);
                         }
                         //更新等级 拒绝
-                        updateLevel(memberLevel[9], userinfo.Id, memberLevel[8], item.username);
+                        userinfo.MemberLevelSettingId = memberLevel[8];
+                        updateLevel(memberLevel[9], userinfo);
                         continue;
                     }
 
@@ -1282,7 +1292,8 @@ namespace AutoWork_Plat1
                             appSittingSet.txtLog(msg);
                         }
                         //更新等级 拒绝
-                        updateLevel(memberLevel[9], userinfo.Id, memberLevel[8], item.username);
+                        userinfo.MemberLevelSettingId = memberLevel[8];
+                        updateLevel(memberLevel[9], userinfo);
                         continue;
                     }
 
@@ -1305,7 +1316,8 @@ namespace AutoWork_Plat1
                     }
 
                     //更新等级
-                    updateLevel(memberLevel[5], userinfo.Id, memberLevel[4], item.username);
+                    userinfo.MemberLevelSettingId = memberLevel[4];
+                    updateLevel(memberLevel[5], userinfo);
                     //回填 操作结果
                     item.msg = "恭喜您，您申请的<" + actInfo[13] + ">已通过活动专员的检验 R";
                     item.passed = true;
@@ -1359,15 +1371,15 @@ namespace AutoWork_Plat1
         /// <param name="memberid"></param>
         /// <param name="levelid"></param>
         /// <param name="username"></param>
-        public static void updateLevel(string swich, string memberid,string levelid,string username)
+        public static void updateLevel(string swich,Gpk_UserDetail userinfo)
         {
             if (swich== "1")
             {
-                bool r4 = platGPK.UpadateMemberLevel(memberid, levelid);
+                bool r4 = platGPK.UpadateMemberLevel(userinfo.Id, userinfo.MemberLevelSettingId);
                 if (!r4)
                 {
-                    r4 = platGPK.UpadateMemberLevel(memberid, levelid);
-                    string msg = string.Format("用户{0}更新等级失败，需要手动更新", username);
+                    r4 = platGPK.UpadateMemberLevel(userinfo.Id, userinfo.MemberLevelSettingId);
+                    string msg = string.Format("用户{0}更新等级失败，需要手动更新", userinfo.Account);
                     appSittingSet.txtLog(msg);
                 }
             }

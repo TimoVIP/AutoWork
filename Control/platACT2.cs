@@ -56,13 +56,14 @@ namespace TimoControl
                 newStream.Write(bytes, 0, bytes.Length);
                 newStream.Close();
 
-                request.CookieContainer = new CookieContainer(); 
+                cookie = new CookieContainer();
+                request.CookieContainer = cookie; 
 
                 HttpWebResponse response = (HttpWebResponse)request.GetResponse();
                 StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
 
                 string ret_html = reader.ReadToEnd();
-                cookie = new CookieContainer();
+
                 cookie.Add(response.Cookies);
                 reader.Close();
                 reader.Dispose();
@@ -96,6 +97,7 @@ namespace TimoControl
             request.CookieContainer = cookie;
 
             List<betData> list = new List<betData>();
+
             try
             {
                 HttpWebResponse response = (HttpWebResponse)request.GetResponse();
@@ -122,13 +124,13 @@ namespace TimoControl
                 HtmlNode node1 = htmlDocument.DocumentNode.SelectSingleNode("//table//tbody");
                 if (node1 == null)
                 {
-                    //appSittingSet.txtLog("没有获取到活动列表信息");
+                    //appSittingSet.txtLog("没有获取到活动列表信息_____1111 " );
                     return list;
                 }
 
                 if (node1.ChildNodes.Count < 2)
                 {
-                    //appSittingSet.txtLog("没有获取到活动列表信息");
+                    //appSittingSet.txtLog("没有获取到活动列表信息____2222");
                     return list;
                 }
                 HtmlNodeCollection collection = node1.SelectNodes("//tr[@class='gradeA']");//跟Xpath一样，轻松的定位到相应节点下

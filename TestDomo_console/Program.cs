@@ -69,8 +69,8 @@ namespace TestDomo_console
             //b = platACT2.login();
             //List<betData> list = platACT2.getActData();
 
-            string[] a4 = appSittingSet.readAppsettings("Act4Set").Split(new char[] { '|', '@' }, StringSplitOptions.RemoveEmptyEntries);
-            Console.ReadLine();
+            //string[] a4 = appSittingSet.readAppsettings("Act4Set").Split(new char[] { '|', '@' }, StringSplitOptions.RemoveEmptyEntries);
+            //Console.ReadLine();
 
 
 

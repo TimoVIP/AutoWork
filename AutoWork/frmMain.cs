@@ -148,7 +148,7 @@ namespace AutoWork_Plat1
             {
                 sched.ScheduleJob(JobBuilder.Create<MyJob5>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval + 2).RepeatForever()).Build());
             }
-            //8秒一次 送28
+            //8秒一次 体验金活动
             if (actInfo[14] == "1")
             {
                 sched.ScheduleJob(JobBuilder.Create<MyJob6>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval + 3).RepeatForever()).Build());
@@ -1160,17 +1160,6 @@ namespace AutoWork_Plat1
                     //更新等级
                     userinfo.MemberLevelSettingId = memberLevel[2];
                     updateLevel(memberLevel[3], userinfo);
-                    //更新等级
-                    //if (memberLevel[3] == "1")
-                    //{
-                    //    bool r4 = platGPK.UpadateMemberLevel(userinfo.Id, memberLevel[2]);
-                    //    if (!r4)
-                    //    {
-                    //        r4 = platGPK.UpadateMemberLevel(userinfo.Id, memberLevel[2]);
-                    //        string msg = string.Format("用户{0}更新等级失败，需要手动更新", bb1.username);
-                    //        appSittingSet.txtLog(msg);
-                    //    }
-                    //}
 
                     //回填 操作结果
                     bb1.msg = "恭喜您，您申请的<" + actInfo[10] + ">已通过活动专员的检验 R";
@@ -1259,9 +1248,51 @@ namespace AutoWork_Plat1
 
                     //获取详细信息
                     Gpk_UserDetail userinfo = platGPK.GetUserDetail(item.username);
+                    if (userinfo==null)
+                    {
+                        //回填拒绝
+                        item.passed = false;
+                        item.msg = "账号有误";
+                        bool r1 = platACT2.confirmAct(item);
+                        if (r1)
+                        {
+                            string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                            MyWrite(msg);
+                            appSittingSet.txtLog(msg);
+                        }
+                        //更新等级 拒绝
+                        userinfo.MemberLevelSettingId = memberLevel[8];
+                        updateLevel(memberLevel[9], userinfo);
+                        continue;
+                    }
+
+                    //判断是否有存款记录 added by shine 2019年1月26日 15点48分
+                    betData bb1 = platGPK.checkInGPK_transaction(item);
+                    if (bb1 == null)
+                    {
+                        continue;//异常
+                    }
+                    if (bb1.betTimes > 0 || bb1.betMoney > 0)
+                    {
+                        //不过
+                        item.passed = false;
+                        item.msg = "有过存款记录，不符合条件";
+                        bool r1 = platACT2.confirmAct(item);
+                        if (r1)
+                        {
+                            string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                            MyWrite(msg);
+                            appSittingSet.txtLog(msg);
+                        }
+                        //更新等级 拒绝
+                        userinfo.MemberLevelSettingId = memberLevel[8];
+                        updateLevel(memberLevel[9], userinfo);
+                        continue;
+                    }
+
                     //历史记录 注册 和绑定银行卡的时间间隔 大于1分钟 机器注册
                     string sr = platGPK.GetUserLoadHistory(userinfo.Id,userinfo.Account,Act4Set[8],Act4Set[9]);
-                    if (sr!="OK")
+                    if (sr != "OK")
                     {
                         item.passed = false;
                         item.msg = sr;
@@ -1478,6 +1509,10 @@ namespace AutoWork_Plat1
                     notify.Dispose();
                     Application.Restart();
                 }
+            }
+            else if (tsmi.Name == "toolStripMenuItem5")
+            {
+                ClsListItem();
             }
         }
         #endregion

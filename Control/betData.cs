@@ -28,6 +28,8 @@ namespace TimoControl
         public string lastCashTime{ get; set; }
         public string aid { get; set; }//所属活动编号
         public string aname{ get; set; }//所属活动名称
+        public int betAudit { get; set; }//优惠稽核倍数
+        public bool needAudit { get; set; }//是否需要优惠稽核
     }
 
     /// <summary>

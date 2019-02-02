@@ -45,6 +45,8 @@ Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "GetData", "..\..\WebSites\G
 		DefaultWebSiteLanguage = "Visual C#"
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoDismissed", "AutoDismissed\AutoDismissed.csproj", "{93D40DBD-D315-4AA6-B00C-6C336A8C80E2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -95,6 +97,10 @@ Global
 		{468CD36B-8CDB-434E-897C-1EACEF5AA8A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{468CD36B-8CDB-434E-897C-1EACEF5AA8A8}.Release|Any CPU.ActiveCfg = Debug|Any CPU
 		{468CD36B-8CDB-434E-897C-1EACEF5AA8A8}.Release|Any CPU.Build.0 = Debug|Any CPU
+		{93D40DBD-D315-4AA6-B00C-6C336A8C80E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{93D40DBD-D315-4AA6-B00C-6C336A8C80E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{93D40DBD-D315-4AA6-B00C-6C336A8C80E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{93D40DBD-D315-4AA6-B00C-6C336A8C80E2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

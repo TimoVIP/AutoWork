@@ -38,7 +38,7 @@ namespace TestDomo_console
             */
             //Console.WriteLine("处理完毕");
 
-
+            /*
 
             betData bb = new betData()
             {
@@ -51,8 +51,10 @@ namespace TestDomo_console
                 wallet = "js33882948401",
                 //实际先换算成美东时间 再获取所在的月份第一天
                 betno= "349347817753"
-
             };
+
+            */
+
             //b = platGPK.loginGPK();
             ////bb = platGPK.checkInGPK_transaction(bb);
             ////b = platGPK.submitToGPK(bb, "测试活动 消除");
@@ -70,10 +72,24 @@ namespace TestDomo_console
             //List<betData> list = platACT2.getActData();
 
             //string[] a4 = appSittingSet.readAppsettings("Act4Set").Split(new char[] { '|', '@' }, StringSplitOptions.RemoveEmptyEntries);
-            //Console.ReadLine();
 
 
 
+
+
+            //读取EXCEL文件
+
+            //调用接口处理数据
+
+            //重置密码
+
+            //提现
+
+
+
+
+
+            Console.ReadLine();
         }
     }
 }

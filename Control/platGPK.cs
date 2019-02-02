@@ -295,9 +295,14 @@ namespace TimoControl
                 var obj1 = new { AccountsString = bb.username, Amount = bb.betMoney, AuditType = "None", DepositToken = ret_html, Memo = aname, Password = pwd, PortalMemo = aname, TimeStamp = (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000, Type = 5 };
                 //postdata = "{\"AccountsString\":\"" + bb.username + "\",\"Type\":5,\"DepositToken\":\"" + ret_html + "\",\"AuditType\":\"None\",\"Amount\":" + bb.betMoney + ",\"IsReal\":false,\"PortalMemo\":\"" + aname + "-" + bb.gamename + "-" + bb.betno + "\",\"Memo\":\"" + aname + "-" + bb.gamename + "-" + bb.betno + "\",\"Password\":\"" + pwd + "\",\"TimeStamp\":" + (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000 + "}";
                 postdata = JsonConvert.SerializeObject(obj1);
-                if (aname.Contains("消除") || aname.Contains("幸运")  || aname.Contains("APP"))
+                //需要稽核
+                if (aname.Contains("消除") || aname.Contains("幸运")  || aname.Contains("APP")|| aname.Contains("救援") || bb.needAudit)
                 {
-                    var obj2 = new { AccountsString = bb.username, Amount = bb.betMoney, Audit = bb.betMoney, AuditType = "Discount", DepositToken = ret_html, Memo = aname, Password = pwd, PortalMemo = aname, TimeStamp = (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000, Type = 5 };
+                    if (bb.betAudit==0)
+                    {
+                        bb.betAudit = 1;
+                    }
+                    var obj2 = new { AccountsString = bb.username, Amount = bb.betMoney, Audit = bb.betMoney * bb.betAudit , AuditType = "Discount", DepositToken = ret_html, Memo = aname, Password = pwd, PortalMemo = aname, TimeStamp = (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000, Type = 5 };
                     postdata = JsonConvert.SerializeObject(obj2);
                 }
 
@@ -703,7 +708,84 @@ namespace TimoControl
             }
         }
 
+        /// <summary>
+        /// 查询非电子类的注单报表
+        /// </summary>
+        /// <param name="bb"></param>
+        /// <returns></returns>
+        public static betData GetDetailInfo_withoutELE(betData bb)
+        {
+            HttpWebRequest request = null;
+            HttpWebResponse response = null;
+            StreamReader reader = null;
 
+            try
+            {
+                //                string postdata =string.Format( "?account={0}&begin={1}&end={2}&isMember=true&orderBy=Commissionable&reverse=true&skip=0&take=100&types=BBINprobability&types=BBINFish30&types=BBINFish38&types=AgEbr&types=AgHsr&types=AgYoPlay&types=Mg2Slot&types=Mg2Html5&types=Pt2Slot&types=GpiSlot3D&types=GpiSlotR&types=GnsSlot&types=PrgSlot&types=SgSlot&types=Rg2Fish&types=Rg2Slot&types=JdbSlot&types=JdbFish&types=HabaSlot&types=Cq9Slot&types=Cq9Fish&types=NetEntSlot&types=GdSlot&types=Pt3Slot&types=RedTigerSlot&types=GameArtSlot&types=Mw2Slot&types=PgSlot&types=RedTiger2Slot&types=LgVirtualSport&types=Mg3Slot&types=IsbSlot&types=PtsSlot&types=PngSlot&types=City761Fish&types=FsSlot&types=FsFish&types=FsArcade&types=KaSlot&types=JsSlot&types=JsFish&types=GtiSlot&types=PlsSlot&types=AeSlot",bb.username, DateTime.Now.AddDays(-DateTime.Now.Day + 1).ToString("yyyy/MM/dd"),DateTime.Now.Date.ToString("yyyy/MM/dd"));                                                                                                     
+                string postdata =string.Format("?account={0}&begin={1}&end={2}&isMember=true&orderBy=Commissionable&reverse=true&skip=0&take=100&types=BBINbbsport&types=BBINlottery&types=BBINvideo&types=SabaSport&types=SabaNumber&types=SabaVirtualSport&types=AgBr&types=Mg2Real&types=Pt2Real&types=GpiReal&types=SingSport&types=AllBetReal&types=IgLottery&types=IgLotto&types=Rg2Real&types=Rg2Board&types=Rg2Lottery&types=Rg2Lottery2&types=JdbBoard&types=EvoReal&types=BgReal&types=GdReal&types=Pt3Real&types=SunbetReal&types=CmdSport&types=Sunbet2Real&types=Mg3Real&types=KgBoard&types=LxLottery&types=EBetReal&types=ImEsport&types=OgReal&types=VrLottery&types=City761Board&types=FsBoard&types=SaReal&types=ImsSport&types=IboSport&types=NwBoard&types=JsBoard&types=ThBoard", bb.username, bb.lastCashTime, DateTime.Now.AddHours(-11).Date.ToString("yyyy/MM/dd"));
+                request = WebRequest.Create(url_gpk_base + "Statistics/GetDetailInfo" +postdata) as HttpWebRequest;
+                request.Method = "GET";
+                request.UserAgent = "Mozilla/4.0";
+                request.KeepAlive = true;
+                request.Accept = "application/json, text/plain, */*";
+                //request.ContentType = "application/json; charset=utf-8";//发送的是json数据 注意
+                request.Host = url_gpk_base.Replace("http://", "").Replace("/", "");
+                request.Referer = url_gpk_base + "MemberDeposit";
+                //request.Headers.Add("Origin", url_gpk_base);
+
+                request.Headers.Add("X-Requested-With", "XMLHttpRequest");
+                //设置请求头、cookie
+                request.CookieContainer = ct_gpk;
+
+                response = (HttpWebResponse)request.GetResponse();
+                reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
+                string ret_html = reader.ReadToEnd();
+                JObject jo = JObject.Parse(ret_html);
+                //如果为空 
+                if ((bool)jo["IsSuccess"] == false)
+                {
+                    appSittingSet.txtLog(postdata + " 没有记录"+ jo["ErrorMessage"]);
+                    bb.passed = false;
+                    return bb;
+                }
+                JArray ja = JArray.FromObject(jo["ReturnObject"]);
+                decimal amount = 0;
+                decimal.TryParse(ja[0]["Commissionable"].ToString(), out amount);
+                bb.total_money = amount;
+                
+                return bb;
+            }
+            catch (WebException ex)
+            {
+                //如果 操作超时 重新登录一下GPK
+                string msg = "查询报表失败 " + ex.Message;
+                if (ex.HResult == -2146233079 || ex.Message == "操作超时")
+                {
+                    //需要重新登录
+                    loginGPK();
+                    msg = string.Format("用户 {0}-{2}-{3} 查询报表失败 {1} 已经重新登录账号 ", bb.username, ex.Message, bb.lastCashTime, bb.betTime);
+                }
+                appSittingSet.txtLog(msg);
+                return null;
+            }
+            finally
+            {
+                if (response != null)
+                {
+                    response.Close();
+                    response.Dispose();
+                }
+                if (reader != null)
+                {
+                    reader.Close();
+                    reader.Dispose();
+                }
+                if (request != null)
+                {
+                    request.Abort();
+                }
+            }
+        }
 
         /// <summary>
         /// 公共方法
@@ -972,6 +1054,96 @@ namespace TimoControl
             //    appSittingSet.txtLog(ex.Message);
             //    return false;
             //}
+        }
+
+        /// <summary>
+        /// 充值密码
+        /// </summary>
+        /// <param name="user"></param>
+        public static void ResetPassword(Gpk_UserDetail user)
+        {
+            try
+            {
+                string postUrl = "Member/ResetPassword";
+                string postData = "{\"id\":\"" + user.Id + "\"}";
+                string postRefere = "MemberDeposit";
+                JObject jo = GetResponse<JObject>(postUrl, postData, "POST", postRefere);
+
+                if (jo["Password"] == null)
+                {
+                    appSittingSet.txtLog(string.Format("{0}密码重置失败", user.Account));
+                }
+                else
+                {
+                    appSittingSet.txtLog(string.Format("{0}密码重置为{1}", user.Account, jo["Password"]));               
+                }
+
+            }
+            catch (Exception ex)
+            {
+                string msg = user.Account +"重置密码失败" +   " " + ex.Message;
+                appSittingSet.txtLog(msg);
+            }
+        }
+
+        /// <summary>
+        /// 人工提出
+        /// </summary>
+        /// <param name="user"></param>
+        public static void WithdrawSubmit(Gpk_UserDetail user)
+        {
+            try
+            {
+                string postUrl = "Member/WithdrawSubmit";
+                string postData = JsonConvert.SerializeObject(new { id = user.Id, isReal = false, memo = "", money = user.Wallet, password = pwd, type = 7 });
+                string postRefere = "MemberDeposit";
+                JObject jo = GetResponse<JObject>(postUrl, postData, "POST", postRefere);
+
+                if (jo["Id"] == null)
+                {
+                    appSittingSet.txtLog(string.Format("{0}提出失败,错误{1}", user.Account,jo["ErrorMessage"]));
+                }
+                else
+                {
+                    appSittingSet.txtLog(string.Format("{0}提出成功ID:{1}", user.Account, jo["Id"]));               
+                }
+
+            }
+            catch (Exception ex)
+            {
+                string msg = user.Account +"提出失败" +   " " + ex.Message;
+                appSittingSet.txtLog(msg);
+            }
+        }
+
+        /// <summary>
+        /// 重置密码
+        /// </summary>
+        /// <param name="user"></param>
+        public static void AllWalletBackMember(Gpk_UserDetail user)
+        {
+            try
+            {
+                string postUrl = "Member/AllWalletBackMember";
+                string postData = JsonConvert.SerializeObject(new { id = user.Id });
+                string postRefere = "MemberDeposit";
+                JObject jo = GetResponse<JObject>(postUrl, postData, "POST", postRefere);
+
+                if (jo["Member"] == null)
+                {
+                    appSittingSet.txtLog(string.Format("{0}全取回失败,错误{1}", user.Account,jo["ErrorMessage"]));
+                }
+                else
+                {
+                    appSittingSet.txtLog(string.Format("{0}全取回成功ID:{1}", user.Account, jo["Member"]["Wallet"]));               
+                }
+
+            }
+            catch (Exception ex)
+            {
+                string msg = user.Account +"提出失败" +   " " + ex.Message;
+                appSittingSet.txtLog(msg);
+            }
         }
     }
 }

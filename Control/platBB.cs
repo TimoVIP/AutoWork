@@ -587,7 +587,6 @@ namespace TimoControl
                     //注单号不存在
                     bb.passed = false;
                     bb.msg = "注单信息不正确，请您提供正确的注单号! R";
-                    appSittingSet.txtLog(ret_html);
                     return bb;
                 }
                 //游戏名称

@@ -1154,7 +1154,7 @@ namespace AutoWork
         }
 
         /// <summary>
-        /// 作业6 活动  送28
+        /// 作业6 体验金  送28
         /// </summary>
         [DisallowConcurrentExecution]
         public class MyJob6 : IJob
@@ -1194,7 +1194,7 @@ namespace AutoWork
                         {
                             //直接拒绝
                             item.passed = false;
-                            item.msg = "RR 同IP其他会员已申请通过";
+                            item.msg = "RR 同IP其他会员已申请过";
                             bool r1 = platACT2.confirmAct(item);
                             if (r1)
                             {
@@ -1245,11 +1245,11 @@ namespace AutoWork
 
                     //判断是否有存款记录 added by shine 2019年1月26日 15点48分
                     betData bb1 = platGPK.checkInGPK_transaction(item);
-                    if (bb1 == null )
+                    if (bb1 == null)
                     {
                         continue;//异常
                     }
-                    if (bb1.betTimes>0 || bb1.betMoney> 0)
+                    if (bb1.betTimes > 0 || bb1.betMoney > 0)
                     {
                         //不过
                         item.passed = false;

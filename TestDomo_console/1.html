@@ -1,0 +1,30 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <script type="text/javascript">
+        function test() {
+
+        };
+        var wsServer = "ws://sts.tjuim.com/signalr/connect?transport=webSockets&clientProtocol=1.5&connectionToken=S4BsUiRNJIuEWfllUxJunQJwNCum%2BGFFPg78w8z4kp7kRylVvwud5DXjIPFcZf%2BSQh8QbOM7APENYKeUOQTeZINx6zU726XQ65yFP2P9APCiRkF4&connectionData=%5B%7B%22name%22%3A%22mainhub%22%7D%5D&tid=2";
+        var websocket = new WebSocket(wsServer);
+        websocket.onopen = function (evt) {
+            //document.getElementById("TextArea1").innerText = document.getElementById("TextArea1").innerText + "Connected to WebSocket server.";
+        };
+        websocket.onclose = function (evt) {
+            //document.getElementById("TextArea1").innerText = document.getElementById("TextArea1").innerText + "Disconnected" + evt.code + " " + evt.reason + " " + evt.wasClean;
+        };
+        websocket.onmessage = function (evt) {
+            document.getElementById("TextArea1").innerText = document.getElementById("TextArea1").innerText + "Retrieved data from server: " + evt.data;
+            //document.write(evt.data);
+            return evt.data;
+        };
+        websocket.onerror = function (evt) {
+            //document.getElementById("TextArea1").innerText = document.getElementById("TextArea1").innerText + "Error occured: " + evt.data;
+        };
+    </script>
+</head>
+<body>
+        <span id="TextArea1"></span>
+</body>
+</html>

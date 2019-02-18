@@ -6,11 +6,11 @@ namespace TimoControl
 {
     public static class MySQLHelper
     {
-        private static string connectionString;
+        public static string connectionString { get; set; }
 
         public static MySqlConnection conn()
         {
-            connectionString = appSittingSet.readAppsettings("MySqlConnect");
+            //connectionString = appSittingSet.readAppsettings("MySqlConnect");
             MySqlConnection connection = new MySqlConnection(connectionString);
             if (connection.State== ConnectionState.Closed)
             {

@@ -185,20 +185,20 @@ namespace TimoControl
         /// MSG 记录提交到活动站的时间
         /// </summary>
         /// <param name="bb"></param>
-        public static void recorderDb(betData bb,string aid)
+        public static void recorderDb(betData bb)
         {
             SQLiteConnection m_dbConnection = get_dbConnection();
             string Str_time="";
-            if (bb.betTime.Length>1)
+            if (bb.betTime!=null)
             {
                 Str_time = bb.betTime;
             }
-            if (bb.lastCashTime.Length>1)
+            if (bb.lastCashTime!=null)
             {
                 Str_time = bb.lastCashTime;
             }
 
-            string sql1 = "insert into record (username, gamename,betno,chargeMoney,pass,msg,subminttime,aid) values ('" + bb.username + "', '" + bb.gamename + "','" + bb.betno + "'," + bb.betMoney + "," + (bb.passed == true ? 1 : 0) + ",'" + Str_time + "','"+ DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd HH:mm:ss") + "' , "+aid+")";
+            string sql1 = "insert into record (username, gamename,betno,chargeMoney,pass,msg,subminttime,aid) values ('" + bb.username + "', '" + bb.gamename + "','" + bb.betno + "'," + bb.betMoney + "," + (bb.passed == true ? 1 : 0) + ",'" + Str_time + "','"+ DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd HH:mm:ss") + "' , "+bb.aid+")";
             SQLiteCommand command1 = new SQLiteCommand(sql1, m_dbConnection);
             command1.ExecuteNonQuery();
             m_dbConnection.Close();

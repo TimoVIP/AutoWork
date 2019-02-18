@@ -14,19 +14,37 @@ namespace AutoDismissed
             //遍历文件
             DirectoryInfo di = new DirectoryInfo(Environment.CurrentDirectory);
             FileInfo[] fs = di.GetFiles("*.xlsx", SearchOption.AllDirectories);
+            string type = "0";
 
-            //先登陆一遍
-            bool b= platGPK.loginGPK();
-            if (!b)
+
+            if (fs.Length>0)
             {
-                Console.WriteLine("GPK登陆失败");
-                return;
+                //先登陆一遍
+                bool b= platGPK.loginGPK();
+                if (!b)
+                {
+                    Console.WriteLine("GPK登陆失败");
+                    return;
+                }
+                else
+                {
+                    Console.WriteLine("GPK登陆成功");                    
+                }
+
+                Console.WriteLine("请选择：1全部更新；2全部取回；3人工提出；4重置密码；0退出");
+               type = Console.ReadLine();
+                if (type == "0")
+                {
+                    Environment.Exit(0);
+                }
+
             }
             else
             {
-                Console.WriteLine("GPK登陆成功");                    
+                Console.WriteLine("没有找到对应的.xlsx文件，按任意键退出");
+                Console.Read();              
             }
-
+            
             foreach (var file in fs)
             {
                 Console.WriteLine("开始处理文件"+file.FullName);       
@@ -34,29 +52,6 @@ namespace AutoDismissed
                 dt = npoi.ExcelToDataTable(true, "", file.FullName);
                 //调用接口处理数据
 
-                /*
-                Parallel.ForEach(dt.AsEnumerable(), (dr) =>
-                {
-                    Gpk_UserDetail user = platGPK.GetUserDetail(dr[0].ToString());
-                    if (user != null)
-                    {
-                        decimal d = 0;
-                        decimal.TryParse(dr[1].ToString(), out d);
-                        user.Wallet = d;
-                        //全部取回
-                        platGPK.AllWalletBackMember(user);
-                        //重置密码
-                        platGPK.ResetPassword(user);
-                        //提现
-                        platGPK.WithdrawSubmit(user);
-                    }
-
-                    Console.WriteLine("处理" + dr[0]);
-                });
-                */
- 
-
-                
                 foreach (DataRow dr in dt.Rows)
                 {
                     Gpk_UserDetail user = platGPK.GetUserDetail(dr[0].ToString());
@@ -64,21 +59,47 @@ namespace AutoDismissed
                     {
                         continue;
                     }
-                    if (dr.ItemArray.Length == 2 )
+
+                    if (type == "1")
                     {
+                        //全部更新
+                        platGPK.autoUpadateMemberAcc(user.Id);
+                    }
+                    else if (type == "2")
+                    {
+                        //全部取回
+                        platGPK.AllWalletBackMember(user);
+                    }
+                    else if (type == "3")
+                    {
+                        //提现 人工提出
                         decimal d = 0;
                         decimal.TryParse(dr[1].ToString(), out d);
                         user.Wallet = d;
-                        //全部取回
-                        //platGPK.AllWalletBackMember(user);
-                        //提现
                         platGPK.WithdrawSubmit(user);
                     }
-                    else
+                    else if (type == "4")
                     {
                         //重置密码
                         platGPK.ResetPassword(user);
                     }
+
+                    //if (dr.ItemArray.Length == 2 )
+                    //{
+                    //    decimal d = 0;
+                    //    decimal.TryParse(dr[1].ToString(), out d);
+                    //    user.Wallet = d;
+                    //    //全部取回
+                    //    //platGPK.AllWalletBackMember(user);
+                    //    //提现
+                    //    platGPK.WithdrawSubmit(user);
+                    //}
+                    //else
+                    //{
+                    //    //重置密码
+                    //    platGPK.ResetPassword(user);
+                    //}
+
                     Console.WriteLine("处理" + dr[0]);
                 }
 
@@ -88,7 +109,7 @@ namespace AutoDismissed
             }
 
 
-            Console.ReadKey();
+            //Console.ReadKey();
         }
     }
 }

@@ -16,7 +16,7 @@ namespace TimoControl
         private static string url_gpk_base { get; set; }
         private static string td_cookie { get; set; }
         private static string GPKconnectionId { get; set; }
-        private static CookieContainer ct_gpk { get; set; }
+        public static CookieContainer cookie { get; set; }
 
         /// <summary>
         /// 登录GPK
@@ -53,14 +53,14 @@ namespace TimoControl
                 request.UserAgent = "Mozilla/4.0";
                 request.KeepAlive = true;
                 request.Accept = "application/json, text/plain, */*";
-                request.ContentType = "application/json; charset=utf-8";//发送的是json数据 注意
+                request.ContentType = "application/json; charset=utf-8";
                 string postdata = "{\"account\":\"" + acc + "\",\"password\":\"" + pwd + "\"}";
 
                 string headurl = url_gpk_base.Replace("http://", "").Replace("/", "");
                 //Init();//证书错误
 
                 //设置请求头、cookie
-                CookieContainer cookie = new CookieContainer();
+                cookie = new CookieContainer();
                 request.CookieContainer = cookie;
                 //request.Headers.Add("Origin", "bh.bs004.gpk135.com");
 
@@ -97,7 +97,7 @@ namespace TimoControl
 
                         string ret_html = reader.ReadToEnd();
                         cookie.Add(response.Cookies);
-                        ct_gpk = cookie;
+                        //platGPK.cookie = cookie;
 
                         if (ret_html == "{\"IsSuccess\":true,\"Methods\":null}")
                         {
@@ -145,7 +145,7 @@ namespace TimoControl
                 request.Referer = url_gpk_base + "MemberDeposit";
                 request.Headers.Add("X-Requested-With", "XMLHttpRequest");
                 //设置请求头、cookie
-                request.CookieContainer = ct_gpk;
+                request.CookieContainer = cookie;
 
                 HttpWebResponse response = (HttpWebResponse)request.GetResponse();
                 StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
@@ -232,7 +232,7 @@ namespace TimoControl
         /// 提交充值到GPK 不适合 改用公共方法 报错 必须同一个请求对象
         /// </summary>
         /// <param name="bb"></param>
-        public static bool submitToGPK(betData bb,string aname)
+        public static bool submitToGPK(betData bb)
         {
             //查询
             HttpWebRequest request = null;
@@ -256,7 +256,7 @@ namespace TimoControl
                 request.ContentLength = 0;
                 request.Headers.Add("X-Requested-With", "XMLHttpRequest");
                 //设置请求头、cookie
-                request.CookieContainer = ct_gpk;
+                request.CookieContainer = cookie;
 
                 response = (HttpWebResponse)request.GetResponse();
                 reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
@@ -292,22 +292,26 @@ namespace TimoControl
                 request.Headers.Add("Origin", url_gpk_base);
                 request.Headers.Add("X-Requested-With", "XMLHttpRequest");
                 string postdata = "";
-                var obj1 = new { AccountsString = bb.username, Amount = bb.betMoney, AuditType = "None", DepositToken = ret_html, Memo = aname, Password = pwd, PortalMemo = aname, TimeStamp = (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000, Type = 5 };
+                var obj1 = new { AccountsString = bb.username, Amount = bb.betMoney, AmountString=bb.betMoney, Audit =bb.Audit, AuditType = bb.AuditType, DepositToken = ret_html, IsReal= bb.isReal, Memo = bb.Memo, Password = pwd, PortalMemo = bb.PortalMemo, TimeStamp = (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000, Type = bb.Type };
+
+
+                //var obj1 = new { AccountsString = bb.username, Amount = bb.betMoney, AuditType = "None", DepositToken = ret_html, Memo = bb.aname, Password = pwd, PortalMemo = bb.aname, TimeStamp = (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000, Type = 5 };
                 //postdata = "{\"AccountsString\":\"" + bb.username + "\",\"Type\":5,\"DepositToken\":\"" + ret_html + "\",\"AuditType\":\"None\",\"Amount\":" + bb.betMoney + ",\"IsReal\":false,\"PortalMemo\":\"" + aname + "-" + bb.gamename + "-" + bb.betno + "\",\"Memo\":\"" + aname + "-" + bb.gamename + "-" + bb.betno + "\",\"Password\":\"" + pwd + "\",\"TimeStamp\":" + (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000 + "}";
                 postdata = JsonConvert.SerializeObject(obj1);
                 //需要稽核
-                if (aname.Contains("消除") || aname.Contains("幸运")  || aname.Contains("APP")|| aname.Contains("救援") || bb.needAudit)
-                {
-                    if (bb.betAudit==0)
-                    {
-                        bb.betAudit = 1;
-                    }
-                    var obj2 = new { AccountsString = bb.username, Amount = bb.betMoney, Audit = bb.betMoney * bb.betAudit , AuditType = "Discount", DepositToken = ret_html, Memo = aname, Password = pwd, PortalMemo = aname, TimeStamp = (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000, Type = 5 };
-                    postdata = JsonConvert.SerializeObject(obj2);
-                }
+                //if (aname.Contains("消除") || aname.Contains("幸运")  || aname.Contains("APP")|| aname.Contains("救援") || bb.needAudit)
+                //if(bb.needAudit)
+                //{
+                //    if (bb.betAudit==0)
+                //    {
+                //        bb.betAudit = 1;
+                //    }
+                //    var obj2 = new { AccountsString = bb.username, Amount = bb.betMoney, Audit = bb.betMoney * bb.betAudit , AuditType = "Discount", DepositToken = ret_html, Memo = bb.aname, Password = pwd, PortalMemo = bb.aname, TimeStamp = (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000, Type = 5 };
+                //    postdata = JsonConvert.SerializeObject(obj2);
+                //}
 
                 //设置请求头、cookie
-                request.CookieContainer = ct_gpk;
+                request.CookieContainer = cookie;
 
                 //发送数据
                 byte[] bytes = Encoding.UTF8.GetBytes(postdata);
@@ -369,7 +373,7 @@ namespace TimoControl
         /// 检查账号 获取转账记录
         /// </summary>
         /// <returns></returns>
-        public static betData checkInGPK_transaction(betData bb)
+        public static betData MemberTransactionSearch(betData bb)
         {
             string postUrl = "MemberTransaction/Search";
             string postData = "{\"Account\":\"" + bb.username + "\",\"IsReal\":\"true\",\"Types\":[\"Account\",\"Manual\",\"ThirdPartyPayment\"]";
@@ -380,7 +384,7 @@ namespace TimoControl
                 bb.lastOprTime = d1.AddHours(-12).ToString("yyyy/MM/dd HH:mm:ss");
                 postData = postData + ",\"TimeBegin\":\"" + bb.lastOprTime + "\"";
             }
-            if (bb.betTime != null && bb.lastOprTime != "")
+            if (bb.betTime != null && bb.betTime != "")
             {
                 //时间-12 变为美东时间
                 DateTime d2;
@@ -497,7 +501,17 @@ namespace TimoControl
             try
             {
                 string postUrl = "BetRecord/Search";
-                string postData = "{\"Account\":\"" + bb.username + "\",\"WagersTimeBegin\":\"" + bb.lastCashTime + "\",\"connectionId\":\"" + GPKconnectionId + "\"}";
+                string postData = "{\"Account\":\"" + bb.username + "\",";
+                if (bb.lastCashTime!=null)
+                {
+                    postData = postData + "\"WagersTimeBegin\":\"" + bb.lastCashTime + "\",";
+                }
+                if (bb.GameCategories != null)
+                {
+                    postData = postData + "\"GameCategories\":" + bb.GameCategories + ",";
+                }
+                postData = postData + "\"connectionId\":\"" + GPKconnectionId + "\"}";
+
                 string postRefere = "MemberDeposit";
                 JObject jo = GetResponse<JObject>(postUrl, postData, "POST", postRefere);
                 JArray ja = JArray.FromObject(jo["PageData"]);
@@ -535,7 +549,7 @@ namespace TimoControl
 
                 request.Headers.Add("X-Requested-With", "XMLHttpRequest");
                 //设置请求头、cookie
-                request.CookieContainer = ct_gpk;
+                request.CookieContainer = cookie;
                 string postdata = "";
                 if (pageIndex==1)
                 {
@@ -656,7 +670,7 @@ namespace TimoControl
 
                 request.Headers.Add("X-Requested-With", "XMLHttpRequest");
                 //设置请求头、cookie
-                request.CookieContainer = ct_gpk;
+                request.CookieContainer = cookie;
 
                 response = (HttpWebResponse)request.GetResponse();
                 reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
@@ -721,8 +735,17 @@ namespace TimoControl
 
             try
             {
+                //if (bb.lastOprTime != null && bb.lastOprTime != "")
+                //{
+                //    DateTime d1;
+                //    DateTime.TryParse(bb.lastOprTime, out d1);
+                //    bb.lastOprTime = d1.ToString("yyyy/MM/dd");
+                //}
+
+                
                 //                string postdata =string.Format( "?account={0}&begin={1}&end={2}&isMember=true&orderBy=Commissionable&reverse=true&skip=0&take=100&types=BBINprobability&types=BBINFish30&types=BBINFish38&types=AgEbr&types=AgHsr&types=AgYoPlay&types=Mg2Slot&types=Mg2Html5&types=Pt2Slot&types=GpiSlot3D&types=GpiSlotR&types=GnsSlot&types=PrgSlot&types=SgSlot&types=Rg2Fish&types=Rg2Slot&types=JdbSlot&types=JdbFish&types=HabaSlot&types=Cq9Slot&types=Cq9Fish&types=NetEntSlot&types=GdSlot&types=Pt3Slot&types=RedTigerSlot&types=GameArtSlot&types=Mw2Slot&types=PgSlot&types=RedTiger2Slot&types=LgVirtualSport&types=Mg3Slot&types=IsbSlot&types=PtsSlot&types=PngSlot&types=City761Fish&types=FsSlot&types=FsFish&types=FsArcade&types=KaSlot&types=JsSlot&types=JsFish&types=GtiSlot&types=PlsSlot&types=AeSlot",bb.username, DateTime.Now.AddDays(-DateTime.Now.Day + 1).ToString("yyyy/MM/dd"),DateTime.Now.Date.ToString("yyyy/MM/dd"));                                                                                                     
-                string postdata =string.Format("?account={0}&begin={1}&end={2}&isMember=true&orderBy=Commissionable&reverse=true&skip=0&take=100&types=BBINbbsport&types=BBINlottery&types=BBINvideo&types=SabaSport&types=SabaNumber&types=SabaVirtualSport&types=AgBr&types=Mg2Real&types=Pt2Real&types=GpiReal&types=SingSport&types=AllBetReal&types=IgLottery&types=IgLotto&types=Rg2Real&types=Rg2Board&types=Rg2Lottery&types=Rg2Lottery2&types=JdbBoard&types=EvoReal&types=BgReal&types=GdReal&types=Pt3Real&types=SunbetReal&types=CmdSport&types=Sunbet2Real&types=Mg3Real&types=KgBoard&types=LxLottery&types=EBetReal&types=ImEsport&types=OgReal&types=VrLottery&types=City761Board&types=FsBoard&types=SaReal&types=ImsSport&types=IboSport&types=NwBoard&types=JsBoard&types=ThBoard", bb.username, bb.lastCashTime, DateTime.Now.AddHours(-11).Date.ToString("yyyy/MM/dd"));
+                //string postdata =string.Format("?account={0}&begin={1}&end={2}&isMember=true&orderBy=Commissionable&reverse=true&skip=0&take=100&types=BBINbbsport&types=BBINlottery&types=BBINvideo&types=SabaSport&types=SabaNumber&types=SabaVirtualSport&types=AgBr&types=Mg2Real&types=Pt2Real&types=GpiReal&types=SingSport&types=AllBetReal&types=IgLottery&types=IgLotto&types=Rg2Real&types=Rg2Board&types=Rg2Lottery&types=Rg2Lottery2&types=JdbBoard&types=EvoReal&types=BgReal&types=GdReal&types=Pt3Real&types=SunbetReal&types=CmdSport&types=Sunbet2Real&types=Mg3Real&types=KgBoard&types=LxLottery&types=EBetReal&types=ImEsport&types=OgReal&types=VrLottery&types=City761Board&types=FsBoard&types=SaReal&types=ImsSport&types=IboSport&types=NwBoard&types=JsBoard&types=ThBoard", bb.username, bb.lastCashTime, bb.lastOprTime);
+                string postdata = string.Format("?account={0}&begin={1}&end={2}&isMember=true&orderBy=Commissionable&reverse=true&skip=0&take=100",bb.username, bb.lastCashTime, bb.lastOprTime);
                 request = WebRequest.Create(url_gpk_base + "Statistics/GetDetailInfo" +postdata) as HttpWebRequest;
                 request.Method = "GET";
                 request.UserAgent = "Mozilla/4.0";
@@ -735,11 +758,14 @@ namespace TimoControl
 
                 request.Headers.Add("X-Requested-With", "XMLHttpRequest");
                 //设置请求头、cookie
-                request.CookieContainer = ct_gpk;
+                request.CookieContainer = cookie;
 
                 response = (HttpWebResponse)request.GetResponse();
                 reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
                 string ret_html = reader.ReadToEnd();
+
+                appSittingSet.txtLog(ret_html);
+
                 JObject jo = JObject.Parse(ret_html);
                 //如果为空 
                 if ((bool)jo["IsSuccess"] == false)
@@ -817,7 +843,7 @@ namespace TimoControl
                 request.Headers.Add("Origin", url_gpk_base);
                 request.Headers.Add("X-Requested-With", "XMLHttpRequest");
                 //设置请求头、cookie
-                request.CookieContainer = ct_gpk;
+                request.CookieContainer = cookie;
                 if (postMethod == "POST" && postData != null)
                 {
                     if (postData.Length > 0)

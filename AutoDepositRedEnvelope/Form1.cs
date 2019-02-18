@@ -234,7 +234,12 @@ namespace AutoDepositRedEnvelope
                 Parallel.ForEach(list, (item) =>
                 {
                     //提交充值 加钱 
-                    bool fr = platGPK.submitToGPK(item, aname);
+                    item.aname = aname;
+                    item.AuditType = "None";
+                    item.Audit = item.betMoney;
+                    item.Memo = item.aname;
+                    item.Type = 5;
+                    bool fr = platGPK.submitToGPK(item);
                     if (fr)
                     {
                         string msg = string.Format("用户{0}处理，存入金额{1}，活动名称{2} ", item.username, item.betMoney, aname);
@@ -293,7 +298,12 @@ namespace AutoDepositRedEnvelope
                     Parallel.ForEach(list_db, (item) =>
                     {
                         //提交充值 加钱 
-                        bool fr = platGPK.submitToGPK(item, aname);
+                        item.aname = aname;
+                        item.AuditType = "Discount";
+                        item.Audit = item.betMoney;
+                        item.Memo = item.aname;
+                        item.Type = 5;
+                        bool fr = platGPK.submitToGPK(item);
                         if (fr)
                         {
                             string msg = string.Format("用户{0}处理，存入金额{1}，活动名称{2} ", item.username, item.betMoney, aname);

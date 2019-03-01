@@ -12,6 +12,7 @@ using System.CodeDom.Compiler;
 using System.Reflection;
 using System.Windows.Forms;
 using mshtml;
+using Newtonsoft.Json.Linq;
 
 namespace TestDomo_console
 {
@@ -53,19 +54,47 @@ namespace TestDomo_console
             //    wallet = "100",
             //    username = "tanxi",
             //    lastOprTime = DateTime.Now.AddDays(-DateTime.Now.Day + 1).ToString("yyyy/MM/dd") + " 12:00:00",
-            //    lastCashTime = "2019/02/03 03:16:02",
+            //    lastCashTime = "2019/02/03 03:16:02",//开始时间
             //    betTime = DateTime.Now.AddHours(12).ToString("yyyy/MM/dd HH:mm:ss"),
             //    betMoney = 2,
             //    betno = "356739235433",
-            //    GameCategories = "[\"BBINbbsport\",\"BBINlottery\",\"BBINvideo\",\"SabaSport\",\"SabaNumber\",\"SabaVirtualSport\",\"AgBr\",\"Mg2Real\",\"Pt2Real\",\"GpiReal\",\"SingSport\",\"AllBetReal\",\"IgLottery\",\"IgLotto\",\"Rg2Real\",\"Rg2Board\",\"Rg2Lottery\",\"Rg2Lottery2\",\"JdbBoard\",\"EvoReal\",\"BgReal\",\"GdReal\",\"Pt3Real\",\"SunbetReal\",\"CmdSport\",\"Sunbet2Real\",\"Mg3Real\",\"KgBoard\",\"LxLottery\",\"EBetReal\",\"ImEsport\",\"OgReal\",\"VrLottery\",\"City761Board\",\"FsBoard\",\"SaReal\",\"ImsSport\",\"IboSport\",\"NwBoard\",\"JsBoard\",\"ThBoard\"]",
-            //    Audit=5,
-            //    AuditType= "Discount",
-            //    Type=5,
+            //    //GameCategories = "[\"BBINbbsport\",\"BBINlottery\",\"BBINvideo\",\"SabaSport\",\"SabaNumber\",\"SabaVirtualSport\",\"AgBr\",\"Mg2Real\",\"Pt2Real\",\"GpiReal\",\"SingSport\",\"AllBetReal\",\"IgLottery\",\"IgLotto\",\"Rg2Real\",\"Rg2Board\",\"Rg2Lottery\",\"Rg2Lottery2\",\"JdbBoard\",\"EvoReal\",\"BgReal\",\"GdReal\",\"Pt3Real\",\"SunbetReal\",\"CmdSport\",\"Sunbet2Real\",\"Mg3Real\",\"KgBoard\",\"LxLottery\",\"EBetReal\",\"ImEsport\",\"OgReal\",\"VrLottery\",\"City761Board\",\"FsBoard\",\"SaReal\",\"ImsSport\",\"IboSport\",\"NwBoard\",\"JsBoard\",\"ThBoard\"]",
+            //    Audit = 5,
+            //    AuditType = "Discount",
+            //    Type = 5,
             //};
 
+            betData tanxi1 = new betData()
+            {
+                username = "tanxi",
+                lastCashTime = "2019/02/13 03:16:02",//开始时间
+                lastOprTime = "2019/02/22 12:59:59",//结束时间
+            };
+
+            betData tanxi2 = new betData()
+            {
+                username = "tanxi",
+                lastCashTime = "2019/02/13 03:16:02",//开始时间
+                lastOprTime = "2019/02/22 12:59:59",//结束时间
+                GameCategories = "[\"BBINbbsport\",\"BBINlottery\",\"BBINvideo\",\"SabaSport\",\"SabaNumber\",\"SabaVirtualSport\",\"AgBr\",\"Mg2Real\",\"Pt2Real\",\"GpiReal\",\"SingSport\",\"AllBetReal\",\"IgLottery\",\"IgLotto\",\"Rg2Real\",\"Rg2Board\",\"Rg2Lottery\",\"Rg2Lottery2\",\"JdbBoard\",\"EvoReal\",\"BgReal\",\"GdReal\",\"Pt3Real\",\"SunbetReal\",\"CmdSport\",\"Sunbet2Real\",\"Mg3Real\",\"KgBoard\",\"LxLottery\",\"EBetReal\",\"ImEsport\",\"OgReal\",\"VrLottery\",\"City761Board\",\"FsBoard\",\"SaReal\",\"ImsSport\",\"IboSport\",\"NwBoard\",\"JsBoard\",\"ThBoard\"]",
+            };
 
 
-            //b = platGPK.loginGPK();
+            b = platGPK.loginGPK();
+
+            //开启 会员不经区域验证登入
+            //platGPK.UpdateMemberLoginEveryWhere(new Gpk_UserDetail() { Id = "997348", SexString = "true" });
+
+            //platGPK.UpdateCrossRegionLogin(new Gpk_UserDetail() { Id = "997348", SexString = "flase" });
+
+            //platGPK.SaveSocket2DB();
+            //platGPK.BetRecordSearch(tanxi1);
+            //Thread.Sleep(2000);
+            //platGPK.BetRecordSearch(tanxi2);
+
+            //SoketObj_etRecordQuery so =  platGPK.getSoketDataFromDb();
+
+
             ////bb = platGPK.checkInGPK_transaction(bb);
             //b = platGPK.submitToGPK(bb, "测试活动 消除");
             ////bb = platGPK.checkInGPK(bb);
@@ -94,7 +123,7 @@ namespace TestDomo_console
             //重置密码
 
             //提现
-
+            //platGPK.ResetPassword(new Gpk_UserDetail() { Id = "997348" });
 
 
             //string[] aa = { "BBINbbsport", "BBINlottery", "BBINvideo", "SabaSport", "SabaNumber", "SabaVirtualSport", "AgBr", "Mg2Real", "Pt2Real", "GpiReal", "SingSport", "AllBetReal", "IgLottery", "IgLotto", "Rg2Real", "Rg2Board", "Rg2Lottery", "Rg2Lottery2", "JdbBoard", "EvoReal", "BgReal", "GdReal", "Pt3Real", "SunbetReal", "CmdSport", "Sunbet2Real", "Mg3Real", "KgBoard", "LxLottery", "EBetReal", "ImEsport", "OgReal", "VrLottery", "City761Board", "FsBoard", "SaReal", "ImsSport", "IboSport", "NwBoard", "JsBoard", "ThBoard" };
@@ -105,18 +134,68 @@ namespace TestDomo_console
 
             //platGPK.GetDetailInfo_withoutELE(new betData() { username = "YJ7654321", lastCashTime = "2019/02/03 20:00:00", lastOprTime = "2019/02/04" });
 
-            //获取ws 连接的数据
-            //string url = "ws://sts.tjuim.com/signalr/connect?transport=webSockets&clientProtocol=1.5&connectionToken=S4BsUiRNJIuEWfllUxJunQJwNCum%2BGFFPg78w8z4kp7kRylVvwud5DXjIPFcZf%2BSQh8QbOM7APENYKeUOQTeZINx6zU726XQ65yFP2P9APCiRkF4&connectionData=%5B%7B%22name%22%3A%22mainhub%22%7D%5D&tid=2";
-            //Uri uri = new Uri(url);
+
+
+
+
+
+
+
+            #region websoket 测试
             /*
-             
+
+            //获取ws 连接的数据
+            //string token = System.Web.HttpUtility.UrlEncode(platGPK.getNegotiate()[0]);
+            //string connectionId =  platGPK.getNegotiate()[1];
+
+            string token = System.Web.HttpUtility.UrlEncode(platGPK.connectionToken);
+            string baseUrl = "http://sts.tjuim.com/";
+            string url = "ws://" + baseUrl.Replace("http://", "").Replace("/", "") + "/signalr/connect?transport=webSockets&clientProtocol=1.5&connectionToken=" + token + "&connectionData=%5B%7B%22name%22%3A%22mainhub%22%7D%5D&tid=8";
+            //ws://sts.tjuim.com/signalr/connect?transport=webSockets&clientProtocol=1.5&connectionToken= &connectionData=%5B%7B%22name%22%3A%22mainhub%22%7D%5D&tid=10
+            //url = System.Web.HttpUtility.UrlEncode(url);
             WebSocketSharp.WebSocket ws = new WebSocketSharp.WebSocket(url);
+            ws.Origin = baseUrl;
+            foreach (System.Net.Cookie item in platGPK.cookie.GetCookies(new Uri(baseUrl)))
+            {
+                ws.SetCookie(new WebSocketSharp.Net.Cookie(item.Name, item.Value, item.Path, item.Domain));
+            }
+            
             ws.OnOpen += (sender, e) =>
             {
                 Console.WriteLine("Open");
             };
             ws.OnMessage += (sender, e) =>
-                    Console.WriteLine("Laputa says: " + e.Data);
+            {
+                //Console.WriteLine("Laputa says: " + e.Data);
+                appSittingSet.txtLog(e.Data);
+                if (e.Data.Contains("MainHub") && e.Data.Contains("BetRecordQueryCtrl_searchComplete"))
+                {
+                    JObject jo = JObject.Parse(e.Data);
+
+                    if (jo["M"][0]["M"].ToString() == "BetRecordQueryCtrl_searchComplete")
+                    {
+                        //SoketObj_etRecordQuery so = new SoketObj_etRecordQuery()
+                        //{
+                        //    Count = (int)jo["M"][0]["A"][0]["Count"],
+                        //    TotalBetAmount = (decimal)jo["M"][0]["A"][0]["TotalBetAmount"],
+                        //    TotalCommissionable = (decimal)jo["M"][0]["A"][0]["TotalCommissionable"],
+                        //    TotalPayoff = (decimal)jo["M"][0]["A"][0]["TotalPayoff"],
+                        //};
+                        //Console.WriteLine(jo["M"][0]["A"][0]["Count"]);
+                        ////Console.WriteLine(jo["M"][0]["A"][0]["TotalBetAmount"]);
+                        //Console.WriteLine(jo["M"][0]["A"][0]["TotalCommissionable"]);
+                        //Console.WriteLine(jo["M"][0]["A"][0]["TotalPayoff"]);
+
+                        //保存到数据库
+                        string sql = string.Format("INSERT INTO record (username,gamename,subminttime,betno,chargeMoney,pass,msg,aid) VALUES ( '{0}', '', datetime(CURRENT_TIMESTAMP,'localtime'), '{1}', {2}, 0, '{3}', 1002 );",tanxi1.username, jo["M"][0]["A"][0]["Count"], jo["M"][0]["A"][0]["TotalCommissionable"], jo["M"][0]["A"][0]["TotalPayoff"]);
+                        appSittingSet.execSql(sql);
+                        //停止
+                        //ws.Close();
+                    }
+                }
+
+            };
+
             ws.OnError += (sender, e) =>
             {
                 Console.WriteLine(e.Message);
@@ -127,83 +206,51 @@ namespace TestDomo_console
             };
 
             ws.Connect();
-            ws.Send("test");
 
-            //ws.Send("BALUS");
+            //for (int i = 0; i < 4; i++)
+            //{
+            //    object o = null;
+            //    if (1==i)
+            //    {
+            //        o = platGPK.BetRecordSearch(tanxi1);
+            //    }
+            //    else 
+            //    {
+            //        o = platGPK.BetRecordSearch(tanxi2);
+            //    }
+
+            //        if (o==null)
+            //        {
+            //            Console.WriteLine("发送查询失败 " +DateTime.Now );
+            //        }
+            //        else 
+            //        {
+            //            Console.WriteLine("发送查询成功,存在记录" + o + " " + DateTime.Now);
+            //        }
+            //    Thread.Sleep(5000);
+            //}
+
+            ws.Close();
 
             */
-
-
-            //try
+            #endregion
+            #region
+            //Console.WriteLine("请选择：1全部更新；2全部取回；3人工提出");
+            //string sw= Console.ReadLine();
+            //if (sw=="1")
             //{
-            //    ClientWebSocket cln = new ClientWebSocket();
-            //    cln.ConnectAsync(new Uri(url), new CancellationToken()).Wait();
-            //    byte[] result = new byte[1024];
-            //    result = Encoding.UTF8.GetBytes("my message");
-            //    cln.SendAsync(new ArraySegment<byte>(result), WebSocketMessageType.Text, true, new CancellationToken()).Wait();
-            //    cln.ReceiveAsync(new ArraySegment<byte>(result), CancellationToken.None);
-            //    Console.WriteLine(Encoding.Default.GetString(result));
 
             //}
-            //catch (Exception ex)
+            //else if (sw == "2")
             //{
-            //    string ss = ex.ToString();
-            //    Console.WriteLine(ss);
+
             //}
+            //else if (sw == "2")
+            //{
 
-
-
-            /*
-            ClientWebSocket cws = new ClientWebSocket();
-            cws.ConnectAsync(uri, CancellationToken.None).Wait();
-            byte[] bt = new byte[1];
-            byte[] result = new byte[1024];
-            cws.ReceiveAsync(new ArraySegment<byte>(result), CancellationToken.None);
-            cws.SendAsync(new ArraySegment<byte>(bt), WebSocketMessageType.Binary, true, CancellationToken.None); //发送数据
-            Console.WriteLine(Encoding.Default.GetString(result));
-
-    */
-
-
-
-            //WebBrowser wb = new WebBrowser();
-            //wb.Navigate(Environment.CurrentDirectory +"/1.html");
-
-            //IHTMLDocument2 document = (IHTMLDocument2)wb.Document.DomDocument;
-            //IHTMLTxtRange htmlElem = (IHTMLTxtRange)document.selection.createRange();
-            //string s = htmlElem.htmlText;
-
-
-
-
-
-
-            //Program p = new Program();
-            //p.WebSocket(url);
-
-            //Console.WriteLine(ExecuteScript());
-
-            //JavascriptUtility objJavascriptUtility = new JavascriptUtility();
-            //objJavascriptUtility.RunJavaScript("javascript:DoubleClickCopyToClipBoard('" + this.LabelResult.Text + "');");
-
-            //Console.WriteLine(RunByJSCodeProvider().ToString());
-
-            Console.WriteLine("请选择：1全部更新；2全部取回；3人工提出");
-            string sw= Console.ReadLine();
-            if (sw=="1")
-            {
-
-            }
-            else if (sw == "2")
-            {
-
-            }
-            else if (sw == "2")
-            {
-
-            }
-            Console.WriteLine(sw);
-
+            //}
+            //Console.WriteLine(sw);
+            #endregion
             Console.ReadLine();
         }
 
@@ -235,8 +282,8 @@ namespace TestDomo_console
                 Console.WriteLine(ex.Message);
             }
         }
-
-
+        #endregion
+        #region 不用代码
         private static string ExecuteScript()
         {
             string sCode = @"function test() { var wsServer = ""ws://sts.tjuim.com/signalr/connect?transport=webSockets&clientProtocol=1.5&connectionToken=S4BsUiRNJIuEWfllUxJunQJwNCum%2BGFFPg78w8z4kp7kRylVvwud5DXjIPFcZf%2BSQh8QbOM7APENYKeUOQTeZINx6zU726XQ65yFP2P9APCiRkF4&connectionData=%5B%7B%22name%22%3A%22mainhub%22%7D%5D&tid=2"";
@@ -299,6 +346,9 @@ namespace TestDomo_console
 
                 return obj;
             }
-            #endregion
-        }
+
+        #endregion
+
+
+    }
 }

@@ -1317,6 +1317,9 @@ namespace AutoWork
                     //更新等级
                     userinfo.MemberLevelSettingId = memberLevel[4];
                     updateLevel(memberLevel[5], userinfo);
+                    //开启 不可跨区登陆  2019年2月28日11点43分
+                    userinfo.SexString = "false";
+                    platGPK.UpdateCrossRegionLogin(userinfo);
                     //回填 操作结果
                     item.msg = "恭喜您，您申请的<" + actInfo[13] + ">已通过活动专员的检验 R";
                     item.passed = true;

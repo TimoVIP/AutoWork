@@ -23,7 +23,7 @@ namespace AutoAppSign
         static string MaxID = "0";
         static string[] connectionString;
         static decimal rate = 0;
-
+        static string[] FiliterGroups;
         public Form1()
         {
             InitializeComponent();
@@ -34,6 +34,7 @@ namespace AutoAppSign
             Act4Stander = appSittingSet.readAppsettings("Act4Stander").Split(new char[] { '|', '@' }, StringSplitOptions.RemoveEmptyEntries);
             connectionString = appSittingSet.readAppsettings("MySqlConnect").Split('|');
             rate=Convert.ToDecimal( appSittingSet.readAppsettings("Rate"));
+            FiliterGroups = appSittingSet.readAppsettings("FiliterGroups").Split('|');
 
             notify = new NotifyIcon();
             notify.BalloonTipTitle = "提示";
@@ -196,18 +197,23 @@ namespace AutoAppSign
             }
             if (aname[1]=="1")
             {
-                //5秒一次 读取提交列表
-                sched.ScheduleJob(JobBuilder.Create<MyJob2>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval).RepeatForever()).Build());
+                //10秒一次 app签到
+                sched.ScheduleJob(JobBuilder.Create<MyJob2>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval+5).RepeatForever()).Build());
             }
             if (aname[3]=="1")
             {
-                //5秒一次 读取提交列表
-                sched.ScheduleJob(JobBuilder.Create<MyJob3>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval -5).RepeatForever()).Build());
+                //5秒一次 快速充值
+                sched.ScheduleJob(JobBuilder.Create<MyJob3>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval+4).RepeatForever()).Build());
             }
+            //if (aname[5]=="1")
+            //{
+            //    //8秒一次 金沙组红包
+            //    sched.ScheduleJob(JobBuilder.Create<MyJob4>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval ).RepeatForever()).Build());
+            //}
             if (aname[5]=="1")
             {
-                //5秒一次 读取提交列表
-                sched.ScheduleJob(JobBuilder.Create<MyJob4>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval -5).RepeatForever()).Build());
+                //15秒一次 新葡京组红包
+                sched.ScheduleJob(JobBuilder.Create<MyJob5>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval).RepeatForever()).Build());
             }
             //开始运行
             sched.Start();
@@ -310,11 +316,23 @@ namespace AutoAppSign
                             //拒绝
                             continue;
                         }
-                        //if (!bb.passed)
-                        //{
-                        //    MySQLHelper.ExecuteSql("update cs_max_id set maxid=" + bb.bbid + ";");
-                        //    continue;
-                        //}
+                        //判断 层级是否在 列表之中
+                        foreach (var s in FiliterGroups)
+                        {
+                            if (bb.level == s)
+                            {
+                                bb.passed = false;
+                                bb.msg = "层级不符合";
+                                break;
+                            }
+                        }
+                        if (!bb.passed)
+                        {
+                            MySQLHelper.connectionString = connectionString[0];
+                            MySQLHelper.ExecuteSql("update cs_max_id set maxid=" + bb.bbid + ";");
+                            //拒绝
+                            continue;
+                        }
                         //计算 需要加钱 的数字 
                         for (int i = Act4Stander.Length - 1; i > 0; i -= 2)
                         {
@@ -375,19 +393,15 @@ namespace AutoAppSign
 
         /// <summary>
         /// 处理快速充值 从数据库获取数据，然后gpk后台提交充值
+        /// 切记不要改线程循环 gpk会提交多次 原因不明 数据库状态未更改过来 如果是网页版 可以用线程循环
         /// </summary>
         [DisallowConcurrentExecution]
         public class MyJob3 : IJob
         {
             public void Execute(IJobExecutionContext context)
             {
-                //查询上次处理的ID
-                //string sql = "select maxid from cs_max_id LIMIT 1;";
-                //MySQLHelper.connectionString = connectionString[0];
-                //MaxID =MySQLHelper.GetScalar(sql).ToString();
 
                 //查询数据库 获取待处理的数据
-                //string sql = string.Format("SELECT `order_no`,`username`,`order_amount` FROM `e_order` WHERE `status`=2 and a.id>{0} ORDER BY a.id DESC LIMIT 100;", MaxID);
                 string sql = "SELECT a.`id`, `order_no`,`username`,`order_amount`,title FROM `e_order` a left join e_bank b on a.bid=b.id WHERE a.`status`=2  ORDER BY id DESC LIMIT 100;";
                 MySQLHelper.connectionString = connectionString[1];
                 DataTable dt = MySQLHelper.Query(sql).Tables[0];
@@ -419,30 +433,27 @@ namespace AutoAppSign
                             continue;
                         }
 
-                        //加钱 送的部分 目前在5‰
+                        //加钱 充值的部分 
                         bool br = platGPK.submitToGPK(bb);
-                        //加钱 优惠部分
-                        bb.betMoney = bb.betMoney * rate;
-                        bb.Audit = bb.betMoney * rate;
-                        bb.AuditType = "Discount";
-                        bb.Type = 5;//优惠活动
-                        bb.Memo = "快速充值优惠";
-                        br = platGPK.submitToGPK(bb);
                         if (br)
                         {
                             //回填通过 更改数据库 状态为3
                             MySQLHelper.connectionString = connectionString[1];
                             int eff1= MySQLHelper.ExecuteSql("update `e_order` set `status`=3,uid='31',handletime =unix_timestamp(now()) where id= " + bb.bbid + ";");
+                            appSittingSet.txtLog(bb.aname + "编号" + bb.bbid + "用户" + bb.username + (eff1 > 0 ? "处理成功" : "钱已经充值，状态更新状态失败"));
+                            MyWrite(bb.aname + "编号" + bb.bbid + "用户" + bb.username + "处理" + (eff1 > 0 ? "处理成功" : "钱已经充值，状态更新状态失败"));
 
-                            if (eff1>0)
-                            {
-                                appSittingSet.txtLog( bb.aname+"编号" + bb.bbid + "用户" + bb.username + "处理成功");
-                                MyWrite(bb.aname +"编号" + bb.bbid + "用户" + bb.username + "处理成功");
-                            }
-                            else
-                            {
-                                appSittingSet.txtLog(bb.aname + bb.username + "编号" + bb.bbid + "更新状态失败");
-                            }
+                            //加钱 赠送部分目前在5‰
+                            bb.betMoney = bb.betMoney * rate;
+                            bb.Audit = bb.betMoney * rate;
+                            bb.AuditType = "Discount";
+                            bb.Type = 5;//优惠活动
+                            bb.Memo = "快速充值优惠";
+                            br = platGPK.submitToGPK(bb);
+                        }
+                        else
+                        {
+                            continue;
                         }
                     }
                 }
@@ -488,25 +499,25 @@ namespace AutoAppSign
                         list.Add(bb);
 
                         //加钱 
-                        bool br = platGPK.submitToGPK(bb);
-                        if (br)
-                        {
-                            //回填通过 更改数据库 状态为3
-                            MySQLHelper.connectionString = connectionString[2];
-                            int eff1 = MySQLHelper.ExecuteSql("update `e_gerenjilu` set `status`=2,addtime =unix_timestamp(now()) where id= " + bb.bbid + ";");
+                        //bool br = platGPK.submitToGPK(bb);
+                        //if (br)
+                        //{
+                        //    //回填通过 更改数据库 状态为3
+                        //    MySQLHelper.connectionString = connectionString[2];
+                        //    int eff1 = MySQLHelper.ExecuteSql("update `e_gerenjilu` set `status`=2,addtime =unix_timestamp(now()) where id= " + bb.bbid + ";");
 
-                            if (eff1 > 0)
-                            {
-                                appSittingSet.txtLog(bb.aname + "编号" + bb.bbid + "用户" + bb.username + "处理成功");
-                                MyWrite(bb.aname + "编号" + bb.bbid + "用户" + bb.username + "处理成功");
-                            }
-                            else
-                            {
-                                appSittingSet.txtLog(bb.aname + bb.username + "编号" + bb.bbid + "钱已经充值，状态更新状态失败");
-                            }
-                        }
+                        //    if (eff1 > 0)
+                        //    {
+                        //        appSittingSet.txtLog(bb.aname + "编号" + bb.bbid + "用户" + bb.username + "处理成功");
+                        //        MyWrite(bb.aname + "编号" + bb.bbid + "用户" + bb.username + "处理成功");
+                        //    }
+                        //    else
+                        //    {
+                        //        appSittingSet.txtLog(bb.aname + bb.username + "编号" + bb.bbid + "钱已经充值，状态更新状态失败");
+                        //    }
+                        //}
                     }
-                    /*
+
                     Parallel.ForEach(list, (item) =>
                     {
                         //提交充值 加钱 
@@ -515,28 +526,89 @@ namespace AutoAppSign
                         {
                             //回填通过 更改数据库 状态为3
                             MySQLHelper.connectionString = connectionString[2];
-                            int eff1 = MySQLHelper.ExecuteSql("update `e_gerenjilu` set `status`=2,addtime =unix_timestamp(now()) where id= " + bb.bbid + ";");
-
-                            if (eff1 > 0)
-                            {
-                                appSittingSet.txtLog(bb.aname + "编号" + bb.bbid + "用户" + bb.username + "处理成功");
-                                MyWrite(bb.aname + "编号" + bb.bbid + "用户" + bb.username + "处理成功");
-                            }
-                            else
-                            {
-                                appSittingSet.txtLog(bb.aname + bb.username + "编号" + bb.bbid + "钱已经充值，状态更新状态失败");
-                            }
+                            int eff1 = MySQLHelper.ExecuteSql("update `e_gerenjilu` set `status`=2,addtime =unix_timestamp(now()) where id= " + item.bbid + ";");
+                            appSittingSet.txtLog(bb.aname + "编号" + bb.bbid + "用户" + bb.username +  (eff1 > 0 ? "处理成功" : "钱已经充值，状态更新状态失败"));
+                            MyWrite(bb.aname + "编号" + bb.bbid + "用户" + bb.username + "处理" + (eff1 > 0 ? "处理成功" : "钱已经充值，状态更新状态失败"));
+                        }
+                        else
+                        {
+                            //充钱失败的情况 ？ 不做处理 下一次处理
+                            return;
                         }
                     });
-                    */
+
                 }
                 else
                 {
                     //没有记录
-                    MyWrite(aname[2] +"没有新的信息，等待下次执行 ");
+                    MyWrite(aname[4] +"没有新的信息，等待下次执行 ");
                 }
             }
         }
+
+        /// <summary>
+        /// 新普京组 红包活动 从数据库获取数据，然后gpk后台提交充值
+        /// </summary>
+        [DisallowConcurrentExecution]
+        public class MyJob5 : IJob
+        {
+            public void Execute(IJobExecutionContext context)
+            {
+
+                betData bb = null;
+                List<betData> list = new List<betData>();
+                //查询数据库 获取待处理的数据
+                string sql = "SELECT id,username,money FROM hr_records  WHERE is_send ='0'   ORDER BY id DESC LIMIT 50;";
+                MySQLHelper.connectionString = connectionString[2];
+                DataTable dt = MySQLHelper.Query(sql).Tables[0];
+                if (dt.Rows.Count>0)
+                {
+                    foreach (DataRow dr in dt.Rows)
+                    {
+                        bb = new betData()
+                        {
+                            bbid = dr["id"].ToString(),
+                            betMoney = Convert.ToDecimal(dr["money"]),
+                            username = dr["username"].ToString(),
+                            AuditType = "None",
+                            Audit = Convert.ToDecimal(dr["money"]),
+                            Type = 5,//优惠活动
+                            isReal = false,
+                            Memo = "红包活动",
+                            aname= aname[4],
+                        };
+                        list.Add(bb);
+                    }
+
+                    //线程循环
+                    Parallel.ForEach(list, (item) =>
+                    {
+                        //提交充值 加钱 
+                        bool fr = platGPK.submitToGPK(item);
+                        if (fr)
+                        {
+                            //回填通过 更改数据库 状态为3
+                            MySQLHelper.connectionString = connectionString[2];
+                            int eff1 = MySQLHelper.ExecuteSql("update `hr_records` set `is_send`='1',addtime =now() where id= " + item.bbid + ";");
+                            appSittingSet.txtLog(bb.aname + "编号" + bb.bbid + "用户" + bb.username + (eff1 > 0 ? "处理成功" : "钱已经充值，状态更新状态失败"));
+                            MyWrite(bb.aname + "编号" + bb.bbid + "用户" + bb.username + "处理" + (eff1 > 0 ? "处理成功" : "钱已经充值，状态更新状态失败"));
+                        }
+                        else
+                        {
+                            //充钱失败的情况 ？ 不做处理 下一次处理
+                            return;
+                        }
+                    });
+
+                }
+                else
+                {
+                    //没有记录
+                    MyWrite(aname[4] +"没有新的信息，等待下次执行 ");
+                }
+            }
+        }
+
         #endregion
 
         private void toolStripMenuItem1_Click(object sender, EventArgs e)

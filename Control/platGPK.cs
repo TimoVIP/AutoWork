@@ -2,6 +2,7 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Net;
 using System.Text;
@@ -15,7 +16,8 @@ namespace TimoControl
         private static string pwd { get; set; }
         private static string url_gpk_base { get; set; }
         private static string td_cookie { get; set; }
-        private static string GPKconnectionId { get; set; }
+        public static string connectionId { get; set; }
+        public static string connectionToken { get; set; }
         public static CookieContainer cookie { get; set; }
 
         /// <summary>
@@ -32,13 +34,10 @@ namespace TimoControl
                acc = s3.Split('|')[0];
                pwd = s3.Split('|')[1];
                url_gpk_base = s3.Split('|')[2];
-               //GPKconnectionId = appSittingSet.readAppsettings("GPKconnectionId");
-               //FiliterGroups = appSittingSet.readAppsettings("FiliterGroups").Split('|');
-               //td_cookie = appSittingSet.readAppsettings("td_cookie");
-
-               //不从appconfig 里面取得了 直接生产随机数
-               GPKconnectionId = Guid.NewGuid().ToString();
-               td_cookie = "18446744070" + new Random().Next(100000000, 999999999).ToString();
+               //不从appconfig 里面取得了 第一次直接生产随机数 后面从gpk获取真实数据
+               connectionId = Guid.NewGuid().ToString();
+                td_cookie = "18446744070" + new Random().Next(100000000, 999999999).ToString();
+                //td_cookie = ((DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000).ToString();//时间戳不对
             }
             catch (Exception ex)
             {
@@ -101,12 +100,15 @@ namespace TimoControl
 
                         if (ret_html == "{\"IsSuccess\":true,\"Methods\":null}")
                         {
-                            //获取 GPKconnectionId 从appconfig 获取固定的即可
-                            //List<string> list =  getNegotiate();
-                            //if (list.Count==2)
-                            //{
-                            //    GPKconnectionId = list[0];
-                            //}
+                            //获取 GPKconnectionId 从appconfig 获取固定的即可 
+                            //改为动态获取 
+                            List<string> list = getNegotiate();
+                            if (list.Count == 2)
+                            {
+                                connectionToken = list[0];
+                                connectionId = list[1];
+                            }
+                            //获取游戏列表 登陆获取一次 2019年3月1日 12点55分
 
                             return true;
                         }
@@ -125,7 +127,7 @@ namespace TimoControl
             
         }
         /// <summary>
-        /// 获取 ConnectionId 等信息 GET
+        /// 获取 ConnectionId ConnectionToken等信息 GET
         /// </summary>
         /// <returns></returns>
         public static List<string> getNegotiate()
@@ -157,11 +159,11 @@ namespace TimoControl
 
                 JObject jo = (JObject)JsonConvert.DeserializeObject(ret_html);
 
-                list.Add(jo["ConnectionId"] == null ? "" : jo["ConnectionId"].ToString());
                 list.Add(jo["ConnectionToken"] == null ? "" : jo["ConnectionToken"].ToString());
+                list.Add(jo["ConnectionId"] == null ? "" : jo["ConnectionId"].ToString());
 
                 //string value = jo[item][index].ToString(); 
-                appSittingSet.txtLog("获取到的GPKconnectionId:" + list[0]);
+                appSittingSet.txtLog(string.Format("获取到的connectionToken:{0} ; connectionId:{1};", list[0], list[1]));
                 return list;
 
             }
@@ -171,7 +173,7 @@ namespace TimoControl
                 {
                     list.Add("False");
                 }
-                appSittingSet.txtLog("获取GPKconnectionId失败，用app.config 里面的值" );
+                appSittingSet.txtLog("获取connectionId、connectionToken失败");
                 return list;
             }
 
@@ -186,7 +188,7 @@ namespace TimoControl
             try
             {
                 string postUrl = "Member/Search";
-                string postData = JsonConvert.SerializeObject(new { Account = bb.username, BbAccount = bb.wallet, connectionId = GPKconnectionId });
+                string postData = JsonConvert.SerializeObject(new { Account = bb.username, BbAccount = bb.wallet, connectionId = connectionId });
                 string postRefere = url_gpk_base;
                 JObject jo = GetResponse<JObject>(postUrl, postData, "POST", postRefere);
                 if ((bool)jo["IsSuccess"])
@@ -245,6 +247,13 @@ namespace TimoControl
             {
                 //获取deposit_token
                 request = WebRequest.Create(url_gpk_base + "Member/DepositToken") as HttpWebRequest;
+
+                request.ProtocolVersion = HttpVersion.Version11;
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | SecurityProtocolType.Tls11;
+                ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
+                //这个在Post的时候，一定要加上，如果服务器返回错误，他还会继续再去请求，不会使用之前的错误数据，做返回数据
+                request.ServicePoint.Expect100Continue = false;
+
                 request.Method = "POST";
                 request.UserAgent = "Mozilla/4.0";
                 request.KeepAlive = true;
@@ -272,7 +281,7 @@ namespace TimoControl
             }
             catch (WebException ex)
             {
-                string msg = string.Format("GPK获取充值Token失败：用户 {0} 注单{1} {2} ", bb.username, bb.betno, ex.Message);
+                string msg = string.Format("GPK获取充值Token失败：用户 {0} 活动{1} {2} ", bb.username, bb.aname, ex.Message);
                 appSittingSet.txtLog(msg);
                 flag = false;
             }
@@ -332,7 +341,7 @@ namespace TimoControl
             }
             catch (WebException ex)
             {
-                string msg = string.Format("GPK提交充值数据失败：用户 {0} 注单{1} {2} ", bb.username, bb.betno, ex.Message);
+                string msg = string.Format("GPK提交充值数据失败：用户 {0} 活动{1} {2} ", bb.username, bb.aname, ex.Message);
                 appSittingSet.txtLog(msg);
                 flag = false;
             }
@@ -506,11 +515,17 @@ namespace TimoControl
                 {
                     postData = postData + "\"WagersTimeBegin\":\"" + bb.lastCashTime + "\",";
                 }
+                if (bb.lastOprTime!=null)
+                {
+                    postData = postData + "\"WagersTimeEnd\":\"" + bb.lastOprTime + "\",";
+                    postData = postData + "\"PayoffTimeEnd\":\"" + bb.lastOprTime + "\",";
+                }
+
                 if (bb.GameCategories != null)
                 {
                     postData = postData + "\"GameCategories\":" + bb.GameCategories + ",";
                 }
-                postData = postData + "\"connectionId\":\"" + GPKconnectionId + "\"}";
+                postData = postData + "\"connectionId\":\"" + connectionId + "\"}";
 
                 string postRefere = "MemberDeposit";
                 JObject jo = GetResponse<JObject>(postUrl, postData, "POST", postRefere);
@@ -553,11 +568,11 @@ namespace TimoControl
                 string postdata = "";
                 if (pageIndex==1)
                 {
-                    postdata = "{\"BalanceBegin\":\"1\",\"State\":\"1\",\"connectionId\":\"" + GPKconnectionId + "\"}";
+                    postdata = "{\"BalanceBegin\":\"1\",\"State\":\"1\",\"connectionId\":\"" + connectionId + "\"}";
                 }
                 else
                 {
-                    postdata = "{\"BalanceBegin\":\"1\",\"State\":\"1\",\"pageIndex\":"+(pageIndex-1).ToString()+",\"connectionId\":\""+GPKconnectionId+"\"}";
+                    postdata = "{\"BalanceBegin\":\"1\",\"State\":\"1\",\"pageIndex\":"+(pageIndex-1).ToString()+",\"connectionId\":\""+connectionId+"\"}";
                 }
 
                 //发送数据
@@ -645,6 +660,7 @@ namespace TimoControl
 
         /// <summary>
         /// 查询用户 统计报表
+        /// GET 方法
         /// </summary>
         /// <param name="bb"></param>
         /// <returns></returns>
@@ -1143,7 +1159,7 @@ namespace TimoControl
         }
 
         /// <summary>
-        /// 重置密码
+        /// 批量取回
         /// </summary>
         /// <param name="user"></param>
         public static void AllWalletBackMember(Gpk_UserDetail user)
@@ -1171,5 +1187,234 @@ namespace TimoControl
                 appSittingSet.txtLog(msg);
             }
         }
+
+        /// <summary>
+        /// 会员不受区域验证限制
+        /// user.SexString设置为 false 打开 true 关闭
+        /// </summary>
+        /// <param name="user"></param>
+        public static void UpdateMemberLoginEveryWhere(Gpk_UserDetail user)
+        {
+            try
+            {
+                string postUrl = "Member/UpdateMemberLoginEveryWhere";
+                //string postData = "{\"memberId\":" + user.Id + ",\"allow\":" + user.SexString + "}";
+                string postData = JsonConvert.SerializeObject(new { memberId = user.Id, allow = user.SexString });
+                string postRefere = "MemberDeposit";
+                string jo = GetResponse<string>(postUrl, postData, "POST", postRefere);
+
+                if (jo== "true")
+                {
+                    appSittingSet.txtLog(string.Format("会员编号{0}不受区域验证限制操作成功", user.Id));
+                }
+                else
+                {
+                    appSittingSet.txtLog(string.Format("会员编号{0}不受区域验证限制操作失败", user.Id));
+                }
+
+            }
+            catch (Exception ex)
+            {
+                string msg = user.Account + "会员不受区域验证限制 " + " " + ex.Message;
+                appSittingSet.txtLog(msg);
+            }
+        }
+
+        /// <summary>
+        /// 可跨区登入 
+        ///user.SexString设置为 false 打开 true 关闭
+        /// </summary>
+        /// <param name="user"></param>
+        public static void UpdateCrossRegionLogin(Gpk_UserDetail user)
+        {
+            try
+            {
+                string postUrl = "Member/UpdateCrossRegionLogin";
+                string postData = JsonConvert.SerializeObject(new { memberId = user.Id, allow = user.SexString });
+                string postRefere = "MemberDeposit";
+                string jo = GetResponse<string>(postUrl, postData, "POST", postRefere);
+
+                if (jo== "true")
+                {
+                    appSittingSet.txtLog(string.Format("会员编号{0}可跨区登入操作成功", user.Id));
+                }
+                else
+                {
+                    appSittingSet.txtLog(string.Format("会员编号{0}可跨区登入操作失败", user.Id));
+                }
+
+            }
+            catch (Exception ex)
+            {
+                string msg = user.Account + "可跨区登入 " + " " + ex.Message;
+                appSittingSet.txtLog(msg);
+            }
+        }
+
+        /// <summary>
+        /// 保存websocket 数据到数据库 2019年2月27日
+        /// </summary>
+        public static void SaveSocket2DB()
+        {
+            string url = "ws://" + url_gpk_base.Replace("http://", "").Replace("/", "") + "/signalr/connect?transport=webSockets&clientProtocol=1.5&connectionToken=" + System.Web.HttpUtility.UrlEncode(connectionToken) + "&connectionData=%5B%7B%22name%22%3A%22mainhub%22%7D%5D&tid=8";
+            WebSocketSharp.WebSocket ws = new WebSocketSharp.WebSocket(url);
+            ws.Origin = url_gpk_base;
+            foreach (System.Net.Cookie item in platGPK.cookie.GetCookies(new Uri(url_gpk_base)))
+            {
+                ws.SetCookie(new WebSocketSharp.Net.Cookie(item.Name, item.Value, item.Path, item.Domain));
+            }
+            ws.OnOpen += (sender, e) =>
+            {
+                //Console.WriteLine("Open");
+                appSittingSet.txtLog("websocket is open");
+            };
+            ws.OnMessage += (sender, e) =>
+            {
+                //appSittingSet.txtLog(e.Data);
+                if (e.Data.Contains("MainHub") && e.Data.Contains("BetRecordQueryCtrl_searchComplete"))
+                {
+                    JObject jo = JObject.Parse(e.Data);
+
+                    if (jo["M"][0]["M"].ToString() == "BetRecordQueryCtrl_searchComplete")
+                    {
+                        //保存到数据库
+                        string sql = string.Format("INSERT INTO record (username,gamename,subminttime,betno,chargeMoney,pass,msg,aid) VALUES ( '__socket', '__socket', datetime(CURRENT_TIMESTAMP,'localtime'), '{0}', {1}, 0, '{2}', 1002 );", jo["M"][0]["A"][0]["Count"], jo["M"][0]["A"][0]["TotalCommissionable"], jo["M"][0]["A"][0]["TotalPayoff"]);
+                        bool b= appSittingSet.execSql(sql);
+                        appSittingSet.txtLog(b.ToString());
+                        //停止
+                        //ws.Close();
+                    }
+                }
+            };
+
+            ws.OnError += (sender, e) =>
+            {
+                //Console.WriteLine(e.Message);
+                appSittingSet.txtLog("websocket error " + e.Message);
+            };
+            ws.OnClose += (sender, e) =>
+            {
+                //Console.WriteLine(e.Code);
+                appSittingSet.txtLog("websocket is close");
+            };
+
+            ws.Connect();
+        }
+
+        /// <summary>
+        /// 从数据库获取websoket数据 2019年2月27日
+        /// </summary>
+        /// <returns></returns>
+        public static SoketObj_etRecordQuery getSoketDataFromDb(string  aid)
+        {
+            SoketObj_etRecordQuery so = null;
+            DataTable dt = appSittingSet.getDataTableBySql("select  * from record where aid= " + aid + " order by rowid desc limit 1;");
+            if (dt.Rows.Count>0)
+            {
+                 so = new SoketObj_etRecordQuery()
+                {
+                    Count = (int)dt.Rows[0]["betno"],
+                     TotalCommissionable = (decimal)dt.Rows[0]["TotalBetAmount"],
+                      TotalPayoff = (decimal)dt.Rows[0]["TotalPayoff"],
+                };
+            }
+            return so;
+        }
+
+        /// <summary>
+        /// 对比最后两笔是否一样
+        /// 是否需要增加一个范围
+        /// </summary>
+        /// <returns></returns>
+        public static object getSoketDataFromDbCompare()
+        {
+            
+            DataTable dt = appSittingSet.getDataTableBySql("select  * from record where aid = 1002 order by rowid desc limit 2;");
+            if (dt.Rows.Count==2)
+            {
+                if (dt.Rows[0]["betno"] == dt.Rows[1]["betno"] && dt.Rows[0]["TotalBetAmount"]== dt.Rows[1]["TotalBetAmount"] && dt.Rows[0]["TotalPayoff"]== dt.Rows[1]["TotalBetAmount"])
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public static SoketObj_etRecordQuery getInfoByWebsocket(betData bb)
+        {
+            SoketObj_etRecordQuery so = null;
+            //string token = platGPK.getNegotiate()[0];
+            //if (token=="False")
+            //{
+            //    return null;
+            //}
+
+            string url = "ws://" + url_gpk_base.Replace("http://", "").Replace("/","") + "/signalr/connect?transport=webSockets&clientProtocol=1.5&connectionToken=" + System.Web.HttpUtility.UrlEncode(connectionToken)+ "&connectionData=%5B%7B%22name%22%3A%22mainhub%22%7D%5D&tid=8";
+
+            WebSocketSharp.WebSocket ws = new WebSocketSharp.WebSocket(url);
+            ws.Origin = url_gpk_base; 
+            foreach (System.Net.Cookie item in platGPK.cookie.GetCookies(new Uri(url_gpk_base)))
+            {
+                ws.SetCookie(new WebSocketSharp.Net.Cookie(item.Name, item.Value, item.Path, item.Domain));
+            }
+            ws.OnOpen += (sender, e) =>
+            {
+                //Console.WriteLine("Open");
+            };
+            ws.OnMessage += (sender, e) =>
+            {
+                //appSittingSet.txtLog(e.Data);
+                if (e.Data.Contains("MainHub") && e.Data.Contains("BetRecordQueryCtrl_searchComplete"))
+                {
+                    JObject jo = JObject.Parse(e.Data);
+
+                    if (jo["M"][0]["M"].ToString() == "BetRecordQueryCtrl_searchComplete")
+                    {
+                        so = new SoketObj_etRecordQuery()
+                        {
+                            Count = (int)jo["M"][0]["A"][0]["Count"],
+                            TotalBetAmount = (decimal)jo["M"][0]["A"][0]["TotalBetAmount"],
+                            TotalCommissionable = (decimal)jo["M"][0]["A"][0]["TotalCommissionable"],
+                            TotalPayoff = (decimal)jo["M"][0]["A"][0]["TotalPayoff"],
+                        };
+                        //停止
+                        ws.Close();
+                    }
+                }
+
+            };
+
+            ws.OnError += (sender, e) =>
+            {
+                //Console.WriteLine(e.Message);
+            };
+            ws.OnClose += (sender, e) =>
+            {
+                //Console.WriteLine(e.Code);
+            };
+
+            ws.Connect();
+
+            object o = BetRecordSearch(bb);
+
+            //if (so!=null)
+            //{
+            //    return so;
+            //}
+            //else
+            //{
+
+            //}
+            return so;
+        }
+
+
     }
 }

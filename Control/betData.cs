@@ -8,26 +8,32 @@ namespace TimoControl
     /// </summary>
     public class betData
     {
-        public string username{ get; set; }
-        public string betno{ get; set; }
-        public string gamename{ get; set; }
-        public decimal betMoney{ get; set; }
-        public int betTimes{ get; set; }
-        public string links{ get; set; }
-        public bool passed{ get; set; }
-        public string msg{ get; set; }
-        public string bbid{ get; set; }
-        public string wallet{ get; set; }
-        public string betTime{ get; set; }
-        public string level{ get; set; }
-        public string lastOprTime{ get; set; }
-        public string Id{ get; set; }
-        public string memberId{ get; set; }
-        public decimal total_money{ get; set; }
-        public decimal subtotal{ get; set; }
-        public string lastCashTime{ get; set; }
+        public string username { get; set; }
+        public string betno { get; set; }
+        public string gamename { get; set; }
+        public decimal betMoney { get; set; }
+        public int betTimes { get; set; }
+        public string links { get; set; }
+        public bool passed { get; set; }
+        public string msg { get; set; }
+        public string bbid { get; set; }
+        public string wallet { get; set; }
+        public string betTime { get; set; }
+        public string level { get; set; }
+        /// <summary>
+        /// 最后存款时间，亦用作起始时间的结束
+        /// </summary>
+        public string lastOprTime { get; set; }
+        public string Id { get; set; }
+        public string memberId { get; set; }
+        public decimal total_money { get; set; }
+        public decimal subtotal { get; set; }
+        /// <summary>
+        /// 最后存款时间，亦用作起始时间的开始
+        /// </summary>
+        public string lastCashTime { get; set; }
         public string aid { get; set; }//所属活动编号
-        public string aname{ get; set; }//所属活动名称
+        public string aname { get; set; }//所属活动名称
         //public int betAudit { get; set; }//优惠稽核倍数
         //人工存入需要的信息
         //public bool needAudit { get; set; }//是否需要优惠稽核
@@ -61,18 +67,18 @@ namespace TimoControl
     /// </summary>
     public class Gpk_UserDetail
     {
-        public string   Account               { get; set; }
-        public string   Birthday               { get; set; }
-        public string   Email                   { get; set; }
-        public string   Id                         { get; set; }
-        public string   Mobile                 { get; set; }
+        public string Account { get; set; }
+        public string Birthday { get; set; }
+        public string Email { get; set; }
+        public string Id { get; set; }
+        public string Mobile { get; set; }
         public string SexString { get; set; }
-        public decimal   Wallet                  { get; set; }
-        public string   LatestLogin_IP     { get; set; }
-        public string   LatestLogin_time { get; set; }
-        public string   LatestLogin_Id     { get; set; }
-        public string   BankAccount       { get; set; }
-        public string   BankName           { get; set; }
+        public decimal Wallet { get; set; }
+        public string LatestLogin_IP { get; set; }
+        public string LatestLogin_time { get; set; }
+        public string LatestLogin_Id { get; set; }
+        public string BankAccount { get; set; }
+        public string BankName { get; set; }
         public string City { get; set; }
         public string Province { get; set; }
         public string BankMemo { get; set; }
@@ -82,6 +88,25 @@ namespace TimoControl
 
     }
 
+    public class SoketObj_etRecordQuery
+    {
+        /// <summary>
+        /// 笔数
+        /// </summary>
+        public int Count { get; set; }
+        /// <summary>
+        /// 有效投注
+        /// </summary>
+        public decimal TotalBetAmount { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public decimal TotalCommissionable { get; set; }
+        /// <summary>
+        /// 派彩
+        /// </summary>
+        public decimal TotalPayoff { get; set; }
+    }
     /// <summary>
     /// 5hao站 用户存款信息--银行
     /// </summary>

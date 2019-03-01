@@ -92,7 +92,7 @@ namespace TimoControl
 
             using (FileStream fs = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, 8, FileOptions.Asynchronous))
             {
-                Byte[] dataArray = System.Text.Encoding.Default.GetBytes(log + DateTime.Now.ToString("G") + System.Environment.NewLine);
+                Byte[] dataArray = System.Text.Encoding.Default.GetBytes(log +" "+ DateTime.Now.ToString("G") + System.Environment.NewLine);
                 bool flag = true;
                 long slen = dataArray.Length;
                 long len = 0;

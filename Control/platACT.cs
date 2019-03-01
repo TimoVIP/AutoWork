@@ -53,7 +53,7 @@ namespace TimoControl
                 HttpWebRequest request = WebRequest.Create(url_act_base + "Public/login.html") as HttpWebRequest;
 
                 request.ProtocolVersion = HttpVersion.Version11;
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | SecurityProtocolType.Tls11;
                 ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
 
                 request.Method = "POST";
@@ -99,7 +99,8 @@ namespace TimoControl
             string url_act_list = url_act_base + "Submissions/index/aid/" + aid + ".html?status=0&p=1&start=&end=&username=&psize=20"; //未处理0 分页20条
             HttpWebRequest request = WebRequest.Create(url_act_list) as HttpWebRequest;
             request.ProtocolVersion = HttpVersion.Version11;
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;//SecurityProtocolType.Tls1.2;
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | SecurityProtocolType.Tls11;
+            ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
             //request.Proxy = new WebProxy("url的ip地址", 80);
             request.Method = "GET";
             request.UserAgent = "Mozilla/4.0";

@@ -16,7 +16,7 @@ namespace AutoDismissed
             FileInfo[] fs = di.GetFiles("*.xlsx", SearchOption.AllDirectories);
             string type = "0";
 
-
+            Console.Title = "自动处理程序";
             if (fs.Length>0)
             {
                 //先登陆一遍
@@ -30,7 +30,10 @@ namespace AutoDismissed
                 {
                     Console.WriteLine("GPK登陆成功");                    
                 }
-
+                foreach (var file in fs)
+                {
+                    Console.WriteLine("发现待处理文件 " + file.FullName);
+                }
                 Console.WriteLine("请选择：1全部更新；2全部取回；3人工提出；4重置密码；0退出");
                type = Console.ReadLine();
                 if (type == "0")
@@ -42,7 +45,7 @@ namespace AutoDismissed
             else
             {
                 Console.WriteLine("没有找到对应的.xlsx文件，按任意键退出");
-                Console.Read();              
+                Console.ReadKey(true);
             }
             
             foreach (var file in fs)
@@ -51,7 +54,10 @@ namespace AutoDismissed
                 //读取EXCEL文件
                 dt = npoi.ExcelToDataTable(true, "", file.FullName);
                 //调用接口处理数据
-
+                if (dt==null)
+                {
+                    continue;
+                }
                 foreach (DataRow dr in dt.Rows)
                 {
                     Gpk_UserDetail user = platGPK.GetUserDetail(dr[0].ToString());

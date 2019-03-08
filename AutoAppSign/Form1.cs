@@ -347,7 +347,7 @@ namespace AutoAppSign
                         bb.Audit = bb.betMoney;
                         bb.Memo = bb.aname;
                         bb.Type = 5;
-                        bool br = platGPK.submitToGPK(bb);
+                        bool br = platGPK.MemberDepositSubmit(bb);
                         if (br)
                         {
                             //回填通过 更改数据库 状态为2 最大Id 为当前
@@ -434,7 +434,7 @@ namespace AutoAppSign
                         }
 
                         //加钱 充值的部分 
-                        bool br = platGPK.submitToGPK(bb);
+                        bool br = platGPK.MemberDepositSubmit(bb);
                         if (br)
                         {
                             //回填通过 更改数据库 状态为3
@@ -449,7 +449,7 @@ namespace AutoAppSign
                             bb.AuditType = "Discount";
                             bb.Type = 5;//优惠活动
                             bb.Memo = "快速充值优惠";
-                            br = platGPK.submitToGPK(bb);
+                            br = platGPK.MemberDepositSubmit(bb);
                         }
                         else
                         {
@@ -521,14 +521,14 @@ namespace AutoAppSign
                     Parallel.ForEach(list, (item) =>
                     {
                         //提交充值 加钱 
-                        bool fr = platGPK.submitToGPK(item);
+                        bool fr = platGPK.MemberDepositSubmit(item);
                         if (fr)
                         {
                             //回填通过 更改数据库 状态为3
                             MySQLHelper.connectionString = connectionString[2];
                             int eff1 = MySQLHelper.ExecuteSql("update `e_gerenjilu` set `status`=2,addtime =unix_timestamp(now()) where id= " + item.bbid + ";");
-                            appSittingSet.txtLog(bb.aname + "编号" + bb.bbid + "用户" + bb.username +  (eff1 > 0 ? "处理成功" : "钱已经充值，状态更新状态失败"));
-                            MyWrite(bb.aname + "编号" + bb.bbid + "用户" + bb.username + "处理" + (eff1 > 0 ? "处理成功" : "钱已经充值，状态更新状态失败"));
+                            appSittingSet.txtLog(item.aname + "编号" + item.bbid + "用户" + item.username +  (eff1 > 0 ? "处理成功" : "钱已经充值，状态更新状态失败"));
+                            MyWrite(item.aname + "编号" + item.bbid + "用户" + item.username + "处理" + (eff1 > 0 ? "处理成功" : "钱已经充值，状态更新状态失败"));
                         }
                         else
                         {
@@ -557,7 +557,7 @@ namespace AutoAppSign
 
                 betData bb = null;
                 List<betData> list = new List<betData>();
-                //查询数据库 获取待处理的数据
+                //查询数据库 获取待处理的数据 只有 0/1
                 string sql = "SELECT id,username,money FROM hr_records  WHERE is_send ='0'   ORDER BY id DESC LIMIT 50;";
                 MySQLHelper.connectionString = connectionString[2];
                 DataTable dt = MySQLHelper.Query(sql).Tables[0];
@@ -584,14 +584,14 @@ namespace AutoAppSign
                     Parallel.ForEach(list, (item) =>
                     {
                         //提交充值 加钱 
-                        bool fr = platGPK.submitToGPK(item);
+                        bool fr = platGPK.MemberDepositSubmit(item);
                         if (fr)
                         {
                             //回填通过 更改数据库 状态为3
                             MySQLHelper.connectionString = connectionString[2];
                             int eff1 = MySQLHelper.ExecuteSql("update `hr_records` set `is_send`='1',addtime =now() where id= " + item.bbid + ";");
-                            appSittingSet.txtLog(bb.aname + "编号" + bb.bbid + "用户" + bb.username + (eff1 > 0 ? "处理成功" : "钱已经充值，状态更新状态失败"));
-                            MyWrite(bb.aname + "编号" + bb.bbid + "用户" + bb.username + "处理" + (eff1 > 0 ? "处理成功" : "钱已经充值，状态更新状态失败"));
+                            appSittingSet.txtLog(item.aname + "编号" + item.bbid + "用户" + item.username + (eff1 > 0 ? "处理成功" : "钱已经充值，状态更新状态失败"));
+                            MyWrite(item.aname + "编号" + item.bbid + "用户" + item.username + "处理" + (eff1 > 0 ? "处理成功" : "钱已经充值，状态更新状态失败"));
                         }
                         else
                         {

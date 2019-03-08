@@ -6,6 +6,7 @@ using System.Data;
 using System.IO;
 using System.Net;
 using System.Text;
+using WebSocketSharp;
 
 namespace TimoControl
 {
@@ -19,7 +20,17 @@ namespace TimoControl
         public static string connectionId { get; set; }
         public static string connectionToken { get; set; }
         public static CookieContainer cookie { get; set; }
-
+        private static string connectionToken_old { get; set; }
+        /// <summary>
+        /// 获取所有游戏类别
+        /// 0 Video 视讯
+        /// 1  Sport 体育
+        /// 2 Lottery 彩票
+        /// 3 Slot 机率
+        /// 4 Board 棋牌
+        /// 5 Fish 捕鱼
+        /// </summary>
+        public static List<string> KindCategories { get; set; }
         /// <summary>
         /// 登录GPK
         /// </summary>
@@ -109,7 +120,7 @@ namespace TimoControl
                                 connectionId = list[1];
                             }
                             //获取游戏列表 登陆获取一次 2019年3月1日 12点55分
-
+                            KindCategories = GetKindCategories();
                             return true;
                         }
                         else
@@ -234,7 +245,7 @@ namespace TimoControl
         /// 提交充值到GPK 不适合 改用公共方法 报错 必须同一个请求对象
         /// </summary>
         /// <param name="bb"></param>
-        public static bool submitToGPK(betData bb)
+        public static bool MemberDepositSubmit(betData bb)
         {
             //查询
             HttpWebRequest request = null;
@@ -435,7 +446,7 @@ namespace TimoControl
                 bb.memberId = ja[0]["MemberId"].ToString();//记录MemberId
                 bb.lastCashTime = ja[0]["Time"].ToString();
                 //bb.lastCashTime = ja[0]["Time"].ToString().Replace("\\", "").Replace("/Date(", "").Replace(")", "").Replace("/","");//计算的时间不对 需要自己来算
-                //bb.lastCashTime = appSittingSet.unixTimeToTime(bb.lastCashTime);
+                //bb.lastCashTime = appSittingSet.unixTimeToTime(bb.lastCashTime);//上次存款时间
                 bb.passed = true;
                 bb.total_money = totalMoney;
                 bb.betTimes = total;
@@ -455,19 +466,33 @@ namespace TimoControl
         /// <param name="memberId">会员号</param>
         /// <param name="levelId">级别号</param>
         /// <returns></returns>
-        public static bool UpadateMemberLevel(string memberId, string levelId)
+        public static bool UpadateMemberLevel(string swich, Gpk_UserDetail userinfo)
         {
             try
             {
+                if (swich=="0")
+                {
+                    return true;
+                }
                 string postUrl = "Member/UpdateMemberLevel";
-                string postData = "{\"memberId\":" + memberId + ",\"levelId\":" + levelId + "}";
+                string postData = "{\"memberId\":" + userinfo.Id + ",\"levelId\":" + userinfo.MemberLevelSettingId + "}";
                 string postRefere = "MemberDeposit";
                 HttpStatusCode r = GetResponse<HttpStatusCode>(postUrl, postData, "POST", postRefere);
-                return r == HttpStatusCode.OK;
+                //if (r==HttpStatusCode.OK)
+                //    return true;
+                //else
+                //    appSittingSet.txtLog("用户" + userinfo.Account + "更新等级失败，需手动更新");
+                //    return false;
+
+                bool b = r == HttpStatusCode.OK ? true : false;
+                if (!b)
+                    appSittingSet.txtLog("用户" + userinfo.Account + "更新等级失败，需手动更新");
+                return b;
+
             }
             catch (Exception ex)
             {
-                appSittingSet.txtLog(memberId + " 更新等级失败 " + ex.Message);
+                appSittingSet.txtLog("用户"+userinfo.Account+"更新等级失败 " + ex.Message);
                 return false;
             }
         }
@@ -502,6 +527,7 @@ namespace TimoControl
 
         /// <summary>
         /// 查询是否有注单记录
+        /// true 没有记录 false 曾在记录
         /// </summary>
         /// <param name="bb"></param>
         /// <returns></returns>
@@ -543,10 +569,11 @@ namespace TimoControl
 
         /// <summary>
         /// 获取账户列表 到数据库 无用到
+        /// "2019/03/01"
         /// </summary>
         /// <param name="pageIndex"></param>
         /// <returns></returns>
-        public static List<Gpk_UserInfo> getInfor(int pageIndex)
+        public static List<Gpk_UserInfo> getUserListByPage(int pageIndex ,bool TDB,string JoinMemberBegin)
         {
                 StringBuilder sb = new StringBuilder();
             try
@@ -568,11 +595,13 @@ namespace TimoControl
                 string postdata = "";
                 if (pageIndex==1)
                 {
-                    postdata = "{\"BalanceBegin\":\"1\",\"State\":\"1\",\"connectionId\":\"" + connectionId + "\"}";
+                     postdata = JsonConvert.SerializeObject(new { JoinMemberBegin=JoinMemberBegin, connectionId= connectionId });
+                    //postdata = "{\"BalanceBegin\":\"1\",\"State\":\"1\",\"connectionId\":\"" + connectionId + "\"}";
                 }
                 else
                 {
-                    postdata = "{\"BalanceBegin\":\"1\",\"State\":\"1\",\"pageIndex\":"+(pageIndex-1).ToString()+",\"connectionId\":\""+connectionId+"\"}";
+                    postdata = JsonConvert.SerializeObject(new { JoinMemberBegin = JoinMemberBegin, connectionId = connectionId, pageIndex = pageIndex - 1 });
+                    //postdata = "{\"BalanceBegin\":\"1\",\"State\":\"1\",\"pageIndex\":"+(pageIndex-1).ToString()+",\"connectionId\":\""+connectionId+"\"}";
                 }
 
                 //发送数据
@@ -617,25 +646,29 @@ namespace TimoControl
                     info1.Account = item["Account"].ToString();
                     info1.Balance = decimal.Parse(item["Balance"].ToString());
                     info1.JoinTime = item["JoinTime"].ToString();
-                    info1.MemberLevelSettingName = item["MemberLevelSettingName"].ToString();
+                    info1.MemberLevelSettingName = item["MemberLevelSettingId"].ToString();
                     info1.Name = item["Name"].ToString();
 
                     list.Add(info1);
-                    //生成sql语句
-                    sb.Append("INSERT INTO infor ( Account, Balance, JoinTime, MemberLevelSettingName, Name ) VALUES( '"+ info1.Account +"', "+info1.Balance+", '"+info1.JoinTime+"', '"+info1.MemberLevelSettingName+"',  '"+info1.Name+"' ); ");
-
+                    if (TDB)
+                    {
+                        //生成sql语句
+                        sb.Append("INSERT INTO infor ( Account, Balance, JoinTime, MemberLevelSettingName, Name ) VALUES( '" + info1.Account + "', " + info1.Balance + ", '" + info1.JoinTime + "', '" + info1.MemberLevelSettingName + "',  '" + info1.Name + "' ); ");
+                    }
                 }
-                try
+                if (TDB)
                 {
-                    //插入到数据库
-                    bool f = appSittingSet.execSql(sb.ToString());
-                    appSittingSet.txtLog("已经操作页数" + pageIndex);
+                    try
+                    {
+                        //插入到数据库
+                        bool f = appSittingSet.execSql(sb.ToString());
+                        appSittingSet.txtLog("已经操作页数" + pageIndex);
+                    }
+                    catch (Exception ex)
+                    {
+                        appSittingSet.txtLog(ex.Message);
+                    }
                 }
-                catch (Exception ex)
-                {
-                    appSittingSet.txtLog(ex.Message);
-                }
-
                 return list;
             }
             catch (WebException ex)
@@ -921,10 +954,11 @@ namespace TimoControl
             catch (WebException ex)
             {
                 //如果 操作超时 重新登录一下GPK
-                string msg = "失败-" + postUrl + "-" + ex.Message;
-                if (ex.HResult == -2146233079 || ex.Message == "操作超时")
+                string msg = "失败-" + postUrl + "-" +ex.HResult +"-" +ex.Status +"-"+ ex.Message;
+                //if (ex.HResult == -2146233079 || ex.Message == "操作超时")
+                if ((ex.Status == WebExceptionStatus.ProtocolError || ex.Status == WebExceptionStatus.Timeout) && !postUrl.Contains("UpdateMemberLevel"))
                 {
-                    //需要重新登录
+                    //需要重新登录 更新级别导致错误几率很大 不需要重新登陆
                     loginGPK();
                     msg = msg + "-已经重新登录账号";
                 }
@@ -978,39 +1012,47 @@ namespace TimoControl
         }
 
         /// <summary>
-        /// 查询操作历史记录 注册和开户时间间隔
+        /// 查询操作历史记录 关键字查询 注册和开户时间间隔
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public static string GetUserLoadHistory(string id, string username, int timeSec_min, int timeSec_max)
+        public static string GetUserLoadHistory(Gpk_UserDetail userinfo,string keywords, int seed)
         {
             try
             {
-                string postUrl = "Member/LoadHistory";
-                string postData = "{\"id\":" + id + ",\"take\":100,\"skip\":0,\"query\":{}}";
-                string postRefere = "Member/" + username + "/History";
-                JArray ja = GetResponse<JArray>(postUrl, postData, "POST", postRefere);
-
                 DateTime dt1 = DateTime.Parse("2018/01/01 00:00:00");
                 DateTime dt2 = DateTime.Parse("2018/01/01 00:00:00");
 
-                foreach (var item in ja)
-                {
-                    if (item["Content"].ToString() == "申请加入会员")
-                    {
-                        dt1 = DateTime.Parse(item["Time"].ToString());
-                    }
-                    if (item["Content"].ToString() == "建立银行帐户资讯")
-                    {
-                        dt2 = DateTime.Parse(item["Time"].ToString());
-                    }
-                }
-                if (dt2 == DateTime.Parse("2018/01/01 00:00:00"))
+                List<HisToryInfor> list = MemberLoadHistory(userinfo, keywords);
+                if (list.Count<2)
                 {
                     return "未绑定银行卡 R";
                 }
+                else
+                {
+                    dt1 = DateTime.Parse(list[1].Time);
+                    dt2 = DateTime.Parse(list[0].Time);
+                }
 
-                bool b = (dt2 - dt1).Duration().TotalSeconds > new Random().Next(timeSec_min, timeSec_max);
+
+
+                //foreach (var item in list)
+                //{
+                //    if (item["Content"].ToString() == "申请加入会员")
+                //    {
+                //        dt1 = DateTime.Parse(item["Time"].ToString());
+                //    }
+                //    if (item["Content"].ToString() == "建立银行帐户资讯")
+                //    {
+                //        dt2 = DateTime.Parse(item["Time"].ToString());
+                //    }
+                //}
+                //if (dt2 == DateTime.Parse("2018/01/01 00:00:00"))
+                //{
+                //    return "未绑定银行卡 R";
+                //}
+
+                bool b = (dt2 - dt1).Duration().TotalSeconds > seed;
                 return b ? "OK" : "同IP其他会员已申请过！R";
 
             }
@@ -1020,6 +1062,45 @@ namespace TimoControl
                 string msg = "查询操作历史记录失败 " + ex.Message;
                 appSittingSet.txtLog(msg);
                 return "错误没有资料";
+            }
+        }
+
+        /// <summary>
+        /// 查询操作历史记录 关键字查询 
+        /// </summary>
+        /// <param name="userinfo"></param>
+        /// <param name="keywords"></param>
+        /// <returns></returns>
+        public static List<HisToryInfor> MemberLoadHistory(Gpk_UserDetail userinfo, string keywords)
+        {
+            try
+            {
+                string postUrl = "Member/LoadHistory";
+                //string postData = "{\"id\":" + id + ",\"take\":100,\"skip\":0,\"query\":{}}";
+                string postData = JsonConvert.SerializeObject(new { id = userinfo.Id, take = 100, skip = 0, query = "{}" });
+                if (keywords != "")
+                {
+                    postData = JsonConvert.SerializeObject(new { id = userinfo.Id, take = 100, skip = 0, query = new { Include = keywords } });
+                }
+
+                string postRefere = "Member/" + userinfo.Account + "/History";
+                JArray ja = GetResponse<JArray>(postUrl, postData, "POST", postRefere);
+                List<HisToryInfor> list = new List<HisToryInfor>();
+                HisToryInfor his = null;
+                foreach (var item in ja)
+                {
+                    his = new HisToryInfor() { Content = item["Content"].ToString(), Display = item["Display"].ToString(), IP = item["IP"].ToString(), Time = item["Time"].ToString() };
+                    list.Add(his);
+                }
+                return list;
+
+            }
+            catch (Exception ex)
+            {
+                //如果 操作超时 重新登录一下GPK
+                string msg = "查询操作历史记录失败 " + ex.Message;
+                appSittingSet.txtLog(msg);
+                return null;
             }
         }
 
@@ -1054,6 +1135,7 @@ namespace TimoControl
                     dd.Mobile = jo["Member"]["Mobile"].ToString();
                     dd.SexString = jo["Member"]["SexString"].ToString();
                     dd.Wallet = decimal.Parse(jo["Member"]["Wallet"].ToString());
+                    dd.MemberLevelSettingId = jo["Member"]["MemberLevelSettingId"].ToString();
                     if (jo["Member"]["LatestLogin"]!=null && jo["Member"]["LatestLogin"].ToString().Length>0)
                     {
                         dd.LatestLogin_IP = jo["Member"]["LatestLogin"]["IP"].ToString();
@@ -1236,11 +1318,11 @@ namespace TimoControl
 
                 if (jo== "true")
                 {
-                    appSittingSet.txtLog(string.Format("会员编号{0}可跨区登入操作成功", user.Id));
+                    appSittingSet.txtLog(string.Format("会员{0}可跨区登入操作成功", user.Account));
                 }
                 else
                 {
-                    appSittingSet.txtLog(string.Format("会员编号{0}可跨区登入操作失败", user.Id));
+                    appSittingSet.txtLog(string.Format("会员{0}可跨区登入操作失败", user.Account));
                 }
 
             }
@@ -1252,53 +1334,63 @@ namespace TimoControl
         }
 
         /// <summary>
-        /// 保存websocket 数据到数据库 2019年2月27日
+        /// 保存websocket 数据到数据库 
+        /// 异步方法 2019年2月27日
         /// </summary>
-        public static void SaveSocket2DB()
+        public static WebSocket SaveSocket2DB(WebSocket ws,string group)
         {
             string url = "ws://" + url_gpk_base.Replace("http://", "").Replace("/", "") + "/signalr/connect?transport=webSockets&clientProtocol=1.5&connectionToken=" + System.Web.HttpUtility.UrlEncode(connectionToken) + "&connectionData=%5B%7B%22name%22%3A%22mainhub%22%7D%5D&tid=8";
-            WebSocketSharp.WebSocket ws = new WebSocketSharp.WebSocket(url);
-            ws.Origin = url_gpk_base;
-            foreach (System.Net.Cookie item in platGPK.cookie.GetCookies(new Uri(url_gpk_base)))
+            if (ws == null || connectionToken != connectionToken_old)
             {
-                ws.SetCookie(new WebSocketSharp.Net.Cookie(item.Name, item.Value, item.Path, item.Domain));
-            }
-            ws.OnOpen += (sender, e) =>
-            {
-                //Console.WriteLine("Open");
-                appSittingSet.txtLog("websocket is open");
-            };
-            ws.OnMessage += (sender, e) =>
-            {
-                //appSittingSet.txtLog(e.Data);
-                if (e.Data.Contains("MainHub") && e.Data.Contains("BetRecordQueryCtrl_searchComplete"))
+                ws = new WebSocket(url);
+                ws.Origin = url_gpk_base;
+                foreach (System.Net.Cookie item in platGPK.cookie.GetCookies(new Uri(url_gpk_base)))
                 {
-                    JObject jo = JObject.Parse(e.Data);
-
-                    if (jo["M"][0]["M"].ToString() == "BetRecordQueryCtrl_searchComplete")
-                    {
-                        //保存到数据库
-                        string sql = string.Format("INSERT INTO record (username,gamename,subminttime,betno,chargeMoney,pass,msg,aid) VALUES ( '__socket', '__socket', datetime(CURRENT_TIMESTAMP,'localtime'), '{0}', {1}, 0, '{2}', 1002 );", jo["M"][0]["A"][0]["Count"], jo["M"][0]["A"][0]["TotalCommissionable"], jo["M"][0]["A"][0]["TotalPayoff"]);
-                        bool b= appSittingSet.execSql(sql);
-                        appSittingSet.txtLog(b.ToString());
-                        //停止
-                        //ws.Close();
-                    }
+                    ws.SetCookie(new WebSocketSharp.Net.Cookie(item.Name, item.Value, item.Path, item.Domain));
                 }
-            };
+                ws.OnOpen += (sender, e) =>
+                {
+                    //Console.WriteLine("Open");
+                    appSittingSet.txtLog("websocket is open");
+                    connectionToken_old = connectionToken;
+                };
+                ws.OnMessage += (sender, e) =>
+                {
+                    //appSittingSet.txtLog(e.Data);
+                    if (e.Data.Contains("MainHub") && e.Data.Contains("BetRecordQueryCtrl_searchComplete"))
+                    {
+                        JObject jo = JObject.Parse(e.Data);
 
-            ws.OnError += (sender, e) =>
-            {
-                //Console.WriteLine(e.Message);
-                appSittingSet.txtLog("websocket error " + e.Message);
-            };
-            ws.OnClose += (sender, e) =>
-            {
-                //Console.WriteLine(e.Code);
-                appSittingSet.txtLog("websocket is close");
-            };
+                        if (jo["M"][0]["M"].ToString() == "BetRecordQueryCtrl_searchComplete")
+                        {
+                            //保存到数据库
+                            string sql = string.Format("INSERT INTO record (username,gamename,subminttime,betno,chargeMoney,pass,msg,aid) VALUES ( '__socket', '{3}', datetime(CURRENT_TIMESTAMP,'localtime'), '{0}', {1}, 0, '{2}', 1002 );", jo["M"][0]["A"][0]["Count"], jo["M"][0]["A"][0]["TotalCommissionable"], jo["M"][0]["A"][0]["TotalPayoff"],group);
+                            bool b= appSittingSet.execSql(sql);
+                            //appSittingSet.txtLog(b.ToString());
+                            //停止
+                            //ws.Close();
+                        }
+                    }
+                };
 
-            ws.Connect();
+                ws.OnError += (sender, e) =>
+                {
+                    //Console.WriteLine(e.Message);
+                    appSittingSet.txtLog("websocket error " + e.Message);
+                };
+                ws.OnClose += (sender, e) =>
+                {
+                    //Console.WriteLine(e.Code);
+                    appSittingSet.txtLog("websocket is close");
+                };
+                if (!ws.IsAlive)
+                {
+                    ws.Connect();
+                }
+
+            }
+
+            return ws;
         }
 
         /// <summary>
@@ -1322,17 +1414,26 @@ namespace TimoControl
         }
 
         /// <summary>
-        /// 对比最后两笔是否一样
+        /// 对比最后两笔是否一样 第一次全部 第二次 几率和捕鱼
         /// 是否需要增加一个范围
         /// </summary>
         /// <returns></returns>
         public static object getSoketDataFromDbCompare()
         {
-            
+            int count1,count2 = 0;
+            decimal TotalBetAmount1, TotalBetAmount2 = 0;
+            decimal TotalPayoff1, TotalPayoff2 = 0;
             DataTable dt = appSittingSet.getDataTableBySql("select  * from record where aid = 1002 order by rowid desc limit 2;");
-            if (dt.Rows.Count==2)
+            //2条记录 并且为同一组
+            if (dt.Rows.Count == 2 && (dt.Rows[0]["gamename"] .ToString()== dt.Rows[1]["gamename"].ToString()))
             {
-                if (dt.Rows[0]["betno"] == dt.Rows[1]["betno"] && dt.Rows[0]["TotalBetAmount"]== dt.Rows[1]["TotalBetAmount"] && dt.Rows[0]["TotalPayoff"]== dt.Rows[1]["TotalBetAmount"])
+                count1 =Convert.ToInt16(dt.Rows[0]["betno"]);
+                count2 = Convert.ToInt16(dt.Rows[1]["betno"]);
+                TotalBetAmount1 = Convert.ToDecimal(dt.Rows[0]["chargeMoney"]);
+                TotalBetAmount2 = Convert.ToDecimal(dt.Rows[1]["chargeMoney"]);
+                TotalPayoff1 = Convert.ToDecimal(dt.Rows[0]["msg"]);
+                TotalPayoff2 = Convert.ToDecimal(dt.Rows[1]["msg"]);
+                if ((count1 > count2 - 10 && count1 < count2 + 10) && (TotalBetAmount1 > TotalBetAmount2 - 10 && TotalBetAmount1 < TotalBetAmount2 + 10) && (TotalPayoff1 > TotalPayoff2 - 10 && TotalPayoff1 < TotalPayoff2 + 10))
                 {
                     return true;
                 }
@@ -1347,74 +1448,78 @@ namespace TimoControl
             }
         }
 
-        public static SoketObj_etRecordQuery getInfoByWebsocket(betData bb)
+        /// <summary>
+        /// 获取所有游戏类别
+        /// 0 Video 视讯
+        /// 1  Sport 体育
+        /// 2 Lottery 彩票
+        /// 3 Slot 机率
+        /// 4 Board 棋牌
+        /// 5 Fish 捕鱼
+        /// </summary>
+        /// <returns></returns>
+        public static List<string> GetKindCategories()
         {
-            SoketObj_etRecordQuery so = null;
-            //string token = platGPK.getNegotiate()[0];
-            //if (token=="False")
-            //{
-            //    return null;
-            //}
-
-            string url = "ws://" + url_gpk_base.Replace("http://", "").Replace("/","") + "/signalr/connect?transport=webSockets&clientProtocol=1.5&connectionToken=" + System.Web.HttpUtility.UrlEncode(connectionToken)+ "&connectionData=%5B%7B%22name%22%3A%22mainhub%22%7D%5D&tid=8";
-
-            WebSocketSharp.WebSocket ws = new WebSocketSharp.WebSocket(url);
-            ws.Origin = url_gpk_base; 
-            foreach (System.Net.Cookie item in platGPK.cookie.GetCookies(new Uri(url_gpk_base)))
+            //StringBuilder GameCategories_all = new StringBuilder();
+            //StringBuilder GameCategories_ele = new StringBuilder();
+            List<string> list = new List<string>();
+            StringBuilder sb;
+            JArray ja = GetResponse<JArray>("BetRecord/GetKindCategories", "", "POST", "BetRecord");
+            if (ja == null)
             {
-                ws.SetCookie(new WebSocketSharp.Net.Cookie(item.Name, item.Value, item.Path, item.Domain));
+                return list;
             }
-            ws.OnOpen += (sender, e) =>
-            {
-                //Console.WriteLine("Open");
-            };
-            ws.OnMessage += (sender, e) =>
-            {
-                //appSittingSet.txtLog(e.Data);
-                if (e.Data.Contains("MainHub") && e.Data.Contains("BetRecordQueryCtrl_searchComplete"))
-                {
-                    JObject jo = JObject.Parse(e.Data);
 
-                    if (jo["M"][0]["M"].ToString() == "BetRecordQueryCtrl_searchComplete")
-                    {
-                        so = new SoketObj_etRecordQuery()
-                        {
-                            Count = (int)jo["M"][0]["A"][0]["Count"],
-                            TotalBetAmount = (decimal)jo["M"][0]["A"][0]["TotalBetAmount"],
-                            TotalCommissionable = (decimal)jo["M"][0]["A"][0]["TotalCommissionable"],
-                            TotalPayoff = (decimal)jo["M"][0]["A"][0]["TotalPayoff"],
-                        };
-                        //停止
-                        ws.Close();
-                    }
+
+
+            foreach (var c in ja)
+            {
+                JArray jab = JArray.FromObject(c["Categories"]);
+                sb = new StringBuilder();
+                foreach (var item in jab)
+                {
+                    //if (c["Value"].ToString() == "Slot" || c["Value"].ToString() == "Fish")
+                    //{
+                    //    GameCategories_ele.AppendFormat("\"{0}\",", item["PropertyName"].ToString());
+                    //}
+                    //GameCategories_all.AppendFormat("\"{0}\",", item["PropertyName"].ToString());
+                    //list_all.Add(item["PropertyName"].ToString());
+                    sb.AppendFormat("\"{0}\",", item["PropertyName"].ToString());
                 }
 
-            };
+                list.Add(sb.Remove(sb.Length - 1, 1).ToString());
+            }
+            //list.Add(GameCategories_all.Remove(GameCategories_all.Length - 1, 1).ToString());
+            //list.Add(GameCategories_ele.Remove(GameCategories_ele.Length - 1, 1).ToString());
 
-            ws.OnError += (sender, e) =>
-            {
-                //Console.WriteLine(e.Message);
-            };
-            ws.OnClose += (sender, e) =>
-            {
-                //Console.WriteLine(e.Code);
-            };
-
-            ws.Connect();
-
-            object o = BetRecordSearch(bb);
-
-            //if (so!=null)
-            //{
-            //    return so;
-            //}
-            //else
-            //{
-
-            //}
-            return so;
+            return list;
         }
 
+        /// <summary>
+        /// 修改会员状态 
+        ///user.SexString设置为 false 打开 true 关闭
+        /// </summary>
+        /// <param name="user"></param>
+        public static void MemberUpdateMemberState(Gpk_UserDetail userinfo)
+        {
+            try
+            {
+                string postUrl = "Member/UpdateMemberState";
+                string postData = JsonConvert.SerializeObject(new { id = userinfo.Id, state = userinfo.SexString });
+                string postRefere = "Member/"+userinfo.Account;
+                HttpStatusCode r = GetResponse<HttpStatusCode>(postUrl, postData, "POST", postRefere);
 
+                bool b = r == HttpStatusCode.OK ? true : false;
+                if (!b)
+                    appSittingSet.txtLog("用户" + userinfo.Account + "编号" + userinfo.Id + "更新状态失败，需手动更新");
+                //return b;
+
+            }
+            catch (Exception ex)
+            {
+                string msg = "用户" + userinfo.Account + "编号" + userinfo.Id + "更新状态失败 " +  ex.Message;
+                appSittingSet.txtLog(msg);
+            }
+        }
     }
 }

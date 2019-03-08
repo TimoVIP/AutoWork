@@ -81,6 +81,31 @@ namespace TestDomo_console
 
 
             b = platGPK.loginGPK();
+            //游戏列表
+            //List<string> list = platGPK.GetKindCategories();
+            //tanxi1.GameCategories = "[" + platGPK.KindCategories[0] +","+ platGPK.KindCategories[1] + "," + platGPK.KindCategories[2] + "," + platGPK.KindCategories[3] + "," + platGPK.KindCategories[4] + "," + platGPK.KindCategories[5] + "]";
+
+            //tanxi2.GameCategories = "[" + platGPK.KindCategories[3] + "," + platGPK.KindCategories[5] + "]";
+
+
+            platGPK.MemberUpdateMemberState(new Gpk_UserDetail() { Account = "siyue5266521", Id = "2164836", SexString = "0" });
+            /*
+            //启动sokect
+            platGPK.SaveSocket2DB();
+
+            //2次投注记录 有效投注 是否相等 
+            //发送一次 全部的查询
+            tanxi1.GameCategories = "[" + platGPK.KindCategories[1] + "]";
+            object o = platGPK.BetRecordSearch(tanxi1);
+            //发送一次 电子的查询
+            tanxi1.GameCategories = "[" + platGPK.KindCategories[0] + "]";
+            o = platGPK.BetRecordSearch(tanxi1);
+            Thread.Sleep(500);
+            //查询一次数据库 看是否符合
+            o = platGPK.getSoketDataFromDbCompare();
+
+            */
+
 
             //开启 会员不经区域验证登入
             //platGPK.UpdateMemberLoginEveryWhere(new Gpk_UserDetail() { Id = "997348", SexString = "true" });

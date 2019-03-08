@@ -21,7 +21,7 @@ namespace TimoControl
         public string betTime { get; set; }
         public string level { get; set; }
         /// <summary>
-        /// 最后存款时间，亦用作起始时间的结束
+        /// 最后操作时间，亦用作起始时间的结束
         /// </summary>
         public string lastOprTime { get; set; }
         public string Id { get; set; }
@@ -32,21 +32,45 @@ namespace TimoControl
         /// 最后存款时间，亦用作起始时间的开始
         /// </summary>
         public string lastCashTime { get; set; }
-        public string aid { get; set; }//所属活动编号
-        public string aname { get; set; }//所属活动名称
+        /// <summary>
+        /// 所属活动编号
+        /// </summary>
+        public string aid { get; set; }
+        /// <summary>
+        /// 所属活动名称
+        /// </summary>
+        public string aname { get; set; }
         //public int betAudit { get; set; }//优惠稽核倍数
         //人工存入需要的信息
         //public bool needAudit { get; set; }//是否需要优惠稽核
-        public string GameCategories { get; set; }//游戏种类
+        /// <summary>
+        /// 游戏种类
+        /// </summary>
+        public string GameCategories { get; set; }
         /// <summary>
         /// 稽核方式
         /// </summary>
         public string AuditType { get; set; }
-        public decimal Audit { get; set; }//稽核金额
-        public int Type { get; set; }//稽核类型
-        public bool isReal { get; set; }//实际存提
-        public string PortalMemo { get; set; }//前台备注
-        public string Memo { get; set; }//备注
+        /// <summary>
+        /// 稽核金额
+        /// </summary>
+        public decimal Audit { get; set; }
+        /// <summary>
+        /// 稽核类型
+        /// </summary>
+        public int Type { get; set; }
+        /// <summary>
+        /// 实际存提
+        /// </summary>
+        public bool isReal { get; set; }
+        /// <summary>
+        /// 前台备注
+        /// </summary>
+        public string PortalMemo { get; set; }
+        /// <summary>
+        /// 备注
+        /// </summary>
+        public string Memo { get; set; }
 
     }
 
@@ -86,6 +110,23 @@ namespace TimoControl
         public string RegisterUrl { get; set; }
         public string MemberLevelSettingId { get; set; }
 
+    }
+
+    /// <summary>
+    /// 历史记录对象
+    /// </summary>
+    public class HisToryInfor
+    {
+        /// <summary>
+        /// 内容
+        /// </summary>
+        public string Content { get; set; }
+        /// <summary>
+        /// 操作人
+        /// </summary>
+        public string Display { get; set; }
+        public string IP { get; set; }
+        public string Time { get; set; }
     }
 
     public class SoketObj_etRecordQuery

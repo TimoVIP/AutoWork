@@ -21,8 +21,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestDomo_console", "TestDom
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestDemo", "TestDemo\TestDemo.csproj", "{142D4930-A11B-4390-A045-44E03D14A9EB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApplication1", "WebApplication1\WebApplication1.csproj", "{C3CCC3D5-545E-4BBC-87B7-AB3DC88EFDB1}"
-EndProject
 Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "GetData", "..\..\WebSites\GetData\", "{468CD36B-8CDB-434E-897C-1EACEF5AA8A8}"
 	ProjectSection(WebsiteProperties) = preProject
 		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"
@@ -89,10 +87,6 @@ Global
 		{142D4930-A11B-4390-A045-44E03D14A9EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{142D4930-A11B-4390-A045-44E03D14A9EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{142D4930-A11B-4390-A045-44E03D14A9EB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C3CCC3D5-545E-4BBC-87B7-AB3DC88EFDB1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C3CCC3D5-545E-4BBC-87B7-AB3DC88EFDB1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C3CCC3D5-545E-4BBC-87B7-AB3DC88EFDB1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C3CCC3D5-545E-4BBC-87B7-AB3DC88EFDB1}.Release|Any CPU.Build.0 = Release|Any CPU
 		{468CD36B-8CDB-434E-897C-1EACEF5AA8A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{468CD36B-8CDB-434E-897C-1EACEF5AA8A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{468CD36B-8CDB-434E-897C-1EACEF5AA8A8}.Release|Any CPU.ActiveCfg = Debug|Any CPU

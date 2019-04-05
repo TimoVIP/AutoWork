@@ -18,7 +18,7 @@ namespace TimoControl
         private static CookieContainer cookie { get; set; }
 
         /// <summary>
-        /// 登录优惠大厅并跳转
+        /// 登录优惠大厅
         /// </summary>
         /// <returns></returns>
         public static bool login()
@@ -33,7 +33,7 @@ namespace TimoControl
             }
             catch (Exception ex)
             {
-                appSittingSet.txtLog("活动站获取配置文件失败" + ex.Message);
+                appSittingSet.Log("活动站获取配置文件失败" + ex.Message);
                 return false;
             }
 
@@ -75,13 +75,13 @@ namespace TimoControl
             }
             catch (WebException ex)
             {
-                appSittingSet.txtLog(string.Format("活动站登录失败：{0}   ", ex.Message));
+                appSittingSet.Log(string.Format("活动站登录失败：{0}   ", ex.Message));
                 return false;
             }
         }
 
         /// <summary>
-        /// 获取注单数据列表
+        /// 获取数据列表
         /// </summary>
         /// <returns></returns>
         public static List<betData> getActData()
@@ -140,10 +140,11 @@ namespace TimoControl
 
                     //*[@id="rightSide"]/div[3]/div[2]/table/tbody/tr[1]/td[1]
                     //*[@id="rightSide"]/div[3]/div[2]/table/tbody/tr[1]/td[7]/input
+                    //*[@id="rightSide"]/div[3]/div[2]/table/tbody/tr[1]/td[2]
                     string bbid = node1.SelectSingleNode("//tbody//tr[" + i + "]/td[7]/input").Attributes["sid"].Value;
                     string username = node1.SelectSingleNode("//tbody//tr[" + i + "]/td[1]").InnerText;
-
-                    list.Add(new betData() { username = username, bbid = bbid });
+                    string mobile = node1.SelectSingleNode("//tbody//tr[" + i + "]/td[2]").InnerText;
+                    list.Add(new betData() { username = username, bbid = bbid, PortalMemo=mobile });
                 }
 
                 return list;
@@ -160,7 +161,7 @@ namespace TimoControl
                     login();
                     return null;
                 }
-                appSittingSet.txtLog("获取活动列表失败：" + ex.Message);
+                appSittingSet.Log("获取活动列表失败：" + ex.Message);
                 return null;
             }
 
@@ -212,7 +213,7 @@ namespace TimoControl
             catch (WebException ex)
             {
                 string msg = string.Format("回填活动处理结果(异常)：用户 {0} 注单{1} {2} ", bb.username, bb.betno, ex.Message);
-                appSittingSet.txtLog(msg);
+                appSittingSet.Log(msg);
                 return false;
             }
         }

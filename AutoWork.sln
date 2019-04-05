@@ -11,39 +11,31 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimoControl", "Control\Timo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoWork_Plat2", "AutoWork2\AutoWork_Plat2.csproj", "{3CF8DFE2-BEDA-46AF-9019-E8AD7E8C4E6B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoDepositRedEnvelope", "AutoDepositRedEnvelope\AutoDepositRedEnvelope.csproj", "{AF13627C-2F27-4A65-91CF-40BB7C99D855}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoDeposit", "AutoDepositRedEnvelope\AutoDeposit.csproj", "{AF13627C-2F27-4A65-91CF-40BB7C99D855}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoWork_Plat_5hao", "AutoWork_Plat_5hao\AutoWork_Plat_5hao.csproj", "{4D02A5D6-7971-4BC5-B77F-B399D5A716E0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoAppSign", "AutoAppSign\AutoAppSign.csproj", "{8C3BF7AB-1912-4C84-B1DE-FB12830B7788}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestDomo_console", "TestDomo_console\TestDomo_console.csproj", "{408B9BAD-5A15-48CB-B7B4-256AD0CF53CC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "测试控制台程序", "TestDomo_console\测试控制台程序.csproj", "{408B9BAD-5A15-48CB-B7B4-256AD0CF53CC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestDemo", "TestDemo\TestDemo.csproj", "{142D4930-A11B-4390-A045-44E03D14A9EB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "测试窗口程序", "TestDemo\测试窗口程序.csproj", "{142D4930-A11B-4390-A045-44E03D14A9EB}"
 EndProject
-Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "GetData", "..\..\WebSites\GetData\", "{468CD36B-8CDB-434E-897C-1EACEF5AA8A8}"
-	ProjectSection(WebsiteProperties) = preProject
-		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"
-		Debug.AspNetCompiler.VirtualPath = "/localhost_51924"
-		Debug.AspNetCompiler.PhysicalPath = "..\..\WebSites\GetData\"
-		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_51924\"
-		Debug.AspNetCompiler.Updateable = "true"
-		Debug.AspNetCompiler.ForceOverwrite = "true"
-		Debug.AspNetCompiler.FixedNames = "false"
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.VirtualPath = "/localhost_51924"
-		Release.AspNetCompiler.PhysicalPath = "..\..\WebSites\GetData\"
-		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_51924\"
-		Release.AspNetCompiler.Updateable = "true"
-		Release.AspNetCompiler.ForceOverwrite = "true"
-		Release.AspNetCompiler.FixedNames = "false"
-		Release.AspNetCompiler.Debug = "False"
-		VWDPort = "51924"
-		SlnRelativePath = "..\..\WebSites\GetData\"
-		DefaultWebSiteLanguage = "Visual C#"
-	EndProjectSection
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "批量自动处理数据", "AutoDismissed\批量自动处理数据.csproj", "{93D40DBD-D315-4AA6-B00C-6C336A8C80E2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoDismissed", "AutoDismissed\AutoDismissed.csproj", "{93D40DBD-D315-4AA6-B00C-6C336A8C80E2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShowData", "ShowData\ShowData.csproj", "{F9450856-BA61-420E-B30D-C7AD1E0C67AB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoWork_2nd", "AutoWork_2nd\AutoWork_2nd.csproj", "{20C6AC8B-5844-415B-BE2C-0D174133D3B2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "平台1", "平台1", "{72B9DD82-1690-4092-B6BA-2A2090D1701F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "平台2", "平台2", "{95B22103-0E53-4877-9E6B-8D2FE7D5C5C2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "通用项目", "通用项目", "{A44408FB-2030-4726-8CB2-43AD36A5D211}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "批量处理域名导入", "DomainBat\批量处理域名导入.csproj", "{1C1302AF-1E42-4323-9B7D-B7E4000FAAF3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoRegTest", "AutoRegTest\AutoRegTest.csproj", "{2300351E-7DD7-4BB7-BDCA-8D7BEB6621CD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -87,16 +79,32 @@ Global
 		{142D4930-A11B-4390-A045-44E03D14A9EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{142D4930-A11B-4390-A045-44E03D14A9EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{142D4930-A11B-4390-A045-44E03D14A9EB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{468CD36B-8CDB-434E-897C-1EACEF5AA8A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{468CD36B-8CDB-434E-897C-1EACEF5AA8A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{468CD36B-8CDB-434E-897C-1EACEF5AA8A8}.Release|Any CPU.ActiveCfg = Debug|Any CPU
-		{468CD36B-8CDB-434E-897C-1EACEF5AA8A8}.Release|Any CPU.Build.0 = Debug|Any CPU
 		{93D40DBD-D315-4AA6-B00C-6C336A8C80E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{93D40DBD-D315-4AA6-B00C-6C336A8C80E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{93D40DBD-D315-4AA6-B00C-6C336A8C80E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{93D40DBD-D315-4AA6-B00C-6C336A8C80E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F9450856-BA61-420E-B30D-C7AD1E0C67AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9450856-BA61-420E-B30D-C7AD1E0C67AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9450856-BA61-420E-B30D-C7AD1E0C67AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9450856-BA61-420E-B30D-C7AD1E0C67AB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{20C6AC8B-5844-415B-BE2C-0D174133D3B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{20C6AC8B-5844-415B-BE2C-0D174133D3B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20C6AC8B-5844-415B-BE2C-0D174133D3B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{20C6AC8B-5844-415B-BE2C-0D174133D3B2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1C1302AF-1E42-4323-9B7D-B7E4000FAAF3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C1302AF-1E42-4323-9B7D-B7E4000FAAF3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C1302AF-1E42-4323-9B7D-B7E4000FAAF3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C1302AF-1E42-4323-9B7D-B7E4000FAAF3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2300351E-7DD7-4BB7-BDCA-8D7BEB6621CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2300351E-7DD7-4BB7-BDCA-8D7BEB6621CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2300351E-7DD7-4BB7-BDCA-8D7BEB6621CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2300351E-7DD7-4BB7-BDCA-8D7BEB6621CD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{1C1302AF-1E42-4323-9B7D-B7E4000FAAF3} = {72B9DD82-1690-4092-B6BA-2A2090D1701F}
+		{2300351E-7DD7-4BB7-BDCA-8D7BEB6621CD} = {A44408FB-2030-4726-8CB2-43AD36A5D211}
 	EndGlobalSection
 EndGlobal

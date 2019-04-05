@@ -117,7 +117,6 @@ namespace AutoWork
         /// </summary>
         public static void start()
         {
-
             //创建一个作业调度池
             ISchedulerFactory schedf = new StdSchedulerFactory();
             sched = schedf.GetScheduler();
@@ -127,8 +126,11 @@ namespace AutoWork
             {
                 sched.ScheduleJob(JobBuilder.Create<MyJob0>().Build(), TriggerBuilder.Create().WithCronSchedule("1 0 8 * * ? ").Build());
             }
-            //0 6 12 18 小时执行 登陆
-            sched.ScheduleJob(JobBuilder.Create<MyJob1>().Build(), TriggerBuilder.Create().WithCronSchedule("10 1 0,6,12,18 * * ? ").Build());
+            if (AutoCls[2] == "1")
+            {
+                //0 6 12 18 小时执行 登陆
+                sched.ScheduleJob(JobBuilder.Create<MyJob1>().Build(), TriggerBuilder.Create().WithCronSchedule("10 1 0,6,12,18 * * ? ").Build());
+            }
             //5秒一次 消除奖
             if (actInfo[2] == "1")
             {
@@ -173,9 +175,9 @@ namespace AutoWork
                 int diff = int.Parse(AutoCls[0]);
                 string sql = "delete from record where subminttime < '" + DateTime.Now.AddDays(-diff).Date.ToString("yyyy-MM-dd") + "'";
                 appSittingSet.execSql(sql);
-                appSittingSet.txtLog("清除一周前的数据");
+                appSittingSet.Log("清除一周前的数据");
                 appSittingSet.clsLogFiles(diff);
-                appSittingSet.txtLog("清除一周前的日志");
+                appSittingSet.Log("清除一周前的日志");
             }
         }
         /// <summary>
@@ -189,19 +191,19 @@ namespace AutoWork
 
                 //1.登录优惠大厅 一次 保存cookie 
                 string msg = string.Format("活动站登录{0} ", platACT.loginActivity() ? "成功" : "失败");
-                appSittingSet.txtLog(msg);
+                appSittingSet.Log(msg);
                 MyWrite(msg);
 
                 msg = string.Format("BB站登录{0} ", platBB.loginBB() ? "成功" : "失败");
-                appSittingSet.txtLog(msg);
+                appSittingSet.Log(msg);
                 MyWrite(msg);
 
                 msg = string.Format("GPK站登录{0} ", platGPK.loginGPK() ? "成功" : "失败");
-                appSittingSet.txtLog(msg);
+                appSittingSet.Log(msg);
                 MyWrite(msg);
                 //登陆活动站2 28
                 msg = string.Format("活动站2登录{0} ", platACT2.login() ? "成功" : "失败");
-                appSittingSet.txtLog(msg);
+                appSittingSet.Log(msg);
                 MyWrite(msg);
             }
         }
@@ -216,6 +218,7 @@ namespace AutoWork
             {
                 //获取注单号码  yh
                 List<betData> list = platACT.getActData(actInfo[0]);
+
                 if (list == null)
                 {
                     MyWrite(actInfo[1] + " 没有获取到注单，等待下次执行 ");
@@ -247,19 +250,21 @@ namespace AutoWork
                         {
                             string msg = string.Format("用户{0}处理完毕，注单号{1}，处理为 {2}，回复消息 {3}", item.username, item.betno, item.passed ? "通过" : "不通过", item.msg);
                             MyWrite(msg);
-                            appSittingSet.txtLog(msg);
+                            appSittingSet.Log(msg);
                         }
-                        return;
+                        continue;
                     }
 
                     //2.获取注单详情信息 bb
                     betData bb = platBB.getBet_Details(item);
+
                     //3.是否匹配要求
                     if (bb == null)
                     {
-                        return;
+                        continue;
                     }
-
+                    bb.aid = actInfo[0];
+                    bb.aname =  actInfo[1];
                     //查询不到信息 注单号不存在 情况
                     if (!bb.passed)
                     {
@@ -269,9 +274,9 @@ namespace AutoWork
                         {
                             string msg = string.Format("用户{0}处理完毕，注单号{1}，处理为 {2}，回复消息 {3}", bb.username, bb.betno, bb.passed ? "通过" : "不通过", bb.msg);
                             MyWrite(msg);
-                            appSittingSet.txtLog(msg);
+                            appSittingSet.Log(msg);
                         }
-                        return;
+                        continue;
                     }
 
                     //判断 美东时间
@@ -286,10 +291,9 @@ namespace AutoWork
                         {
                             string msg = string.Format("用户{0}处理完毕，注单号{1}，处理为 {2}，回复消息 {3}", bb.username, bb.betno, bb.passed ? "通过" : "不通过", bb.msg);
                             MyWrite(msg);
-                            appSittingSet.txtLog(msg);
-                            //appSittingSet.recorderDb(bb,actInfo[0]);
+                            appSittingSet.Log(msg);
                         }
-                        return;
+                        continue;
                     }
 
                     //判断 游戏 名称
@@ -311,10 +315,9 @@ namespace AutoWork
                         {
                             string msg = string.Format("用户{0}处理完毕，注单号{1}，处理为 {2}，回复消息 {3}", bb.username, bb.betno, bb.passed ? "通过" : "不通过", bb.msg);
                             MyWrite(msg);
-                            appSittingSet.txtLog(msg);
-                            //appSittingSet.recorderDb(bb, actInfo[0]);
+                            appSittingSet.Log(msg);
                         }
-                        return;
+                        continue;
                     }
 
                     //免费游戏直接驳回 不通过
@@ -327,14 +330,15 @@ namespace AutoWork
                         {
                             string msg = string.Format("用户{0}处理完毕，注单号{1}，处理为 {2}，回复消息 {3}", bb.username, bb.betno, bb.passed ? "通过" : "不通过", bb.msg);
                             MyWrite(msg);
-                            appSittingSet.txtLog(msg);
-                            //appSittingSet.recorderDb(bb, actInfo[0]);
+                            appSittingSet.Log(msg);
                         }
-                        return;
+                        continue;
                     }
 
+
+
                     //判断是否提交过 同一用户 同类游戏 一天只能一次
-                    string sql = "select * from record where (betno='" + bb.betno + "' and pass=1 and aid=" + actInfo[0] + " ) or (pass=1  and aid=" + actInfo[0] + " and  username='" + bb.username + "' and gamename='" + bb.gamename + "'  and subminttime > '" + DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd") + " 00:00:01' and  subminttime < '" + DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd") + " 23:59:59') ";
+                    string sql = "select * from record where (betno='" + bb.betno + "' and pass=1 and aid=" + bb.aid+ " ) or (pass=1  and aid=" + bb.aid + " and  username='" + bb.username + "' and gamename='" + bb.gamename + "'  and subminttime > '" + DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd") + " 00:00:01' and  subminttime < '" + DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd") + " 23:59:59') ";
                     if (appSittingSet.recorderDbCheck(sql))
                     {
                         bb.passed = false;
@@ -344,10 +348,9 @@ namespace AutoWork
                         {
                             string msg = string.Format("用户{0}处理完毕，注单号{1}，处理为 {2}，回复消息 {3}", bb.username, bb.betno, bb.passed ? "通过" : "不通过", bb.msg);
                             MyWrite(msg);
-                            appSittingSet.txtLog(msg);
-                            //appSittingSet.recorderDb(bb, actInfo[0]);
+                            appSittingSet.Log(msg);
                         }
-                        return;
+                        continue;
                     }
 
                     //获取次数
@@ -359,9 +362,9 @@ namespace AutoWork
                         {
                             string msg = string.Format("用户{0}处理完毕，注单号{1}，处理为 {2}，回复消息 {3}", bb.username, bb.betno, bb.passed ? "通过" : "不通过", bb.msg);
                             MyWrite(msg);
-                            appSittingSet.txtLog(msg);
+                            appSittingSet.Log(msg);
                         }
-                        return;
+                        continue;
                     }
 
                     //计算规则 多少次 送多少倍
@@ -392,17 +395,31 @@ namespace AutoWork
                         {
                             string msg = string.Format("用户{0}处理完毕，注单号{1}，处理为 {2}，回复消息 {3}", bb.username, bb.betno, bb.passed ? "通过" : "不通过", bb.msg);
                             MyWrite(msg);
-                            appSittingSet.txtLog(msg);
-                            //appSittingSet.recorderDb(bb, actInfo[0]);
+                            appSittingSet.Log(msg);
                         }
-                        return;
+                        continue;
                     }
 
                     //判断注单是否是用户的 检查钱包 会员组别
                     bb = platGPK.checkInGPK(bb);
                     if (bb == null)
                     {
-                        return;
+                        continue;
+                    }
+                    else
+                    {
+                        if (!bb.passed)
+                        {
+                            bb.msg = "经查询，您的账号或者钱包不正确！ R";
+                            bool b6 = platACT.confirmAct(bb);
+                            if (b6)
+                            {
+                                string msg = string.Format("用户{0}处理完毕，注单号{1}，处理为 {2}，回复消息 {3}", bb.username, bb.betno, bb.passed ? "通过" : "不通过", bb.msg);
+                                MyWrite(msg);
+                                appSittingSet.Log(msg);
+                                continue;
+                            }
+                        }
                     }
 
                     //判断 层级是否在 列表之中
@@ -412,22 +429,22 @@ namespace AutoWork
                         {
                             bb.passed = false;
                             bb.msg = "经查询，您的账号目前不享有此优惠！ R";
+                            break;
+                        }
+                    }
+
+                    if (!bb.passed)
+                    {
                             //回填失败
                             bool b6 = platACT.confirmAct(bb);
                             if (b6)
                             {
                                 string msg = string.Format("用户{0}处理完毕，注单号{1}，处理为 {2}，回复消息 {3}", bb.username, bb.betno, bb.passed ? "通过" : "不通过", bb.msg);
                                 MyWrite(msg);
-                                appSittingSet.txtLog(msg);
-                                //appSittingSet.recorderDb(bb, actInfo[0]);
-                                return;
+                                appSittingSet.Log(msg);
+                                continue;
                             }
-                            break;
-                        }
                     }
-
-                    //钱包 层级通过
-
 
                     //大于 max 不处理
                     if (bb.betMoney > maxValue)
@@ -439,43 +456,39 @@ namespace AutoWork
                         {
                             string msg = string.Format("用户{0}处理完毕，注单号{1}，处理为 {2}，回复消息 {3}", bb.username, bb.betno, bb.passed ? "通过" : "不通过", bb.msg);
                             MyWrite(msg);
-                            appSittingSet.txtLog(msg);
+                            appSittingSet.Log(msg);
                         }
-                        return;
+                        continue;
                     }
+
+
                     //次数符合
                     //提交充值 加钱 
-
-                    bb.aname = actInfo[1];
-                    bb.AuditType = "Discount";
-                    bb.Audit = bb.betMoney;
-                    bb.Memo = bb.aname;
-                    bb.Type = 5;
-                    bb.aid = actInfo[0];
-                    bool fr = platGPK.MemberDepositSubmit(bb);
-                    if (fr)
+                    if (bb.passed)
                     {
-                        string msg = string.Format("用户{0}处理，存入金额{1}，注单号{2}，活动名称{3} ", bb.username, bb.betMoney, bb.betno, actInfo[1]);
-                        MyWrite(msg);
-                        appSittingSet.txtLog(msg);
-                        //记录到数据库
-                        appSittingSet.recorderDb(bb);
-                        bb.msg = "恭喜您，您申请的<" + actInfo[1] + ">已通过活动专员的检验";
-                        bool b8 = platACT.confirmAct(bb);
-                        if (b8)
+                        bb.AuditType = "Discount";
+                        bb.Audit = bb.betMoney;
+                        bb.Memo = bb.aname;
+                        bb.Type = 5;
+
+                        bool fr = platGPK.MemberDepositSubmit(bb);
+                        if (fr)
                         {
-                            msg = string.Format("用户{0}处理完毕，注单号{1}，处理为 {2}，回复消息 {3}", bb.username, bb.betno, bb.passed ? "通过" : "不通过", bb.msg);
-                            MyWrite(msg);
-                            appSittingSet.txtLog(msg);
-                            return;
+                            //记录到数据库
+                            appSittingSet.recorderDb(bb);
+                            bb.msg = "恭喜您，您申请的<" + bb.aname+ ">已通过活动专员的检验 R";
+                            bool b8 = platACT.confirmAct(bb);
+                        }
+                        else
+                        {
+                            //充钱失败的情况 ？ 不做处理 下一次处理
+                            continue;
                         }
                     }
-                    else
-                    {
-                        //充钱失败的情况 ？ 不做处理 下一次处理
-                        return;
-                    }
 
+                    string msg1 = string.Format("用户{0}处理完毕，注单号{1}，处理为 {2}，回复消息 {3}", bb.username, bb.betno, bb.passed ? "通过" : "不通过", bb.msg);
+                    MyWrite(msg1);
+                    appSittingSet.Log(msg1);
 
                 }
 
@@ -509,7 +522,6 @@ namespace AutoWork
                 {
 
                     //0 注单号不合法 驳回
-
                     if (item.betno != "" && Regex.IsMatch(item.betno, @"^\d{12}$"))
                     {
                         //最后三位是否含有幸运数字
@@ -523,31 +535,32 @@ namespace AutoWork
                             {
                                 string msg = string.Format("用户{0}处理完毕，注单号{1}，处理为 {2}，回复消息 {3}", item.username, item.betno, item.passed ? "通过" : "不通过", item.msg);
                                 MyWrite(msg);
-                                appSittingSet.txtLog(msg);
+                                appSittingSet.Log(msg);
                             }
-                            return;
+                            continue;
                         }
 
 
                         //获取注单信息 是否存在 
                         betData bb = platBB.getBet_Details(item);
+
                         if (bb == null)
                         {
-                            return;
+                            continue;
                         }
-
+                        bb.aid = actInfo[3];
+                        bb.aname = actInfo[4];
                         //查询不到信息 注单号不存在 情况
                         if (!bb.passed)
                         {
-
                             bool b = platACT.confirmAct(bb);
                             if (b)
                             {
                                 string msg = string.Format("用户{0}处理完毕，注单号{1}，处理为 {2}，回复消息 {3}", bb.username, bb.betno, bb.passed ? "通过" : "不通过", bb.msg);
                                 MyWrite(msg);
-                                appSittingSet.txtLog(msg);
+                                appSittingSet.Log(msg);
                             }
-                            return;
+                            continue;
                         }
 
                         //判断 美东时间
@@ -562,9 +575,9 @@ namespace AutoWork
                             {
                                 string msg = string.Format("用户{0}处理完毕，注单号{1}，处理为 {2}，回复消息 {3}", bb.username, bb.betno, bb.passed ? "通过" : "不通过", bb.msg);
                                 MyWrite(msg);
-                                appSittingSet.txtLog(msg);
+                                appSittingSet.Log(msg);
                             }
-                            return;
+                            continue;
                         }
 
                         //判断 游戏 名称
@@ -586,9 +599,9 @@ namespace AutoWork
                             {
                                 string msg = string.Format("用户{0}处理完毕，注单号{1}，处理为 {2}，回复消息 {3}", bb.username, bb.betno, bb.passed ? "通过" : "不通过", bb.msg);
                                 MyWrite(msg);
-                                appSittingSet.txtLog(msg);
+                                appSittingSet.Log(msg);
                             }
-                            return;
+                            continue;
                         }
 
                         //免费游戏直接驳回 不通过
@@ -601,13 +614,13 @@ namespace AutoWork
                             {
                                 string msg = string.Format("用户{0}处理完毕，注单号{1}，处理为 {2}，回复消息 {3}", bb.username, bb.betno, bb.passed ? "通过" : "不通过", bb.msg);
                                 MyWrite(msg);
-                                appSittingSet.txtLog(msg);
+                                appSittingSet.Log(msg);
                             }
-                            return;
+                            continue;
                         }
 
                         //判断是否提交过 同一用户 所有游戏 一天只能一次
-                        string sql = "select * from record where (betno='" + bb.betno + "' and pass=1 and aid =" + actInfo[3] + ") or ( pass=1 and aid =" + actInfo[3] + " and username='" + bb.username + "'   and subminttime > '" + DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd") + " 00:00:01' and  subminttime < '" + DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd") + " 23:59:59') ";
+                        string sql = "select * from record where (betno='" + bb.betno + "' and pass=1 and aid =" + bb.aid + ") or ( pass=1 and aid =" + bb.aid + " and username='" + bb.username + "'   and subminttime > '" + DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd") + " 00:00:01' and  subminttime < '" + DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd") + " 23:59:59') ";
                         if (appSittingSet.recorderDbCheck(sql))
                         {
                             bb.passed = false;
@@ -617,16 +630,31 @@ namespace AutoWork
                             {
                                 string msg = string.Format("用户{0}处理完毕，注单号{1}，处理为 {2}，回复消息 {3}", bb.username, bb.betno, bb.passed ? "通过" : "不通过", bb.msg);
                                 MyWrite(msg);
-                                appSittingSet.txtLog(msg);
+                                appSittingSet.Log(msg);
                             }
-                            return;
+                            continue;
                         }
 
                         //判断注单是否是用户的 检查钱包 会员组别
                         bb = platGPK.checkInGPK(bb);
                         if (bb == null)
                         {
-                            return;
+                            continue;
+                        }
+                        else
+                        {
+                            if (!bb.passed)
+                            {
+                                bb.msg = "经查询，您的账号或者钱包不正确！ R";
+                                bool b6 = platACT.confirmAct(bb);
+                                if (b6)
+                                {
+                                    string msg = string.Format("用户{0}处理完毕，注单号{1}，处理为 {2}，回复消息 {3}", bb.username, bb.betno, bb.passed ? "通过" : "不通过", bb.msg);
+                                    MyWrite(msg);
+                                    appSittingSet.Log(msg);
+                                    continue;
+                                }
+                            }
                         }
 
                         //判断 层级是否在 列表之中
@@ -647,10 +675,9 @@ namespace AutoWork
                             {
                                 string msg = string.Format("用户{0}处理完毕，注单号{1}，处理为 {2}，回复消息 {3}", bb.username, bb.betno, bb.passed ? "通过" : "不通过", bb.msg);
                                 MyWrite(msg);
-                                appSittingSet.txtLog(msg);
-                                //appSittingSet.recorderDb(bb, actInfo[0]);
+                                appSittingSet.Log(msg);
                             }
-                            return;
+                            continue;
                         }
 
                         //计算 需要加钱 的数字 
@@ -673,42 +700,43 @@ namespace AutoWork
                             {
                                 string msg = string.Format("用户{0}处理完毕，注单号{1}，处理为 {2}，回复消息 {3}", bb.username, bb.betno, bb.passed ? "通过" : "不通过", bb.msg);
                                 MyWrite(msg);
-                                appSittingSet.txtLog(msg);
+                                appSittingSet.Log(msg);
                             }
-                            return;
+                            continue;
                         }
-
-                        //加钱  提交数据
-                        bb.aname = actInfo[4];
-                        bb.AuditType = "Discount";
-                        bb.Audit = bb.betMoney;
-                        bb.Memo = bb.aname;
-                        bb.Type = 5;
-                        bb.aid = actInfo[3];
-                        bool fr = platGPK.MemberDepositSubmit(bb);
-                        if (fr)
+                        if (bb.passed)
                         {
-                            string msg = string.Format("用户{0}处理，存入金额{1}，注单号{2}，活动名称{3}：", bb.username, bb.betMoney, bb.betno, actInfo[4]);
-                            MyWrite(msg);
-                            appSittingSet.txtLog(msg);
+                            //加钱  提交数据
+                            bb.AuditType = "Discount";
+                            bb.Audit = bb.betMoney;
+                            bb.Memo = bb.aname;
+                            bb.Type = 5;
 
-                            //记录到sqlite数据库
-                            appSittingSet.recorderDb(bb);
-                        }
-                        else
-                        {
-                            //充钱失败的情况 ？
-                            return;
-                        }
+                            bool fr = platGPK.MemberDepositSubmit(bb);
+                            if (fr)
+                            {
+                                string msg = string.Format("用户{0}处理，存入金额{1}，注单号{2}，活动名称{3}：", bb.username, bb.betMoney, bb.betno, bb.aname);
+                                MyWrite(msg);
+                                appSittingSet.Log(msg);
 
-                        //回填
-                        bb.msg = "恭喜您，您申请的<" + actInfo[4] + ">已通过活动专员的检验";
-                        bool r = platACT.confirmAct(bb);
-                        if (r)
-                        {
-                            string msg = string.Format("用户{0}处理完毕，注单号{1}，处理为 {2}，回复消息 {3}", bb.username, bb.betno, bb.passed ? "通过" : "不通过", bb.msg);
-                            MyWrite(msg);
-                            appSittingSet.txtLog(msg);
+                                //记录到sqlite数据库
+                                appSittingSet.recorderDb(bb);
+                            }
+                            else
+                            {
+                                //充钱失败的情况 ？
+                                continue;
+                            }
+
+                            //回填
+                            bb.msg = "恭喜您，您申请的<" + bb.aname + ">已通过活动专员的检验";
+                            bool r = platACT.confirmAct(bb);
+                            if (r)
+                            {
+                                string msg = string.Format("用户{0}处理完毕，注单号{1}，处理为 {2}，回复消息 {3}", bb.username, bb.betno, bb.passed ? "通过" : "不通过", bb.msg);
+                                MyWrite(msg);
+                                appSittingSet.Log(msg);
+                            }
                         }
                     }
                     else
@@ -721,8 +749,8 @@ namespace AutoWork
                         {
                             string msg = string.Format("用户{0}处理完毕，注单号{1}，处理为 {2}，回复消息 {3}", item.username, item.betno, item.passed ? "通过" : "不通过", item.msg);
                             MyWrite(msg);
-                            appSittingSet.txtLog(msg);
-                            return;
+                            appSittingSet.Log(msg);
+                            continue;
                         }
                     }
 
@@ -759,9 +787,10 @@ namespace AutoWork
                     {
                         return;
                     }
-
+                    bb.aid = actInfo[6];
+                    bb.aname= actInfo[7];
                     //判断是否提交过 同一用户 所有游戏 一天只能一次
-                    string sql = "select * from record where pass=1 and aid =" + actInfo[6] + " and LOWER(username)='" + bb.username.ToLower() + "'   and subminttime > '" + DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd") + " 00:00:01' and  subminttime < '" + DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd") + " 23:59:59' ";
+                    string sql = "select * from record where pass=1 and aid =" +bb.aid + " and LOWER(username)='" + bb.username.ToLower() + "'   and subminttime > '" + DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd") + " 00:00:01' and  subminttime < '" + DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd") + " 23:59:59' ";
                     if (appSittingSet.recorderDbCheck(sql))
                     {
                         bb.passed = false;
@@ -771,7 +800,7 @@ namespace AutoWork
                         {
                             string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", bb.username, bb.passed ? "通过" : "不通过", bb.msg);
                             MyWrite(msg);
-                            appSittingSet.txtLog(msg);
+                            appSittingSet.Log(msg);
                         }
                         return;
                     }
@@ -791,11 +820,10 @@ namespace AutoWork
                         {
                             string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", bb.username, bb.passed ? "通过" : "不通过", bb.msg);
                             MyWrite(msg);
-                            appSittingSet.txtLog(msg);
+                            appSittingSet.Log(msg);
                         }
                         return;
                     }
-
 
                     //判断 层级是否在 列表之中
                     foreach (var s in FiliterGroups)
@@ -815,7 +843,7 @@ namespace AutoWork
                         {
                             string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", bb.username, bb.passed ? "通过" : "不通过", bb.msg);
                             MyWrite(msg);
-                            appSittingSet.txtLog(msg);
+                            appSittingSet.Log(msg);
                         }
                         return;
                     }
@@ -844,7 +872,7 @@ namespace AutoWork
                         {
                             string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", bb.username, bb.passed ? "通过" : "不通过", bb.msg);
                             MyWrite(msg);
-                            appSittingSet.txtLog(msg);
+                            appSittingSet.Log(msg);
                         }
                         return;
                     }
@@ -863,7 +891,7 @@ namespace AutoWork
                         {
                             string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", bb.username, bb.passed ? "通过" : "不通过", bb.msg);
                             MyWrite(msg);
-                            appSittingSet.txtLog(msg);
+                            appSittingSet.Log(msg);
                         }
                         return;
                     }
@@ -871,15 +899,10 @@ namespace AutoWork
 
                     //更新一下 钱包 ？？
                     bool b000 = platGPK.autoUpadateMemberAcc(bb.Id);
-
+                    //获取详细信息
+                    Gpk_UserDetail userinfo = platGPK.GetUserDetail(bb.username);
                     //查询账户余额
-                    betData bb2 = platGPK.MemberGetDetail(bb);
-                    if (bb2 == null)
-                    {
-                        return;
-                    }
-                    //判断账户余额是否在范围 10-15 20-25 区间
-                    if ((bb.subtotal >= Act4Stander[0] && bb.subtotal <= (Act4Stander[0] + 5)) || (bb.subtotal >= Act4Stander[4] && bb.subtotal <= (Act4Stander[4] + 5)))
+                    if ((userinfo.Wallet >= Act4Stander[0] && userinfo.Wallet <= (Act4Stander[0] + 5)) || (userinfo.Wallet >= Act4Stander[4] && userinfo.Wallet <= (Act4Stander[4] + 5)))
                     {
 
                     }
@@ -892,25 +915,24 @@ namespace AutoWork
                         {
                             string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", bb.username, bb.passed ? "通过" : "不通过", bb.msg);
                             MyWrite(msg);
-                            appSittingSet.txtLog(msg);
+                            appSittingSet.Log(msg);
                         }
                         return;
                     }
 
 
                     //更新操作 加钱
-                    bb.aname = actInfo[7];
                     bb.AuditType = "None";
                     bb.Audit = bb.betMoney;
                     bb.Memo = bb.aname;
                     bb.Type = 5;
-                    bb.aid = actInfo[6];
+
                     bool fr = platGPK.MemberDepositSubmit(bb);
                     if (fr)
                     {
-                        string msg = string.Format("用户{0}处理，存入金额{1} ,活动名称{2} ", bb.username, bb.betMoney, actInfo[7]);
+                        string msg = string.Format("用户{0}处理，存入金额{1} ,活动名称{2} ", bb.username, bb.betMoney, bb.aname);
                         MyWrite(msg);
-                        appSittingSet.txtLog(msg);
+                        appSittingSet.Log(msg);
 
                         //记录到sqlite数据库
                         appSittingSet.recorderDb(bb);
@@ -922,17 +944,18 @@ namespace AutoWork
                     }
 
                     //更新等级
-                    Gpk_UserDetail userinfo = new Gpk_UserDetail() { Id = bb.memberId, MemberLevelSettingId = memberLevel[0], Account = bb.username };
-                    platGPK.UpadateMemberLevel(memberLevel[1], userinfo);
+                    userinfo.Province = memberLevel[1];
+                    userinfo.RegisterDevice = memberLevel[0];
+                    platGPK.UpadateMemberLevel(userinfo);
 
                     //回填 操作结果
-                    bb.msg = "恭喜您，您申请的<" + actInfo[7] + ">已通过活动专员的检验";
+                    bb.msg = "恭喜您，您申请的<" + bb.aname + ">已通过活动专员的检验";
                     bool r = platACT.confirmAct(bb);
                     if (r)
                     {
                         string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", bb.username, bb.passed ? "通过" : "不通过", bb.msg);
                         MyWrite(msg);
-                        appSittingSet.txtLog(msg);
+                        appSittingSet.Log(msg);
                     }
 
                 }
@@ -964,7 +987,6 @@ namespace AutoWork
                 foreach (var item in list)
                 {
                     //记录一个list 去除重复后 的第9，10 条 直接拒绝掉
-
                     if (Prob[1] == "1")
                     {
                         //如果达到10条清除掉
@@ -982,13 +1004,13 @@ namespace AutoWork
                         {
                             //直接拒绝
                             item.passed = false;
-                            item.msg = "R 同IP其他会员已申请过，申请不通过！R";
+                            item.msg = "RR 同IP其他会员已申请过";
                             bool r1 = platACT.confirmAct(item);
                             if (r1)
                             {
                                 string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
                                 MyWrite(msg);
-                                appSittingSet.txtLog(msg);
+                                appSittingSet.Log(msg);
                             }
                             continue;
                         }
@@ -1005,7 +1027,7 @@ namespace AutoWork
                         {
                             string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
                             MyWrite(msg);
-                            appSittingSet.txtLog(msg);
+                            appSittingSet.Log(msg);
                         }
                         continue;
                     }
@@ -1016,6 +1038,9 @@ namespace AutoWork
                     {
                         continue;
                     }
+                    bb.aid = actInfo[9];
+                    bb.aname= actInfo[10];
+
                     if (!bb.passed)
                     {
                         //账号不存在？
@@ -1025,7 +1050,7 @@ namespace AutoWork
                         {
                             string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", bb.username, bb.passed ? "通过" : "不通过", bb.msg);
                             MyWrite(msg);
-                            appSittingSet.txtLog(msg);
+                            appSittingSet.Log(msg);
                         }
                         continue;
                     }
@@ -1043,7 +1068,7 @@ namespace AutoWork
                         {
                             string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", bb.username, bb.passed ? "通过" : "不通过", bb.msg);
                             MyWrite(msg);
-                            appSittingSet.txtLog(msg);
+                            appSittingSet.Log(msg);
                         }
                         continue;
                     }
@@ -1052,7 +1077,7 @@ namespace AutoWork
                     Gpk_UserDetail userinfo = platGPK.GetUserDetail(bb.username);
                     //历史记录 注册 和绑定银行卡的时间间隔 大于1分钟 机器注册
                     string sr = platGPK.GetUserLoadHistory(userinfo, "申请加入会员,建立银行帐户资讯", new Random().Next(Act4Set[3], Act4Set[4]));
-                    if (sr != "OK")
+                    if (sr.Contains("同IP其他"))
                     {
                         bb.passed = false;
                         bb.msg = sr;
@@ -1061,11 +1086,12 @@ namespace AutoWork
                         {
                             string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", bb.username, bb.passed ? "通过" : "不通过", bb.msg);
                             MyWrite(msg);
-                            appSittingSet.txtLog(msg);
+                            appSittingSet.Log(msg);
                         }
                         //更新等级
-                        userinfo.MemberLevelSettingId = memberLevel[6];
-                        platGPK.UpadateMemberLevel(memberLevel[7], userinfo);
+                        userinfo.Province = memberLevel[7];
+                        userinfo.RegisterDevice = memberLevel[6];
+                        platGPK.UpadateMemberLevel(userinfo);
                         continue;
                     }
 
@@ -1080,27 +1106,29 @@ namespace AutoWork
                         {
                             string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", bb.username, bb.passed ? "通过" : "不通过", bb.msg);
                             MyWrite(msg);
-                            appSittingSet.txtLog(msg);
+                            appSittingSet.Log(msg);
                         }
                         //更新等级
-                        userinfo.MemberLevelSettingId = memberLevel[6];
-                        platGPK.UpadateMemberLevel(memberLevel[7], userinfo);
+                        userinfo.Province = memberLevel[7];
+                        userinfo.RegisterDevice = memberLevel[6];
+                        platGPK.UpadateMemberLevel(userinfo);
                         continue;
                     }
 
                     //更新操作 加钱
-                    bb.aname = actInfo[10];
+                    //bb.aid = actInfo[9];
+                    //bb.aname = actInfo[10];
                     bb.AuditType = "None";
                     bb.Audit = bb.betMoney;
                     bb.Memo = bb.aname;
                     bb.Type = 5;
-                    bb.aid = actInfo[9];
+
                     bool fr = platGPK.MemberDepositSubmit(bb);
                     if (fr)
                     {
-                        string msg = string.Format("用户{0}处理，存入金额{1} ,活动名称{2} ", bb.username, bb.betMoney, actInfo[10]);
+                        string msg = string.Format("用户{0}处理，存入金额{1} ,活动名称{2} ", bb.username, bb.betMoney, bb.aname);
                         MyWrite(msg);
-                        appSittingSet.txtLog(msg);
+                        appSittingSet.Log(msg);
 
                         //记录到sqlite数据库
                         appSittingSet.recorderDb(bb);
@@ -1112,17 +1140,18 @@ namespace AutoWork
                     }
 
                     //更新等级
-                    userinfo.MemberLevelSettingId = memberLevel[2];
-                    platGPK.UpadateMemberLevel(memberLevel[3], userinfo);
+                    userinfo.Province = memberLevel[3];
+                    userinfo.RegisterDevice = memberLevel[2];
+                    platGPK.UpadateMemberLevel(userinfo);
 
                     //回填 操作结果
-                    bb.msg = "恭喜您，您申请的<" + actInfo[10] + ">已通过活动专员的检验 R";
+                    bb.msg = "恭喜您，您申请的<" + bb.aname + ">已通过活动专员的检验 R";
                     bool r = platACT.confirmAct(bb);
                     if (r)
                     {
                         string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", bb.username, bb.passed ? "通过" : "不通过", bb.msg);
                         MyWrite(msg);
-                        appSittingSet.txtLog(msg);
+                        appSittingSet.Log(msg);
                     }
 
                 }
@@ -1177,7 +1206,7 @@ namespace AutoWork
                             {
                                 string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
                                 MyWrite(msg);
-                                appSittingSet.txtLog(msg);
+                                appSittingSet.Log(msg);
                             }
                             continue;
                         }
@@ -1195,7 +1224,7 @@ namespace AutoWork
                         {
                             string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
                             MyWrite(msg);
-                            appSittingSet.txtLog(msg);
+                            appSittingSet.Log(msg);
                         }
                         continue;
                     }
@@ -1212,11 +1241,12 @@ namespace AutoWork
                         {
                             string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
                             MyWrite(msg);
-                            appSittingSet.txtLog(msg);
+                            appSittingSet.Log(msg);
                         }
                         //更新等级 拒绝
-                        userinfo.MemberLevelSettingId = memberLevel[8];
-                        platGPK.UpadateMemberLevel(memberLevel[9], userinfo);
+                        userinfo.Province = memberLevel[9];
+                        userinfo.RegisterDevice = memberLevel[8];
+                        platGPK.UpadateMemberLevel(userinfo);
                         continue;
                     }
 
@@ -1236,17 +1266,23 @@ namespace AutoWork
                         {
                             string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
                             MyWrite(msg);
-                            appSittingSet.txtLog(msg);
+                            appSittingSet.Log(msg);
                         }
                         //更新等级 拒绝
-                        userinfo.MemberLevelSettingId = memberLevel[8];
-                        platGPK.UpadateMemberLevel(memberLevel[9], userinfo);
+                        userinfo.Province = memberLevel[9];
+                        userinfo.RegisterDevice = memberLevel[8];
+                        platGPK.UpadateMemberLevel(userinfo);
                         continue;
                     }
 
                     //历史记录 注册 和绑定银行卡的时间间隔 大于1分钟 机器注册
                     string sr = platGPK.GetUserLoadHistory(userinfo, "申请加入会员,建立银行帐户资讯", new Random().Next(Act4Set[8], Act4Set[9]));
-                    if (sr != "OK")
+                    if (sr.Contains("ERR"))
+                    {
+                        continue;
+                    }
+
+                    if (sr.Contains("同IP其他") || sr.Contains("未绑定"))
                     {
                         item.passed = false;
                         item.msg = sr;
@@ -1255,11 +1291,12 @@ namespace AutoWork
                         {
                             string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
                             MyWrite(msg);
-                            appSittingSet.txtLog(msg);
+                            appSittingSet.Log(msg);
                         }
                         //更新等级 拒绝
-                        userinfo.MemberLevelSettingId = memberLevel[8];
-                        platGPK.UpadateMemberLevel(memberLevel[9], userinfo);
+                        userinfo.Province = memberLevel[9];
+                        userinfo.RegisterDevice = memberLevel[8];
+                        platGPK.UpadateMemberLevel(userinfo);
                         continue;
                     }
 
@@ -1274,28 +1311,30 @@ namespace AutoWork
                         {
                             string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
                             MyWrite(msg);
-                            appSittingSet.txtLog(msg);
+                            appSittingSet.Log(msg);
                         }
                         //更新等级 拒绝
-                        userinfo.MemberLevelSettingId = memberLevel[8];
-                        platGPK.UpadateMemberLevel(memberLevel[9], userinfo);
+                        userinfo.Province = memberLevel[9];
+                        userinfo.RegisterDevice = memberLevel[8];
+                        platGPK.UpadateMemberLevel(userinfo);
                         continue;
                     }
 
                     //更新操作 加钱
                     item.betMoney = Act4Set[6];//先写死 不会更改
+                    item.aid = actInfo[12];
                     item.aname = actInfo[13];
                     bb.AuditType = "None";
                     bb.Audit = bb.betMoney;
                     bb.Memo = bb.aname;
                     bb.Type = 5;
-                    item.aid = actInfo[12];
+
                     bool fr = platGPK.MemberDepositSubmit(item);
                     if (fr)
                     {
-                        string msg = string.Format("用户{0}处理，存入金额{1} ,活动名称{2} ", item.username, item.betMoney, actInfo[13]);
+                        string msg = string.Format("用户{0}处理，存入金额{1} ,活动名称{2} ", item.username, item.betMoney, item.aname);
                         MyWrite(msg);
-                        appSittingSet.txtLog(msg);
+                        appSittingSet.Log(msg);
 
                         //记录到sqlite数据库
                         appSittingSet.recorderDb(item);
@@ -1307,20 +1346,22 @@ namespace AutoWork
                     }
 
                     //更新等级
-                    userinfo.MemberLevelSettingId = memberLevel[4];
-                    platGPK.UpadateMemberLevel(memberLevel[5], userinfo);
+                    userinfo.Province = memberLevel[5];
+                    userinfo.RegisterDevice = memberLevel[4];
+                    platGPK.UpadateMemberLevel(userinfo);
+
                     //开启 不可跨区登陆  2019年2月28日11点43分
                     userinfo.SexString = "true";
                     platGPK.UpdateCrossRegionLogin(userinfo);
                     //回填 操作结果
-                    item.msg = "恭喜您，您申请的<" + actInfo[13] + ">已通过活动专员的检验 R";
+                    item.msg = "恭喜您，您申请的<" + bb.aname + ">已通过活动专员的检验 R";
                     item.passed = true;
                     bool r = platACT2.confirmAct(item);
                     if (r)
                     {
                         string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
                         MyWrite(msg);
-                        appSittingSet.txtLog(msg);
+                        appSittingSet.Log(msg);
                     }
 
                 }
@@ -1339,10 +1380,10 @@ namespace AutoWork
             public void Execute(IJobExecutionContext context)
             {
                 //发送心跳
-                if (ws != null && ws.IsAlive)
-                {
-                    ws.Send("test");
-                }
+                //if (ws != null && ws.IsAlive)
+                //{
+                //    ws.Send("test");
+                //}
 
                 List<betData> list = platACT.getActData2(actInfo[15]);
                 //list.Add(new betData() { username = "wlf5577558", betTime = "2018-12-29 21:50:59", bbid = "738215", passed = true, aid = "40" });//默认等于合格
@@ -1410,7 +1451,7 @@ namespace AutoWork
                         {
                             string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", bb.username, bb.passed ? "通过" : "不通过", bb.msg);
                             MyWrite(msg);
-                            appSittingSet.txtLog(msg);
+                            appSittingSet.Log(msg);
                         }
                         continue;
                     }
@@ -1428,7 +1469,7 @@ namespace AutoWork
                         {
                             string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", bb.username, bb.passed ? "通过" : "不通过", bb.msg);
                             MyWrite(msg);
-                            appSittingSet.txtLog(msg);
+                            appSittingSet.Log(msg);
                         }
                         continue;
                     }
@@ -1444,7 +1485,7 @@ namespace AutoWork
                         {
                             string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
                             MyWrite(msg);
-                            appSittingSet.txtLog(msg);
+                            appSittingSet.Log(msg);
                         }
                         continue;
                     }
@@ -1461,7 +1502,7 @@ namespace AutoWork
                         {
                             string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", bb.username, bb.passed ? "通过" : "不通过", bb.msg);
                             MyWrite(msg);
-                            appSittingSet.txtLog(msg);
+                            appSittingSet.Log(msg);
                         }
                         continue;
                     }
@@ -1478,7 +1519,7 @@ namespace AutoWork
                         {
                             string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", bb.username, bb.passed ? "通过" : "不通过", bb.msg);
                             MyWrite(msg);
-                            appSittingSet.txtLog(msg);
+                            appSittingSet.Log(msg);
                         }
                         continue;
                     }
@@ -1520,7 +1561,7 @@ namespace AutoWork
                             {
                                 string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", bb.username, bb.passed ? "通过" : "不通过", bb.msg);
                                 MyWrite(msg);
-                                appSittingSet.txtLog(msg);
+                                appSittingSet.Log(msg);
                             }
                             continue;
                         }
@@ -1539,7 +1580,7 @@ namespace AutoWork
                             {
                                 string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", bb.username, bb.passed ? "通过" : "不通过", bb.msg);
                                 MyWrite(msg);
-                                appSittingSet.txtLog(msg);
+                                appSittingSet.Log(msg);
                             }
                             continue;
                         }
@@ -1611,9 +1652,9 @@ namespace AutoWork
                     bool fr = platGPK.MemberDepositSubmit(bb);
                     if (fr)
                     {
-                        string msg = string.Format("用户{0}处理，存入金额{1} ,活动名称{2} ", bb.username, bb.betMoney, actInfo[16]);
+                        string msg = string.Format("用户{0}处理，存入金额{1} ,活动名称{2} ", bb.username, bb.betMoney, bb.aname);
                         MyWrite(msg);
-                        appSittingSet.txtLog(msg);
+                        appSittingSet.Log(msg);
 
                         //记录到sqlite数据库
                         appSittingSet.recorderDb(bb);
@@ -1628,13 +1669,13 @@ namespace AutoWork
                     //userinfo.MemberLevelSettingId = memberLevel[2];
                     //platGPK.UpadateMemberLevel(memberLevel[3], userinfo);
                     //回填 操作结果
-                    bb.msg = "恭喜您，您申请的<" + actInfo[16] + ">已通过活动专员的检验 R";
+                    bb.msg = "恭喜您，您申请的<" + bb.aname + ">已通过活动专员的检验 R";
                     bool r = platACT.confirmAct(bb);
                     if (r)
                     {
                         string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", bb.username, bb.passed ? "通过" : "不通过", bb.msg);
                         MyWrite(msg);
-                        appSittingSet.txtLog(msg);
+                        appSittingSet.Log(msg);
                     }
 
                 }
@@ -1763,40 +1804,62 @@ namespace AutoWork
             this.WindowState = FormWindowState.Normal;
         }
 
-        private void menuStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        private void 日志_Click(object sender, EventArgs e)
         {
-            ToolStripMenuItem tsmi = (ToolStripMenuItem)e.ClickedItem;
-            if (tsmi.Name == "toolStripMenuItem1")
+            appSittingSet.showLogFile();
+        }
+
+        private void 配置_Click(object sender, EventArgs e)
+        {
+            string filePath = Application.ExecutablePath + ".config";
+            System.Diagnostics.Process.Start("notepad.exe", filePath);
+        }
+
+        private void 重启_Click(object sender, EventArgs e)
+        {
+            if (MessageBox.Show("应用程序重启", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button1) == DialogResult.OK)
             {
-                //登录一遍
-                MyJob1 myjob1 = new MyJob1();
-                myjob1.Execute(null);
-                appSittingSet.txtLog("手动操作登录");
-            }
-            else if (tsmi.Name == "toolStripMenuItem2")
-            {
-                appSittingSet.showLogFile();
-            }
-            else if (tsmi.Name == "toolStripMenuItem3")
-            {
-                string filePath = Application.ExecutablePath + ".config";
-                System.Diagnostics.Process.Start("notepad.exe", filePath);
-            }
-            else if (tsmi.Name == "toolStripMenuItem4")
-            {
-                if (MessageBox.Show("应用程序重启", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button1) == DialogResult.OK)
-                {
-                    notify.Dispose();
-                    Application.Restart();
-                }
-            }
-            else if (tsmi.Name == "toolStripMenuItem5")
-            {
-                ClsListItem();
+                notify.Dispose();
+                Application.Restart();
             }
         }
-        #endregion
 
+        private void 清空_Click(object sender, EventArgs e)
+        {
+            ClsListItem();
+        }
+
+        private void 登陆优惠大厅_Click(object sender, EventArgs e)
+        {
+            //1.登录优惠大厅 一次 保存cookie 
+            string msg = string.Format("活动站登录{0} ", platACT.loginActivity() ? "成功" : "失败");
+            appSittingSet.Log(msg);
+            MyWrite(msg);
+        }
+
+        private void 登陆BB后台_Click(object sender, EventArgs e)
+        {
+            string msg = string.Format("BB站登录{0} ", platBB.loginBB() ? "成功" : "失败");
+            appSittingSet.Log(msg);
+            MyWrite(msg);
+        }
+
+        private void 登陆GPK_Click(object sender, EventArgs e)
+        {
+            string msg = string.Format("GPK站登录{0} ", platGPK.loginGPK() ? "成功" : "失败");
+            appSittingSet.Log(msg);
+            MyWrite(msg);
+        }
+
+        private void 登陆彩金后台_Click(object sender, EventArgs e)
+        {
+            //登陆活动站2 28
+            string msg = string.Format("活动站2登录{0} ", platACT2.login() ? "成功" : "失败");
+            appSittingSet.Log(msg);
+            MyWrite(msg);
+        }
+
+        #endregion
     }
 
 }

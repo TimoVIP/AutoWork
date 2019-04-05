@@ -35,7 +35,7 @@ namespace TimoControl
             }
             catch (Exception ex)
             {
-                appSittingSet.txtLog("获取配置文件失败" + ex.Message);
+                appSittingSet.Log("获取配置文件失败" + ex.Message);
                 return false;
             }
             HttpWebRequest request = null;
@@ -125,7 +125,7 @@ namespace TimoControl
                 if (ret_html.Contains("top.window.location"))
                 {
                     //维护
-                    appSittingSet.txtLog("BB维护");
+                    appSittingSet.Log("BB维护");
                     return false;
                     //尝试登陆新站
                     //bool b = LoginBB2();
@@ -185,7 +185,7 @@ namespace TimoControl
             }
             catch (WebException ex)
             {
-                appSittingSet.txtLog(string.Format("BB站登录失败：{0}   ", ex.Message));
+                appSittingSet.Log(string.Format("BB站登录失败：{0}   ", ex.Message));
                 return false;
             }
             finally
@@ -470,7 +470,7 @@ namespace TimoControl
 
                 if (ret_html.Contains("网站维护"))
                 {
-                    appSittingSet.txtLog(string.Format("BB网站维护：{0}    错误：网站维护", bb.betno));
+                    appSittingSet.Log(string.Format("BB网站维护：{0}    错误：网站维护", bb.betno));
                     bb.passed = false;
                     bb.msg = "平台维护，请稍后提交! R";
                     bb.betTimes = 0;
@@ -525,7 +525,7 @@ namespace TimoControl
             }
             catch (WebException ex)
             {
-                appSittingSet.txtLog("BB获取次数失败：" + ex.Message);
+                appSittingSet.Log("BB获取次数失败：" + ex.Message);
                 bb.betTimes = 0;
                 return bb;
             }
@@ -573,7 +573,7 @@ namespace TimoControl
 
                 if (ret_html.Contains("网站维护") )
                 {
-                    appSittingSet.txtLog(string.Format("BB网站维护：{0}    错误：网站维护", bb.betno));
+                    appSittingSet.Log(string.Format("BB网站维护：{0}    错误：网站维护", bb.betno));
                     bb.passed = false;
                     bb.msg = "平台维护，请稍后提交! R";
                     return bb;
@@ -648,7 +648,7 @@ namespace TimoControl
                 //    appSittingSet.txtLog(string.Format("用户 {0} 注单{1} bb平台获取注单错误：{2}", bb.username, bb.betno, ex.Message));
                 //    return bb;
                 //}
-                appSittingSet.txtLog(string.Format("用户 {0} 注单{1} bb平台获取注单错误：{2}", bb.username, bb.betno, ex.Message));
+                appSittingSet.Log(string.Format("用户 {0} 注单{1} bb平台获取注单错误：{2}", bb.username, bb.betno, ex.Message));
                 return null;
             }
         }
@@ -664,7 +664,7 @@ namespace TimoControl
             HttpWebResponse response = null;
             StreamReader reader = null;
             pwd_new = Guid.NewGuid().ToString().Substring(0, 6); //{B770603A-ECF2-40AF-9E2E-67D281D858F8} 小写字母前面6位
-            appSittingSet.txtLog("BB新密码：" + pwd_new);
+            appSittingSet.Log("BB新密码：" + pwd_new);
             try
             {
 
@@ -697,7 +697,7 @@ namespace TimoControl
                 if (ret_html.Contains("請重新登入,謝謝"))
                 {
                     appSittingSet.writeAppsettings("BB", "dYHJQR|" + pwd_new + "|https://ag.casiuo.com/");
-                    appSittingSet.txtLog("BB更新密码为 " + pwd_new);
+                    appSittingSet.Log("BB更新密码为 " + pwd_new);
                     loginBB();
                     return true;                    
                 }
@@ -705,18 +705,18 @@ namespace TimoControl
                 if (jo["status"].ToString() == "OK" && jo["code"].ToString() == "200")
                 {
                     appSittingSet.writeAppsettings("BB", "dYHJQR|" + pwd_new + "|https://ag.casiuo.com/");
-                    appSittingSet.txtLog("BB更新密码为 " + pwd_new);
+                    appSittingSet.Log("BB更新密码为 " + pwd_new);
                     return true;
                 }
                 else
                 {
-                    appSittingSet.txtLog("BB更新密码失败 " + jo["message"].ToString());
+                    appSittingSet.Log("BB更新密码失败 " + jo["message"].ToString());
                     return false;
                 }
             }
             catch (WebException ex)
             {
-                appSittingSet.txtLog(string.Format("BB站更新密码失败：{0}   ", ex.Message));
+                appSittingSet.Log(string.Format("BB站更新密码失败：{0}   ", ex.Message));
                 return false;
             }
             finally
@@ -750,7 +750,7 @@ namespace TimoControl
             }
             catch (Exception ex)
             {
-                appSittingSet.txtLog("获取配置文件失败" + ex.Message);
+                appSittingSet.Log("获取配置文件失败" + ex.Message);
                 return false;
             }
             HttpWebRequest request = null;
@@ -853,7 +853,7 @@ namespace TimoControl
             }
             catch (WebException ex)
             {
-                appSittingSet.txtLog(string.Format("BB2站登录失败：{0}   ", ex.Message));
+                appSittingSet.Log(string.Format("BB2站登录失败：{0}   ", ex.Message));
                 return false;
             }
         }

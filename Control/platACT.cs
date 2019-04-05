@@ -38,7 +38,7 @@ namespace TimoControl
             }
             catch (Exception ex)
             {
-                appSittingSet.txtLog("活动站获取配置文件失败" + ex.Message);
+                appSittingSet.Log("活动站获取配置文件失败" + ex.Message);
                 return false;
             }
 
@@ -85,7 +85,7 @@ namespace TimoControl
             }
             catch (WebException ex)
             {
-                appSittingSet. txtLog(string.Format("活动站登录失败：{0}   ", ex.Message));
+                appSittingSet. Log(string.Format("活动站登录失败：{0}   ", ex.Message));
                 return false;
             }
         }
@@ -144,7 +144,17 @@ namespace TimoControl
                     return list;
                 }
                 HtmlNodeCollection collection = node1.SelectNodes("//tr[@class='gradeA']");//跟Xpath一样，轻松的定位到相应节点下
+                 
+                //方法需要调试看哪里有误 幸运尾数 活动错误
+                //for (int i = 1; i <= node1.SelectNodes("//tbody//tr").Count; i++)
+                //{
+                //    string username = node1.SelectSingleNode("//tbody//tr[" + i + "]/td[1]").InnerText.Trim();
+                //    string mobile = node1.SelectSingleNode("//tbody//tr[" + i + "]/td[2]").InnerText.Trim();
+                //    string bbid = node1.SelectSingleNode("//tbody//tr[" + i + "]/td[6]/input").Attributes["sid"].Value;
+                //    list.Add(new betData() { username = username, bbid = bbid, PortalMemo = mobile, betno = mobile, aid = aid });
+                //}
 
+                
                 foreach (HtmlNode node in collection)
                 {
                     string bbid = "0";
@@ -157,7 +167,7 @@ namespace TimoControl
 
                     //去除\r\n以及空格，获取到相应td里面的数据
                     string[] line = node.InnerText.Replace("\t", "").Split(new char[] { '\r', '\n', ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                    list.Add(new betData() { username = line[0], betno = line[1], bbid = bbid,aid= aid });
+                    list.Add(new betData() { username = line[0], betno = line[1], bbid = bbid, aid = aid, PortalMemo = line[1] });
 
                     //if (line.Length == 11)
                     //{
@@ -167,9 +177,8 @@ namespace TimoControl
                     //{
                     //    list.Add(new betData() { betno = line[2], username = line[0], bbid = bbid });
                     //}
-
-
                 }
+                
 
                 return list;
             }
@@ -181,7 +190,7 @@ namespace TimoControl
                     loginActivity();
                     return null;
                 }
-                appSittingSet.txtLog("获取活动列表失败：" + ex.Message);
+                appSittingSet.Log("获取活动列表失败：" + ex.Message);
                 return null;
             }
 
@@ -234,7 +243,7 @@ namespace TimoControl
             {
                 string msg = string.Format("回填活动处理结果(异常)：用户 {0} 注单{1} {2} ", bb.username, bb.betno, ex.Message);
                 //lvRecorder.Items.Insert(0, msg);
-                appSittingSet.txtLog(msg);
+                appSittingSet.Log(msg);
 
                 return false;
             }
@@ -316,8 +325,6 @@ namespace TimoControl
 
                 HtmlNodeCollection collection = node1.SelectNodes("//tr[@class='gradeA']");//跟Xpath一样，轻松的定位到相应节点下
 
-
-
                 foreach (HtmlNode node in collection)
                 {
                     string bbid = "0";
@@ -329,7 +336,7 @@ namespace TimoControl
                     //string un = node.ChildNodes[1].InnerText.Trim();
                     //去除\r\n以及空格，获取到相应td里面的数据
                     string[] line = node.InnerText.Replace("\t", "").Split(new char[] { '\r', '\n', ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                    list.Add(new betData() { username = line[0], betTime = line[2].Replace("-", "/") + " " + line[3] + ":59", bbid = bbid, passed = true,aid=aid });//默认等于合格
+                    list.Add(new betData() { username = line[0], betTime = line[2].Replace("-", "/") + " " + line[3] + ":00", bbid = bbid, passed = true,aid=aid });//默认等于合格
 
 
                     //HtmlNodeCollection node_td = node.SelectNodes("//td");
@@ -347,7 +354,7 @@ namespace TimoControl
                 //    loginActivity();
                 //    return null;
                 //}
-                appSittingSet.txtLog("获取活动列表失败：" + ex.Message);
+                appSittingSet.Log("获取活动列表失败：" + ex.Message);
                 return null;
             }
 
@@ -427,7 +434,7 @@ namespace TimoControl
                 }
 
                 HtmlNodeCollection node_td =  htmlDocument.DocumentNode.SelectNodes("//table//tbody//tr//td");
-                bb.lastOprTime = node_td[index2].InnerText + ":59";//补足59秒
+                bb.lastOprTime = node_td[index2].InnerText + ":00";//补足59秒
 
                 //去除\r\n以及空格，获取到相应td里面的数据
                 //string[] line = node1.SelectSingleNode("//tr[@class='gradeA']").InnerText.Replace("\t", "").Split(new char[] { '\r', '\n', ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -443,172 +450,12 @@ namespace TimoControl
                 //    loginActivity();
                 //    return null;
                 //}
-                appSittingSet.txtLog("获取活动列表失败：" + ex.Message);
+                appSittingSet.Log("获取活动列表失败：" + ex.Message);
                 return null;
             }
 
         }
 
-        public static betData getActData2_topone(string aid)
-        {
-            string url_act_list = url_act_base + "Submissions/index/aid/" + aid + ".html?status=0&p=1&start=&end=&username=&psize=20"; //未处理0 分页20条
-            HttpWebRequest request = WebRequest.Create(url_act_list) as HttpWebRequest;
-            request.ProtocolVersion = HttpVersion.Version11;
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-            request.Method = "GET";
-            request.UserAgent = "Mozilla/4.0";
-            request.KeepAlive = true;
-            request.CookieContainer = ct_yh;
 
-            try
-            {
-                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
-
-                string ret_html = reader.ReadToEnd();
-                reader.Close();
-                reader.Dispose();
-                response.Close();
-                response.Dispose();
-
-                if (ret_html.Contains("130102031") ||ret_html.Contains("登录" ))
-                {
-                    //需要重新登录
-                    loginActivity();
-                    return null;
-                }
-                //HtmlAgilityPack.HtmlDocument doc = new HtmlAgilityPack.HtmlDocument();
-                var htmlDocument = new HtmlAgilityPack.HtmlDocument();
-                htmlDocument.LoadHtml(ret_html);
-                HtmlNode node1 = htmlDocument.DocumentNode.SelectSingleNode("//table//tbody");
-                if (node1 == null)
-                {
-                    //appSittingSet.txtLog("没有获取到活动列表信息");
-                    return null;
-                }
-
-                if (node1.ChildNodes.Count < 2)
-                {
-                    //appSittingSet.txtLog("没有获取到活动列表信息");
-                    return null;
-                }
-                HtmlNodeCollection collection = node1.SelectNodes("//tr[@class='gradeA']");//跟Xpath一样，轻松的定位到相应节点下
-
-                HtmlNode node_top = collection[collection.Count - 1];
-                string bbid = "0";
-
-                //**************************只能用字符串处理    用其他方法 SelectSingleNode 均会出错  不知道是否 HtmlAgilityPack bug 原因*****************
-                int index1 = node_top.InnerHtml.IndexOf("sid=") + 5;
-                int index2 = node_top.InnerHtml.IndexOf("noTongguo") - 9;
-                bbid = node_top.InnerHtml.Substring(index1, index2 - index1);
-
-                //去除\r\n以及空格，获取到相应td里面的数据
-                string[] line = node_top.InnerText.Replace("\t", "").Split(new char[] { '\r', '\n', ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                return new betData() { username = line[0], betTime = line[3].Replace("-", "/") + " " + line[4] + ":59", bbid = bbid, passed = true };
-            }
-            catch (WebException ex)
-            {
-                //if (ex.HResult== -2146233079 || ex.Message== "操作超时")
-                //{
-                //    //需要重新登录
-                //    loginActivity();
-                //    return null;
-                //}
-                appSittingSet.txtLog("获取活动列表失败：" + ex.Message);
-                return null;
-            }
-
-        }
-
-        /// <summary>
-        /// 获取活动列表数据 以小博大
-        /// </summary>
-        /// <param name="aid"></param>
-        /// <returns></returns>
-        public static List<betData> getActData_First_Deposit(int aid)
-        {
-            HttpWebRequest request = null;
-            HttpWebResponse response = null;
-            StreamReader reader = null;
-            List<betData> list = new List<betData>();
-            try
-            {
-                string url_act_list = url_act_base + "Submissions/index/aid/" + aid + ".html?status=0&p=1&start=&end=&username=&psize=20"; //未处理0 分页20条
-                request = WebRequest.Create(url_act_list) as HttpWebRequest;
-                request.ProtocolVersion = HttpVersion.Version11;
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-                ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
-
-                request.Method = "GET";
-                request.UserAgent = "Mozilla/4.0";
-                request.KeepAlive = true;
-                request.CookieContainer = ct_yh;
-
-                response = (HttpWebResponse)request.GetResponse();
-                reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
-                string ret_html = reader.ReadToEnd();
-                if (ret_html.Contains("130102031") || ret_html.Contains("登录"))
-                {
-                    //需要重新登录
-                    loginActivity();
-                    return null;
-                }
-
-                HtmlDocument htmlDocument = new HtmlDocument();
-                htmlDocument.LoadHtml(ret_html);
-                HtmlNode node1 = htmlDocument.DocumentNode.SelectSingleNode("//table//tbody");
-                if (node1 == null)
-                {
-                    //appSittingSet.txtLog("没有获取到活动列表信息");
-                    return list;
-                }
-
-                if (node1.ChildNodes.Count < 2)
-                {
-                    //appSittingSet.txtLog("没有获取到活动列表信息");
-                    return list;
-                }
-
-                for (int i = 1; i <= node1.SelectNodes("//tbody//tr").Count; i++)
-                {
-                    //*[@id="rightSide"]/div[3]/div[2]/table/tbody/tr[1]/td[1]
-                    //*[@id="rightSide"]/div[3]/div[2]/table/tbody/tr[2]/td[1]
-                    string bbid = node1.SelectSingleNode("/html/body/div[3]/div[2]/table/tbody/tr["+i+"]/td[5]/input").Attributes["sid"].Value;
-                    string username = node1.SelectSingleNode("/html/body/div[3]/div[2]/table/tbody/tr["+i+"]/td[1]").InnerText;
-
-                    list.Add(new betData() { username = username,bbid = bbid });
-                }
-
-                return list;
-            }
-            catch (WebException ex)
-            {
-                //if (ex.HResult== -2146233079 || ex.Message== "操作超时")
-                //{
-                //    //需要重新登录
-                //    loginActivity();
-                //    return null;
-                //}
-                appSittingSet.txtLog("获取活动列表失败：" + ex.Message);
-                return null;
-            }
-            finally
-            {
-                if (request != null)
-                {
-                    request.Abort();
-                }
-                if (response != null)
-                {
-                    response.Close();
-                    response.Dispose();
-                }
-                if (reader != null)
-                {
-                    reader.Close();
-                    reader.Dispose();
-                }
-            }
-        }
     }
 }

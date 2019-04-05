@@ -13,6 +13,7 @@ using System.Reflection;
 using System.Windows.Forms;
 using mshtml;
 using Newtonsoft.Json.Linq;
+using System.Threading.Tasks;
 
 namespace TestDomo_console
 {
@@ -81,6 +82,21 @@ namespace TestDomo_console
 
 
             b = platGPK.loginGPK();
+
+
+            //b = platWSB.login();
+            //List<betData> list = platWSB.getData();
+            //foreach (var item in list)
+            //{
+            //    //来自网页 存入数据库，确认掉
+            //    string sql = string.Format("INSERT INTO [t_data] ([oid]  ,[username] ,[deposit]  ,[state]) VALUES ({0} ,{1} ,{2} ,0)", item.betno, item.username, item.betMoney);
+            //    int i = sqlHelper.ExecuteNonQuery(sql);
+            //}
+
+
+            //platWSB.confirmAct(list[0]);
+
+
             //游戏列表
             //List<string> list = platGPK.GetKindCategories();
             //tanxi1.GameCategories = "[" + platGPK.KindCategories[0] +","+ platGPK.KindCategories[1] + "," + platGPK.KindCategories[2] + "," + platGPK.KindCategories[3] + "," + platGPK.KindCategories[4] + "," + platGPK.KindCategories[5] + "]";
@@ -88,7 +104,25 @@ namespace TestDomo_console
             //tanxi2.GameCategories = "[" + platGPK.KindCategories[3] + "," + platGPK.KindCategories[5] + "]";
 
 
-            platGPK.MemberUpdateMemberState(new Gpk_UserDetail() { Account = "siyue5266521", Id = "2164836", SexString = "0" });
+
+            //string sr = platGPK.GetUserLoadHistory(new Gpk_UserDetail() { Account = "weiyb747" ,Id= "2164365" }, "申请加入会员,建立会员,建立银行帐户资讯", 10);
+            //string sr = platGPK.GetUserLoadHistory(new Gpk_UserDetail() { Account = "tanxi" ,Id= "2164365" }, "申请加入会员,建立会员,建立银行帐户资讯", 10);
+            //if (sr != "OK")
+            //{
+            //    Console.WriteLine("111");
+            //}
+
+            //string sr = platGPK.GetUserLoadHistory(new Gpk_UserDetail() { Account = "feng1o22", Id = "1000472" }, "申请加入会员,建立会员,建立银行帐户资讯", 10);
+
+            //DateTime dt1 = DateTime.Parse("2018/07/05 16:20:54");
+            //DateTime dt2 = DateTime.Parse("2018/07/05 16:19:08");
+            //double d =  (dt2 - dt1).TotalSeconds ;
+            // d =  (dt2 - dt1).Duration().TotalSeconds ;
+
+            //string aa = platGPK.GetUserLoadHistory(new Gpk_UserDetail() { Account = "feng1o22", Id = "1000472" }, "申请加入会员,建立会员,建立银行帐户资讯", 10);
+
+
+            //platGPK.MemberUpdateMemberState(new Gpk_UserDetail() { Account = "siyue5266521", Id = "2164836", SexString = "0" });
             /*
             //启动sokect
             platGPK.SaveSocket2DB();
@@ -276,6 +310,24 @@ namespace TestDomo_console
             //}
             //Console.WriteLine(sw);
             #endregion
+
+
+            //List<string> list = new List<string>();
+            //list.Add("ssss");
+            //list.Add("aaaa");
+
+            //string test = list.Find(o => o == "ssss");
+
+
+            //List<string> list = platGPK.GetKindCategories();
+
+            //获取详细信息
+            //Gpk_UserDetail userinfo = platGPK.GetUserDetail(tanxi1.username);
+            ////发送站内信 14点09分 2019年4月2日
+            //SendMailBody mail = new SendMailBody() { MailBody = "<p>您申请的体验金已经送至你的账户</p>", Subject = "您申请的体验金已经送至你的账户", SendMailType = "1", MailRecievers = userinfo.Account };
+            //platGPK.SiteMailSendMail(mail);
+
+
             Console.ReadLine();
         }
 

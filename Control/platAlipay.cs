@@ -56,7 +56,7 @@ namespace TimoControl
             }
             catch (WebException ex)
             {
-                appSittingSet.txtLog(string.Format("获取验证码失败：{0}   ", ex.Message));
+                appSittingSet.Log(string.Format("获取验证码失败：{0}   ", ex.Message));
                 return null;
             }
             finally

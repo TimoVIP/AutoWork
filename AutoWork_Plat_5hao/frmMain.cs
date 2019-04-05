@@ -61,7 +61,7 @@ namespace AutoWork_Plat_5hao
             MyJob1 myjob1 = new MyJob1();
             myjob1.Execute(null);
 
-            appSittingSet.txtLog("手动操作登录");
+            appSittingSet.Log("手动操作登录");
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -144,7 +144,7 @@ namespace AutoWork_Plat_5hao
             {
                 //文件创建 merge 到数据库
                 bool b = plat5hao.dbFromFile(FolderPath);
-                appSittingSet.txtLog(string.Format("文件到数据库 {0}", b? "成功" : "失败"));
+                appSittingSet.Log(string.Format("文件到数据库 {0}", b? "成功" : "失败"));
             }
             else if (e.ChangeType == WatcherChangeTypes.Deleted)
             {
@@ -159,7 +159,7 @@ namespace AutoWork_Plat_5hao
                 {
                     //文件创建 merge 到数据库
                     bool b = plat5hao.dbFromFile(FolderPath);
-                    appSittingSet.txtLog(string.Format("文件到数据库 {0}", b? "成功" : "失败"));
+                    appSittingSet.Log(string.Format("文件到数据库 {0}", b? "成功" : "失败"));
                 }
             }
             LastChangeFileName = e.Name;
@@ -235,7 +235,7 @@ namespace AutoWork_Plat_5hao
                 //清除listbox 信息
                 mycls();
                 string msg = string.Format("5hao站登录{0} ", plat5hao.login() ? "成功" : "失败");
-                appSittingSet.txtLog(msg);
+                appSittingSet.Log(msg);
                 MyWrite(msg);
             }
         }
@@ -249,9 +249,9 @@ namespace AutoWork_Plat_5hao
                 int diff = int.Parse(AutoCls[0]);
                 string sql = "delete from History where time < '" + DateTime.Now.AddDays(-diff).Date.ToString("yyyy-MM-dd") + "'";
                 appSittingSet.execSql(sql);
-                appSittingSet.txtLog("清除一周前的数据");
+                appSittingSet.Log("清除一周前的数据");
                 appSittingSet.clsLogFiles(diff);
-                appSittingSet.txtLog("清除一周前的日志");
+                appSittingSet.Log("清除一周前的日志");
             }
         }
 
@@ -295,7 +295,7 @@ namespace AutoWork_Plat_5hao
 
                         //从文件夹获取数据 文件创建 merge 到数据库
                         bool b = plat5hao.dbFromFile(FolderPath);
-                        appSittingSet.txtLog(string.Format("文件到数据库 {0}", b ? "成功" : "失败"));
+                        appSittingSet.Log(string.Format("文件到数据库 {0}", b ? "成功" : "失败"));
 
                         //前一天12:00:00点以后的数据 同网站后台一样
                         List<DepositInfo> list_dep = plat5hao.getLits_db(3);
@@ -327,7 +327,7 @@ namespace AutoWork_Plat_5hao
                         bool r = plat5hao.confirm(item_rc);
                         string msg = string.Format("用户{0}，存入金额{1} ,处理结果为：取消(重复提交) ,处理{2}", item_rc.UserName, item_rc.RechargeMoney, r ? "成功" : "失败");
                         MyWrite(msg);
-                        appSittingSet.txtLog(msg);
+                        appSittingSet.Log(msg);
                     }
 
                     if (item_rc.OperateType == 1)
@@ -337,7 +337,7 @@ namespace AutoWork_Plat_5hao
                         //bool r = true;//测试
                         string msg = string.Format("用户{0}，申请金额{1} ,处理结果为：通过 ,处理{2}", item_rc.UserName, item_rc.RechargeMoney, r ? "成功" : "失败");
                         MyWrite(msg);
-                        appSittingSet.txtLog(msg);
+                        appSittingSet.Log(msg);
 
                         //记录到通过的信息到数据库
                         string sql = "INSERT INTO History ( UserName, RechargeMoney, Status, Time )  VALUES ( '" + item_rc.UserName + "', " + item_rc.RechargeMoney + ", '" + item_rc.OperateType + "', '" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "' );";
@@ -356,7 +356,7 @@ namespace AutoWork_Plat_5hao
                             //bool r = true;//测试
                             string msg = string.Format("用户{0}，申请金额{1} ,处理结果为：取消(超时) ,处理{2}", item_rc.UserName, item_rc.RechargeMoney, r ? "成功" : "失败");
                             MyWrite(msg);
-                            appSittingSet.txtLog(msg);
+                            appSittingSet.Log(msg);
                             //更新数据库信息0-1  不存在的记录 不用更新
                             //string sql = "UPDATE DepositInfo SET   Status = '1' WHERE Account = '" + item_rc.UserName + "' AND  Deposit = '" + item_rc.RechargeMoney + "' AND Status = '0' ;";
                             //appSittingSet.execSql(sql);

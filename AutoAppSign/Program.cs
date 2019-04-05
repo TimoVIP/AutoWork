@@ -14,12 +14,12 @@ namespace AutoAppSign
         {
             //AppCheck.getMachineCode();
             //验证软件有效期
-            string msg = "";
-            if (!AppCheck.isExpired(out msg))
-            {
-                appSittingSet.txtLog(msg);
-                return;
-            }
+            //string msg = "";
+            //if (!AppCheck.isExpired(out msg))
+            //{
+            //    appSittingSet.Log(msg);
+            //    return;
+            //}
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);

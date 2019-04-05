@@ -33,7 +33,7 @@ namespace TimoControl
             }
             catch (Exception ex)
             {
-                appSittingSet.txtLog("获取配置文件失败" + ex.Message);
+                appSittingSet.Log("获取配置文件失败" + ex.Message);
                 return false;
             }
 
@@ -83,7 +83,7 @@ namespace TimoControl
             }
             catch (WebException ex)
             {
-                appSittingSet.txtLog(string.Format("红包站登录失败：{0}   ", ex.Message));
+                appSittingSet.Log(string.Format("红包站登录失败：{0}   ", ex.Message));
                 return false;
             }
             finally
@@ -210,7 +210,7 @@ namespace TimoControl
                 //    loginActivity();
                 //    return null;
                 //}
-                appSittingSet.txtLog("获取活动列表失败：" + ex.Message);
+                appSittingSet.Log("获取活动列表失败：" + ex.Message);
                 return null;
             }
             finally
@@ -317,7 +317,7 @@ namespace TimoControl
                 }
                 catch (Exception ex)
                 {
-                    appSittingSet.txtLog("解析列表、到数据库 失败：" + ex.Message);
+                    appSittingSet.Log("解析列表、到数据库 失败：" + ex.Message);
                     return null;
                 }
 
@@ -331,7 +331,7 @@ namespace TimoControl
                 //    loginActivity();
                 //    return null;
                 //}
-                appSittingSet.txtLog("获取活动列表失败：" + ex.Message);
+                appSittingSet.Log("获取活动列表失败：" + ex.Message);
                 return null;
             }
             finally
@@ -411,7 +411,7 @@ namespace TimoControl
             catch (WebException ex)
             {
                 string msg = string.Format("回填活动处理结果(异常)：用户 {0} 金额{1} {2} ", bb.username, bb.betMoney, ex.Message);
-                appSittingSet.txtLog(msg);
+                appSittingSet.Log(msg);
                 return false;
             }
             finally
@@ -496,7 +496,7 @@ namespace TimoControl
             catch (WebException ex)
             {
                 string msg = string.Format("回填活动处理结果(异常)：用户 {0}-{1} ", postdata.ToString(), ex.Message);
-                appSittingSet.txtLog(msg);
+                appSittingSet.Log(msg);
                 return false;
             }
             finally

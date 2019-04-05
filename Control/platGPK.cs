@@ -52,7 +52,7 @@ namespace TimoControl
             }
             catch (Exception ex)
             {
-                appSittingSet.txtLog("获取配置文件失败" + ex.Message);
+                appSittingSet.Log("获取配置文件失败" + ex.Message);
                 return false;
             }
 
@@ -132,7 +132,7 @@ namespace TimoControl
             }
             catch (WebException ex)
             {
-                appSittingSet.txtLog(string.Format("GPK站登录失败：{0}   ", ex.Message));
+                appSittingSet.Log(string.Format("GPK站登录失败：{0}   ", ex.Message));
                 return false;
             }
             
@@ -174,7 +174,7 @@ namespace TimoControl
                 list.Add(jo["ConnectionId"] == null ? "" : jo["ConnectionId"].ToString());
 
                 //string value = jo[item][index].ToString(); 
-                appSittingSet.txtLog(string.Format("获取到的connectionToken:{0} ; connectionId:{1};", list[0], list[1]));
+                appSittingSet.Log(string.Format("获取到的connectionToken:{0} ; connectionId:{1};", list[0], list[1]));
                 return list;
 
             }
@@ -184,7 +184,7 @@ namespace TimoControl
                 {
                     list.Add("False");
                 }
-                appSittingSet.txtLog("获取connectionId、connectionToken失败");
+                appSittingSet.Log("获取connectionId、connectionToken失败");
                 return list;
             }
 
@@ -235,7 +235,7 @@ namespace TimoControl
                 //    loginGPK();
                 //    msg = string.Format("用户 {0} 注单{1}  GPK查询账号、钱包失败 {2} 已经重新登录账号", bb.username, bb.betno, ex.Message);
                 //}
-                appSittingSet.txtLog(msg);
+                appSittingSet.Log(msg);
                 return null;
             }
 
@@ -293,7 +293,7 @@ namespace TimoControl
             catch (WebException ex)
             {
                 string msg = string.Format("GPK获取充值Token失败：用户 {0} 活动{1} {2} ", bb.username, bb.aname, ex.Message);
-                appSittingSet.txtLog(msg);
+                appSittingSet.Log(msg);
                 flag = false;
             }
 
@@ -353,7 +353,7 @@ namespace TimoControl
             catch (WebException ex)
             {
                 string msg = string.Format("GPK提交充值数据失败：用户 {0} 活动{1} {2} ", bb.username, bb.aname, ex.Message);
-                appSittingSet.txtLog(msg);
+                appSittingSet.Log(msg);
                 flag = false;
             }
 
@@ -379,7 +379,7 @@ namespace TimoControl
             }
             catch (WebException ex)
             {
-                appSittingSet.txtLog(ex.Message);
+                appSittingSet.Log(ex.Message);
                 if (ex.HResult == -2146233079)
                 {
                     return true;
@@ -390,7 +390,8 @@ namespace TimoControl
 
 
         /// <summary>
-        /// 检查账号 获取转账记录
+        /// 检查账号 获取转账记录 
+        /// 减去12小时 到美东时间 终止时间再加2分钟 
         /// </summary>
         /// <returns></returns>
         public static betData MemberTransactionSearch(betData bb)
@@ -401,7 +402,7 @@ namespace TimoControl
             {
                 DateTime d1;
                 DateTime.TryParse(bb.lastOprTime, out d1);
-                bb.lastOprTime = d1.AddHours(-12).ToString("yyyy/MM/dd HH:mm:ss");
+                bb.lastOprTime = d1.AddMinutes(2).AddHours(-12).ToString("yyyy/MM/dd HH:mm:ss");
                 postData = postData + ",\"TimeBegin\":\"" + bb.lastOprTime + "\"";
             }
             if (bb.betTime != null && bb.betTime != "")
@@ -409,7 +410,7 @@ namespace TimoControl
                 //时间-12 变为美东时间
                 DateTime d2;
                 DateTime.TryParse(bb.betTime, out d2);
-                bb.betTime = d2.AddHours(-12).ToString("yyyy/MM/dd HH:mm:ss");
+                bb.betTime = d2.AddMinutes(2).AddHours(-12).ToString("yyyy/MM/dd HH:mm:ss");
                 postData = postData + ",\"TimeEnd\":\"" + bb.betTime + "\"";
             }
             postData = postData + "}";
@@ -455,27 +456,29 @@ namespace TimoControl
             catch (Exception ex)
             {
                 string msg = string.Format("用户 {0} GPK查询转账记录失败 {1}", bb.username, ex.Message);
-                appSittingSet.txtLog(msg);
+                appSittingSet.Log(msg);
                 return null;
             }
         }
 
         /// <summary>
         /// 更新会员级别 
+        /// 如果开关0 临时存取 Province  或者级别是一样的就不改变了 用RegisterDevice 临时存取新的级别
         /// </summary>
         /// <param name="memberId">会员号</param>
         /// <param name="levelId">级别号</param>
         /// <returns></returns>
-        public static bool UpadateMemberLevel(string swich, Gpk_UserDetail userinfo)
+        public static bool UpadateMemberLevel(Gpk_UserDetail userinfo)
         {
             try
             {
-                if (swich=="0")
+                //如果开关0 或者级别是一样的就不改变了 用RegisterDevice 临时存取新的级别
+                if (userinfo.Province=="0" || userinfo.MemberLevelSettingId==userinfo.RegisterDevice)
                 {
                     return true;
                 }
                 string postUrl = "Member/UpdateMemberLevel";
-                string postData = "{\"memberId\":" + userinfo.Id + ",\"levelId\":" + userinfo.MemberLevelSettingId + "}";
+                string postData = "{\"memberId\":" + userinfo.Id + ",\"levelId\":" + userinfo.RegisterDevice + "}";
                 string postRefere = "MemberDeposit";
                 HttpStatusCode r = GetResponse<HttpStatusCode>(postUrl, postData, "POST", postRefere);
                 //if (r==HttpStatusCode.OK)
@@ -486,13 +489,13 @@ namespace TimoControl
 
                 bool b = r == HttpStatusCode.OK ? true : false;
                 if (!b)
-                    appSittingSet.txtLog("用户" + userinfo.Account + "更新等级失败，需手动更新");
+                    appSittingSet.Log("用户" + userinfo.Account + "更新等级失败，需手动更新");
                 return b;
 
             }
             catch (Exception ex)
             {
-                appSittingSet.txtLog("用户"+userinfo.Account+"更新等级失败 " + ex.Message);
+                appSittingSet.Log("用户"+userinfo.Account+"更新等级失败 " + ex.Message);
                 return false;
             }
         }
@@ -520,7 +523,7 @@ namespace TimoControl
             {
                 //如果 操作超时 重新登录一下GPK
                 string msg = "查询账户信息(钱包)失败 " + ex.Message;
-                appSittingSet.txtLog(msg);
+                appSittingSet.Log(msg);
                 return null;
             }
         }
@@ -562,7 +565,7 @@ namespace TimoControl
             {
                 //如果 操作超时 重新登录一下GPK
                 string msg = "查询是否有注单记录错误 " + ex.Message;
-                appSittingSet.txtLog(msg);
+                appSittingSet.Log(msg);
                 return null;
             }
         }
@@ -633,7 +636,7 @@ namespace TimoControl
                 //string s = appSittingSet.unixTimeToTime("1544116883183");
                 if ((bool)jo["IsSuccess"] == false)
                 {
-                    appSittingSet.txtLog(postdata + " 没有交易记录");
+                    appSittingSet.Log(postdata + " 没有交易记录");
                     return null;
                 }
 
@@ -662,11 +665,11 @@ namespace TimoControl
                     {
                         //插入到数据库
                         bool f = appSittingSet.execSql(sb.ToString());
-                        appSittingSet.txtLog("已经操作页数" + pageIndex);
+                        appSittingSet.Log("已经操作页数" + pageIndex);
                     }
                     catch (Exception ex)
                     {
-                        appSittingSet.txtLog(ex.Message);
+                        appSittingSet.Log(ex.Message);
                     }
                 }
                 return list;
@@ -682,7 +685,7 @@ namespace TimoControl
                     msg += " 已经重新登录账号 ";
                 }
 
-                appSittingSet.txtLog(msg);
+                appSittingSet.Log(msg);
                 return null;
             }
 
@@ -728,7 +731,7 @@ namespace TimoControl
                 //如果为空 
                 if ((bool)jo["IsSuccess"] == false)
                 {
-                    appSittingSet.txtLog(postdata + " 没有记录"+ jo["ErrorMessage"]);
+                    appSittingSet.Log(postdata + " 没有记录"+ jo["ErrorMessage"]);
                     bb.passed = false;
                     return bb;
                 }
@@ -749,7 +752,7 @@ namespace TimoControl
                     loginGPK();
                     msg = string.Format("用户 {0}-{2}-{3} 查询报表失败 {1} 已经重新登录账号 ", bb.username, ex.Message, bb.lastCashTime, bb.betTime);
                 }
-                appSittingSet.txtLog(msg);
+                appSittingSet.Log(msg);
                 return null;
             }
             finally
@@ -813,13 +816,13 @@ namespace TimoControl
                 reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
                 string ret_html = reader.ReadToEnd();
 
-                appSittingSet.txtLog(ret_html);
+                appSittingSet.Log(ret_html);
 
                 JObject jo = JObject.Parse(ret_html);
                 //如果为空 
                 if ((bool)jo["IsSuccess"] == false)
                 {
-                    appSittingSet.txtLog(postdata + " 没有记录"+ jo["ErrorMessage"]);
+                    appSittingSet.Log(postdata + " 没有记录"+ jo["ErrorMessage"]);
                     bb.passed = false;
                     return bb;
                 }
@@ -840,7 +843,7 @@ namespace TimoControl
                     loginGPK();
                     msg = string.Format("用户 {0}-{2}-{3} 查询报表失败 {1} 已经重新登录账号 ", bb.username, ex.Message, bb.lastCashTime, bb.betTime);
                 }
-                appSittingSet.txtLog(msg);
+                appSittingSet.Log(msg);
                 return null;
             }
             finally
@@ -924,7 +927,7 @@ namespace TimoControl
 
                 if (ret_html == null)
                 {
-                    appSittingSet.txtLog(postUrl + "-" + postData + " 没有记录");
+                    appSittingSet.Log(postUrl + "-" + postData + " 没有记录");
                     return default(T);
                 }
 
@@ -962,7 +965,7 @@ namespace TimoControl
                     loginGPK();
                     msg = msg + "-已经重新登录账号";
                 }
-                appSittingSet.txtLog(msg);
+                appSittingSet.Log(msg);
                 return default(T);
             }
             finally
@@ -1060,8 +1063,8 @@ namespace TimoControl
             {
                 //如果 操作超时 重新登录一下GPK
                 string msg = "查询操作历史记录失败 " + ex.Message;
-                appSittingSet.txtLog(msg);
-                return "错误没有资料";
+                appSittingSet.Log(msg);
+                return "ERR错误没有资料";
             }
         }
 
@@ -1099,7 +1102,7 @@ namespace TimoControl
             {
                 //如果 操作超时 重新登录一下GPK
                 string msg = "查询操作历史记录失败 " + ex.Message;
-                appSittingSet.txtLog(msg);
+                appSittingSet.Log(msg);
                 return null;
             }
         }
@@ -1121,11 +1124,7 @@ namespace TimoControl
                 string postRefere = "MemberDeposit";
                 JObject jo = GetResponse<JObject>(postUrl, postData, "POST", postRefere);
 
-                if (jo["Member"] == null)
-                {
-                    appSittingSet.txtLog(postData + " 没有记录");
-                }
-                else
+                if (jo["Member"] != null)
                 {
                     dd = new Gpk_UserDetail() { };
                     dd.Account = jo["Member"]["Account"].ToString();
@@ -1163,7 +1162,7 @@ namespace TimoControl
             {
                 //如果 操作超时 重新登录一下GPK
                 string msg = "查询账户信息详细信息失败，用户为： " + username + " " + ex.Message;
-                appSittingSet.txtLog(msg);
+                appSittingSet.Log(msg);
                 return dd;
             }
             //try
@@ -1181,7 +1180,7 @@ namespace TimoControl
         }
 
         /// <summary>
-        /// 充值密码
+        /// 重置用户密码
         /// </summary>
         /// <param name="user"></param>
         public static void ResetPassword(Gpk_UserDetail user)
@@ -1195,18 +1194,18 @@ namespace TimoControl
 
                 if (jo["Password"] == null)
                 {
-                    appSittingSet.txtLog(string.Format("{0}密码重置失败", user.Account));
+                    appSittingSet.Log(string.Format("{0}密码重置失败", user.Account));
                 }
                 else
                 {
-                    appSittingSet.txtLog(string.Format("{0}密码重置为{1}", user.Account, jo["Password"]));               
+                    appSittingSet.Log(string.Format("{0}密码重置为{1}", user.Account, jo["Password"]));               
                 }
 
             }
             catch (Exception ex)
             {
                 string msg = user.Account +"重置密码失败" +   " " + ex.Message;
-                appSittingSet.txtLog(msg);
+                appSittingSet.Log(msg);
             }
         }
 
@@ -1225,18 +1224,18 @@ namespace TimoControl
 
                 if (jo["Id"] == null)
                 {
-                    appSittingSet.txtLog(string.Format("{0}提出失败,错误{1}", user.Account,jo["ErrorMessage"]));
+                    appSittingSet.Log(string.Format("{0}提出失败,错误{1}", user.Account,jo["ErrorMessage"]));
                 }
                 else
                 {
-                    appSittingSet.txtLog(string.Format("{0}提出成功ID:{1}", user.Account, jo["Id"]));               
+                    appSittingSet.Log(string.Format("{0}提出成功ID:{1}", user.Account, jo["Id"]));               
                 }
 
             }
             catch (Exception ex)
             {
                 string msg = user.Account +"提出失败" +   " " + ex.Message;
-                appSittingSet.txtLog(msg);
+                appSittingSet.Log(msg);
             }
         }
 
@@ -1255,18 +1254,18 @@ namespace TimoControl
 
                 if (jo["Member"] == null)
                 {
-                    appSittingSet.txtLog(string.Format("{0}全取回失败,错误{1}", user.Account,jo["ErrorMessage"]));
+                    appSittingSet.Log(string.Format("{0}全取回失败,错误{1}", user.Account,jo["ErrorMessage"]));
                 }
                 else
                 {
-                    appSittingSet.txtLog(string.Format("{0}全取回成功ID:{1}", user.Account, jo["Member"]["Wallet"]));               
+                    appSittingSet.Log(string.Format("{0}全取回成功ID:{1}", user.Account, jo["Member"]["Wallet"]));               
                 }
 
             }
             catch (Exception ex)
             {
                 string msg = user.Account +"提出失败" +   " " + ex.Message;
-                appSittingSet.txtLog(msg);
+                appSittingSet.Log(msg);
             }
         }
 
@@ -1287,18 +1286,18 @@ namespace TimoControl
 
                 if (jo== "true")
                 {
-                    appSittingSet.txtLog(string.Format("会员编号{0}不受区域验证限制操作成功", user.Id));
+                    appSittingSet.Log(string.Format("会员编号{0}不受区域验证限制操作成功", user.Id));
                 }
                 else
                 {
-                    appSittingSet.txtLog(string.Format("会员编号{0}不受区域验证限制操作失败", user.Id));
+                    appSittingSet.Log(string.Format("会员编号{0}不受区域验证限制操作失败", user.Id));
                 }
 
             }
             catch (Exception ex)
             {
                 string msg = user.Account + "会员不受区域验证限制 " + " " + ex.Message;
-                appSittingSet.txtLog(msg);
+                appSittingSet.Log(msg);
             }
         }
 
@@ -1316,20 +1315,18 @@ namespace TimoControl
                 string postRefere = "MemberDeposit";
                 string jo = GetResponse<string>(postUrl, postData, "POST", postRefere);
 
-                if (jo== "true")
-                {
-                    appSittingSet.txtLog(string.Format("会员{0}可跨区登入操作成功", user.Account));
-                }
-                else
-                {
-                    appSittingSet.txtLog(string.Format("会员{0}可跨区登入操作失败", user.Account));
-                }
+                //if (jo== "true")
+                //    appSittingSet.Log(string.Format("会员{0}可跨区登入操作成功", user.Account));
+                //else
+                //    appSittingSet.Log(string.Format("会员{0}可跨区登入操作失败", user.Account));
 
+                if (jo!="true")
+                    appSittingSet.Log(string.Format("会员{0}可跨区登入操作失败", user.Account));
             }
             catch (Exception ex)
             {
                 string msg = user.Account + "可跨区登入 " + " " + ex.Message;
-                appSittingSet.txtLog(msg);
+                appSittingSet.Log(msg);
             }
         }
 
@@ -1337,59 +1334,55 @@ namespace TimoControl
         /// 保存websocket 数据到数据库 
         /// 异步方法 2019年2月27日
         /// </summary>
-        public static WebSocket SaveSocket2DB(WebSocket ws,string group)
+        public static WebSocket SaveSocket2DB(WebSocket ws, string gamename)
+        {
+            if (ws==null || connectionToken != connectionToken_old)
+            {
+                ws= WebSocketConnect(gamename);
+            }
+            return ws;
+        }
+
+        public static WebSocket WebSocketConnect(string gamename)
         {
             string url = "ws://" + url_gpk_base.Replace("http://", "").Replace("/", "") + "/signalr/connect?transport=webSockets&clientProtocol=1.5&connectionToken=" + System.Web.HttpUtility.UrlEncode(connectionToken) + "&connectionData=%5B%7B%22name%22%3A%22mainhub%22%7D%5D&tid=8";
-            if (ws == null || connectionToken != connectionToken_old)
+            WebSocket ws = new WebSocket(url);
+            ws.Origin = url_gpk_base;
+            foreach (System.Net.Cookie item in platGPK.cookie.GetCookies(new Uri(url_gpk_base)))
             {
-                ws = new WebSocket(url);
-                ws.Origin = url_gpk_base;
-                foreach (System.Net.Cookie item in platGPK.cookie.GetCookies(new Uri(url_gpk_base)))
-                {
-                    ws.SetCookie(new WebSocketSharp.Net.Cookie(item.Name, item.Value, item.Path, item.Domain));
-                }
-                ws.OnOpen += (sender, e) =>
-                {
-                    //Console.WriteLine("Open");
-                    appSittingSet.txtLog("websocket is open");
-                    connectionToken_old = connectionToken;
-                };
-                ws.OnMessage += (sender, e) =>
-                {
-                    //appSittingSet.txtLog(e.Data);
-                    if (e.Data.Contains("MainHub") && e.Data.Contains("BetRecordQueryCtrl_searchComplete"))
-                    {
-                        JObject jo = JObject.Parse(e.Data);
-
-                        if (jo["M"][0]["M"].ToString() == "BetRecordQueryCtrl_searchComplete")
-                        {
-                            //保存到数据库
-                            string sql = string.Format("INSERT INTO record (username,gamename,subminttime,betno,chargeMoney,pass,msg,aid) VALUES ( '__socket', '{3}', datetime(CURRENT_TIMESTAMP,'localtime'), '{0}', {1}, 0, '{2}', 1002 );", jo["M"][0]["A"][0]["Count"], jo["M"][0]["A"][0]["TotalCommissionable"], jo["M"][0]["A"][0]["TotalPayoff"],group);
-                            bool b= appSittingSet.execSql(sql);
-                            //appSittingSet.txtLog(b.ToString());
-                            //停止
-                            //ws.Close();
-                        }
-                    }
-                };
-
-                ws.OnError += (sender, e) =>
-                {
-                    //Console.WriteLine(e.Message);
-                    appSittingSet.txtLog("websocket error " + e.Message);
-                };
-                ws.OnClose += (sender, e) =>
-                {
-                    //Console.WriteLine(e.Code);
-                    appSittingSet.txtLog("websocket is close");
-                };
-                if (!ws.IsAlive)
-                {
-                    ws.Connect();
-                }
-
+                ws.SetCookie(new WebSocketSharp.Net.Cookie(item.Name, item.Value, item.Path, item.Domain));
             }
+            ws.OnOpen += (sender, e) =>
+            {
+                appSittingSet.Log("websocket is open");
+                connectionToken_old = connectionToken;
+            };
+            ws.OnMessage += (sender, e) =>
+            {
+                if (e.Data.Contains("MainHub") && e.Data.Contains("BetRecordQueryCtrl_searchComplete"))
+                {
+                    JObject jo = JObject.Parse(e.Data);
 
+                    if (jo["M"][0]["M"].ToString() == "BetRecordQueryCtrl_searchComplete")
+                    {
+                        //保存到数据库
+                        string sql = string.Format("INSERT INTO record (username,gamename,subminttime,betno,chargeMoney,pass,msg,aid) VALUES ( '__socket', '{3}', datetime(CURRENT_TIMESTAMP,'localtime'), '{0}', {1}, 0, '{2}', 1002 );", jo["M"][0]["A"][0]["Count"], jo["M"][0]["A"][0]["TotalCommissionable"], jo["M"][0]["A"][0]["TotalPayoff"], gamename);
+                        bool b = appSittingSet.execSql(sql);
+                    }
+                }
+            };
+
+            ws.OnError += (sender, e) =>
+            {
+                appSittingSet.Log("websocket error " + e.Message);
+            };
+            ws.OnClose += (sender, e) =>
+            {
+                appSittingSet.Log("websocket is close" + e.Code + e.Reason + "已经重连，状态" + ws.IsAlive);
+                //WebSocketConnect(aid);
+                loginGPK();
+            };
+            ws.Connect();
             return ws;
         }
 
@@ -1418,14 +1411,15 @@ namespace TimoControl
         /// 是否需要增加一个范围
         /// </summary>
         /// <returns></returns>
-        public static object getSoketDataFromDbCompare()
+        public static object getSoketDataFromDbCompare(string gamename, out decimal chargeMoney)
         {
             int count1,count2 = 0;
             decimal TotalBetAmount1, TotalBetAmount2 = 0;
             decimal TotalPayoff1, TotalPayoff2 = 0;
-            DataTable dt = appSittingSet.getDataTableBySql("select  * from record where aid = 1002 order by rowid desc limit 2;");
+            //DataTable dt = appSittingSet.getDataTableBySql("select  * from record where gamename = " + gamename + " and aid=1002 order by rowid desc limit 2;");
+            DataTable dt = appSittingSet.getDataTableBySql("select  * from record where  aid=1002 order by rowid desc limit 2;");
             //2条记录 并且为同一组
-            if (dt.Rows.Count == 2 && (dt.Rows[0]["gamename"] .ToString()== dt.Rows[1]["gamename"].ToString()))
+            if (dt.Rows.Count == 2 && (dt.Rows[0]["gamename"].ToString() == dt.Rows[1]["gamename"].ToString()))
             {
                 count1 =Convert.ToInt16(dt.Rows[0]["betno"]);
                 count2 = Convert.ToInt16(dt.Rows[1]["betno"]);
@@ -1435,15 +1429,18 @@ namespace TimoControl
                 TotalPayoff2 = Convert.ToDecimal(dt.Rows[1]["msg"]);
                 if ((count1 > count2 - 10 && count1 < count2 + 10) && (TotalBetAmount1 > TotalBetAmount2 - 10 && TotalBetAmount1 < TotalBetAmount2 + 10) && (TotalPayoff1 > TotalPayoff2 - 10 && TotalPayoff1 < TotalPayoff2 + 10))
                 {
+                    chargeMoney =Math.Abs( TotalPayoff1);
                     return true;
                 }
                 else
                 {
+                    chargeMoney = Math.Abs(TotalPayoff1);
                     return false;
                 }
             }
             else
             {
+                chargeMoney = 0;
                 return null;
             }
         }
@@ -1469,8 +1466,6 @@ namespace TimoControl
             {
                 return list;
             }
-
-
 
             foreach (var c in ja)
             {
@@ -1511,15 +1506,44 @@ namespace TimoControl
 
                 bool b = r == HttpStatusCode.OK ? true : false;
                 if (!b)
-                    appSittingSet.txtLog("用户" + userinfo.Account + "编号" + userinfo.Id + "更新状态失败，需手动更新");
+                    appSittingSet.Log("用户" + userinfo.Account + "编号" + userinfo.Id + "更新状态失败，需手动更新");
                 //return b;
 
             }
             catch (Exception ex)
             {
                 string msg = "用户" + userinfo.Account + "编号" + userinfo.Id + "更新状态失败 " +  ex.Message;
-                appSittingSet.txtLog(msg);
+                appSittingSet.Log(msg);
             }
         }
+
+        /// <summary>
+        /// 发送站内信
+        /// </summary>
+        /// <param name="mail"></param>
+        public static void SiteMailSendMail(SendMailBody mail)
+        {
+            try
+            {
+                string postUrl = "SiteMail/SendMail";
+                string postData = JsonConvert.SerializeObject(new { BatchParam = mail.BatchParam, ExcelFilePath = mail.ExcelFilePath, MailBody = mail.MailBody, MailRecievers = mail.MailRecievers, ResendMailID = mail.ResendMailID, SearchParam = mail.SearchParam, SendMailType = mail.SendMailType, Subject = mail.Subject, SuperSearchRequest = mail.SuperSearchRequest });
+                string postRefere = "SiteMail/Send";
+                HttpStatusCode r = GetResponse<HttpStatusCode>(postUrl, postData, "POST", postRefere);
+
+                bool b = r == HttpStatusCode.OK ? true : false;
+                if (!b)
+                    appSittingSet.Log("站内信发送成功" + mail.MailRecievers);
+                //return b;
+
+            }
+            catch (Exception ex)
+            {
+                string msg = "站内信发送失败" + mail.MailRecievers +"-"+ ex.Message;
+                appSittingSet.Log(msg);
+            }
+        }
+
+
+
     }
 }

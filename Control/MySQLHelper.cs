@@ -1,5 +1,6 @@
 ﻿using MySql.Data.MySqlClient;
 using System;
+using System.Collections.Generic;
 using System.Data;
 
 namespace TimoControl
@@ -50,11 +51,19 @@ namespace TimoControl
         /// <returns>影响的记录数</returns>
         public static int ExecuteSql(string SQLString)
         {
+            return ExecuteSql(SQLString, null);
+        }
+        public static int ExecuteSql(string SQLString,List<MySqlParameter> para)
+        {
             MySqlConnection connection = conn();
             using (MySqlCommand cmd = new MySqlCommand(SQLString, connection))
             {
                 try
                 {
+                    if (para!=null && para.Count>0)
+                    {
+                        cmd.Parameters.AddRange(para.ToArray());
+                    }
                     int rows = cmd.ExecuteNonQuery();
                     return rows;
                 }
@@ -70,6 +79,7 @@ namespace TimoControl
                 }
             }
         }
+
         /// <summary>
         /// 执行SQL语句，返回影响的记录数
         /// </summary>

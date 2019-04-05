@@ -218,8 +218,27 @@ namespace TimoControl
         public string BankName { get; set; }
         public string CardNum { get; set; }
         public string Id { get; set; }
-
     }
 
-
+    /// <summary>
+    /// 站内信主体
+    /// </summary>
+    public class SendMailBody
+    {
+        public string BatchParam { get; set; }
+        public string ExcelFilePath { get; set; }
+        public string MailBody { get; set; }
+        /// <summary>
+        /// 国歌用,隔开 如ys5164 或者 wgd4416,zyy64002,ys5164
+        /// </summary>
+        public string MailRecievers { get; set; }
+        public string ResendMailID { get; set; }
+        public string SearchParam { get; set; }
+        /// <summary>
+        /// 默认1
+        /// </summary>
+        public string SendMailType { get; set; }
+        public string Subject { get; set; }
+        public string SuperSearchRequest { get; set; }
+    }
 }

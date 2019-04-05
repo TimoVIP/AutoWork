@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using TimoControl;
 
-namespace AutoDepositRedEnvelope
+namespace AutoDeposit
 {
     public delegate void Write(string msg);//写lv消息
     public delegate void ClsListItem();
@@ -36,6 +36,7 @@ namespace AutoDepositRedEnvelope
             notify.BalloonTipClicked += Notify_BalloonTipClicked;
 
             Text = platname;
+            toolStripStatusLabel1.Text = aname;
         }
 
         private void Notify_BalloonTipClicked(object sender, EventArgs e)
@@ -58,9 +59,15 @@ namespace AutoDepositRedEnvelope
             MyWrite = Write;
             mycls = ClsListItem;
 
+
+
             //先登陆一次
             MyJob1 myjob1 = new MyJob1();
             myjob1.Execute(null);
+
+            string msg = string.Format("数据库连接{0} ", sqlHelper.ConnState() ? "成功" : "失败");
+            //appSittingSet.Log(msg);
+            MyWrite(msg);
             //开始调度
             start();
         }
@@ -71,7 +78,7 @@ namespace AutoDepositRedEnvelope
             {
                 sched.Shutdown();
             }
-            appSittingSet.sendEmail(platname + " 程序关闭", "程序关闭 ");
+            //appSittingSet.sendEmail(platname + " 程序关闭", "程序关闭 ");
 
             notify.Dispose();
         }
@@ -95,7 +102,7 @@ namespace AutoDepositRedEnvelope
                 //登录一遍
                 MyJob1 myjob1 = new MyJob1();
                 myjob1.Execute(null);
-                appSittingSet.txtLog("手动操作登录");
+                appSittingSet.Log("手动操作登录");
             }
             else if (tsmi.Name == "toolStripMenuItem2")
             {
@@ -161,7 +168,7 @@ namespace AutoDepositRedEnvelope
             //0 6 12 18 小时执行 登陆
             sched.ScheduleJob(JobBuilder.Create<MyJob1>().Build(), TriggerBuilder.Create().WithCronSchedule("0 0 0,6,12,18 * * ? ").Build());
 
-            //5秒一次 读取提交列表
+            //5秒一次 处理入款
             sched.ScheduleJob(JobBuilder.Create<MyJob2>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval).RepeatForever()).Build());
 
             //5秒一次 读取提交列表
@@ -186,13 +193,14 @@ namespace AutoDepositRedEnvelope
             {
                 //清除listbox 信息
                 mycls();
-                string msg = string.Format("红包站登录{0} ", platRedEnvelope.login() ? "成功" : "失败");
-                appSittingSet.txtLog(msg);
+                string msg = string.Format("WSB登录{0} ", platWSB.login() ? "成功" : "失败");
+                appSittingSet.Log(msg);
                 MyWrite(msg);
 
                 msg = string.Format("GPK站登录{0} ", platGPK.loginGPK() ? "成功" : "失败");
-                appSittingSet.txtLog(msg);
+                appSittingSet.Log(msg);
                 MyWrite(msg);
+
             }
         }
         /// <summary>
@@ -204,13 +212,14 @@ namespace AutoDepositRedEnvelope
             {
                 int diff = int.Parse(AutoCls[0]);
                 appSittingSet.clsLogFiles(diff);
-                appSittingSet.txtLog("清除一周前的日志");
+                appSittingSet.Log("清除一周前的日志");
             }
         }
 
 
         /// <summary>
-        /// 遍历数据库新数据，处理网页数据
+        /// 遍历 处理网页+数据库 数据
+        /// 数据库 0存入客服需要改 |改后1 需要加款  |2加款完毕 3客服改了名字但是失败
         /// </summary>
         [DisallowConcurrentExecution]
         public class MyJob2 : IJob
@@ -218,8 +227,9 @@ namespace AutoDepositRedEnvelope
             List<betData> list = new List<betData>();
             public void Execute(IJobExecutionContext context)
             {
-                //获取网页等待处理的数据
-                list = platRedEnvelope.getActData();
+                Gpk_UserDetail userifo = null;
+
+                list = platWSB.getData();
                 if (list == null)
                 {
                     MyWrite("没有获取到申请信息，等待下次执行 ");
@@ -230,45 +240,98 @@ namespace AutoDepositRedEnvelope
                     MyWrite("没有新的申请信息，等待下次执行 ");
                     return;
                 }
-
-                Parallel.ForEach(list, (item) =>
+                foreach (var item in list)
                 {
-                    //提交充值 加钱 
-                    item.aname = aname;
-                    item.AuditType = "None";
+                    //1.判断用户名是否存在 
+                    userifo = platGPK.GetUserDetail(item.username);
+                    if (userifo == null)
+                    {
+                        if (item.aname == "WSB" && item.links.Length>10)
+                        {
+                            //来自网页 存入数据库，确认掉
+                            string sql = string.Format("INSERT INTO [t_data] ([oid]  ,[username] ,[deposit]  ,[state]，[subtime] ) VALUES ('{0}' ,'{1}' ,{2} ,0,getdate())", item.betno, item.username, item.betMoney);
+                            int i = sqlHelper.ExecuteNonQuery(sql);
+                            bool b = platWSB.confirm(item);
+                            if (b)
+                            {
+                                string msg = string.Format("上游订单" + item.betno + "已经确认，存入数据库，等待数据完善再处理");
+                                appSittingSet.Log(msg);
+                            }
+                        }
+                        else
+                        {
+                            //来自数据库 用户名填错
+                            string sql = string.Format("UPDATE [t_data] SET [state] = 3 WHERE  [oid] = '{0}'", item.betno);
+                            int i = sqlHelper.ExecuteNonQuery(sql);
+                        }
+                        continue;
+                    }
+                    //2.提交充值 加钱 
+                    //item.aname = aname;
+                    item.AuditType = "Deposit";
                     item.Audit = item.betMoney;
-                    item.Memo = item.aname;
-                    item.Type = 5;
-                    bool fr = platGPK.submitToGPK(item);
+                    item.Memo = item.betno;
+                    item.PortalMemo = item.betno;
+                    item.Type = 4;
+                    bool fr = platGPK.MemberDepositSubmit(item);
+                    fr = true;
+
                     if (fr)
                     {
                         string msg = string.Format("用户{0}处理，存入金额{1}，活动名称{2} ", item.username, item.betMoney, aname);
                         MyWrite(msg);
-                        appSittingSet.txtLog(msg);
-                        bool b = platRedEnvelope.confirm(item);
-                        if (!b)
+                        appSittingSet.Log(msg);
+                        if (item.aname == "DB")
                         {
-                            msg = string.Format("用户" + item.username + "处理失败，再次回填");
-                            b = platRedEnvelope.confirm(item);
-                            msg = string.Format("用户{0} 二次回填 {1}", item.username, b ? "成功" : "失败");
-                            MyWrite(msg);
-                            appSittingSet.txtLog(msg);
-                            return;
+                            //如果是数据库来的数据 更改数据库数据状态
+                            string sql = string.Format("UPDATE [t_data] SET [state] = 2 ,subtime=getdate() WHERE  [oid] = '{0}'", item.betno);
+                            int i = sqlHelper.ExecuteNonQuery(sql);
+                            if (i == 0)
+                            {
+                                msg = string.Format("用户" + item.username + "确认失败");
+                                appSittingSet.Log(msg);
+                                return;
+                            }
                         }
+                        //如果是网页来的数据 确认掉
+                        else if (item.aname == "WSB")
+                        {
+                            bool b = platWSB.confirm(item);
+                            if (!b)
+                            {
+                                b = platWSB.confirm(item);
+
+                                msg = string.Format("用户{0}确认{1}", item.username ,b);
+                                //MyWrite(msg);
+                                appSittingSet.Log(msg);
+                                return;
+                            }
+                            //存入数据库，已经处理完毕
+                            string sql = string.Format("INSERT INTO [t_data] ([oid]  ,[username] ,[deposit]  ,[state]，[subtime] ) VALUES ('{0}' ,'{1}' ,{2} ,2,getdate())", item.betno, item.username, item.betMoney);
+                            int i = sqlHelper.ExecuteNonQuery(sql);
+                            if (i == 0)
+                            {
+                                msg = string.Format("用户" + item.username + "确认失败");
+                                appSittingSet.Log(msg);
+                                return;
+                            }
+                        }
+
                     }
                     else
                     {
                         //充钱失败的情况 ？ 不做处理 下一次处理
                         return;
                     }
-                });
+                }
             }
         }
+
         /// <summary>
         /// 处理网页数据，然后gpk后台提交充值
         /// </summary>
         [DisallowConcurrentExecution]
-        public class MyJob3 : IJob
+        public class MyJob100 : IJob
         {
             public void Execute(IJobExecutionContext context)
             {
@@ -291,10 +354,43 @@ namespace AutoDepositRedEnvelope
                 if (b)
                 {
                     //记录处理过的 list 中的元素 更改数据库标识0-1
+                    string sql = "";
                     StringBuilder sbsql = new StringBuilder("UPDATE applyList SET status = '1' WHERE status = '0'  and  id in(");
                     //从数据库读取list 加入现有list 失败的在里面
                     list_db = platRedEnvelope.getLits_db();
 
+
+                    foreach (var item in list_db)
+                    {
+                        //提交充值 加钱 
+                        item.aname = aname;
+                        item.AuditType = "Discount";
+                        item.Audit = item.betMoney;
+                        item.Memo = item.aname;
+                        item.Type = 5;
+                        bool fr = platGPK.MemberDepositSubmit(item);
+                        if (fr)
+                        {
+                            string msg = string.Format("用户{0}处理，存入金额{1}，活动名称{2} ", item.username, item.betMoney, aname);
+                            MyWrite(msg);
+                            appSittingSet.Log(msg);
+                            //更改数据库标识0-1
+                            sql = "UPDATE applyList SET status = '1' WHERE status = '0'  and  id =" + item.bbid;
+                            b = appSittingSet.execSql(sql);
+                            if (!b)
+                            {
+                                //数据库改状态失败 钱已经送出了 会导致送两遍
+                                b = appSittingSet.execSql(sql);
+                            }
+                        }
+                        else
+                        {
+                            //充钱失败的情况 ？ 不做处理 下一次处理
+                            continue;
+                        }
+                    }
+                    //去掉线程循环
+                    /*
                     Parallel.ForEach(list_db, (item) =>
                     {
                         //提交充值 加钱 
@@ -303,12 +399,12 @@ namespace AutoDepositRedEnvelope
                         item.Audit = item.betMoney;
                         item.Memo = item.aname;
                         item.Type = 5;
-                        bool fr = platGPK.submitToGPK(item);
+                        bool fr = platGPK.MemberDepositSubmit(item);
                         if (fr)
                         {
                             string msg = string.Format("用户{0}处理，存入金额{1}，活动名称{2} ", item.username, item.betMoney, aname);
                             MyWrite(msg);
-                            appSittingSet.txtLog(msg);
+                            appSittingSet.Log(msg);
                             //更改数据库标识0-1
                             sbsql.AppendFormat("'{0}',", item.bbid);
                         }
@@ -320,12 +416,15 @@ namespace AutoDepositRedEnvelope
                     });
 
                     sbsql.Append(");");
-                    b = appSittingSet.execSql(sbsql.ToString().Replace(",)", ")"));
+                    sql = sbsql.ToString().Replace(",)", ")");
+                    b = appSittingSet.execSql(sql);
                     if (!b)
                     {
                         //数据库改状态失败 钱已经送出了 会导致送两遍
-
+                        b = appSittingSet.execSql(sql);
                     }
+                    */
+
                 }
             }
         }

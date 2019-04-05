@@ -83,7 +83,7 @@
     <Compile Include="AMESTime.cs" />
     <Compile Include="appSittingSet.cs" />
     <Compile Include="AsynFileHelp.cs" />
-    <Compile Include="betData.cs" />
+    <Compile Include="Entities.cs" />
     <Compile Include="KeyBoard_Mouse.cs" />
     <Compile Include="MySQLHelper.cs" />
     <Compile Include="NPOIExcel.cs" />
@@ -94,7 +94,9 @@
     <Compile Include="platBB.cs" />
     <Compile Include="platGPK.cs" />
     <Compile Include="platRedEnvelope.cs" />
+    <Compile Include="platWSB.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="sqlHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

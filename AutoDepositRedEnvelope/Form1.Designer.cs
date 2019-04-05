@@ -1,4 +1,4 @@
-﻿namespace AutoDepositRedEnvelope
+﻿namespace AutoDeposit
 {
     partial class Form1
     {
@@ -37,6 +37,7 @@
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.lvRecorder = new System.Windows.Forms.ListBox();
+            this.toolStripMenuItem5 = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -47,10 +48,11 @@
             this.toolStripMenuItem1,
             this.toolStripMenuItem2,
             this.toolStripMenuItem3,
-            this.toolStripMenuItem4});
+            this.toolStripMenuItem4,
+            this.toolStripMenuItem5});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(534, 25);
+            this.menuStrip1.Size = new System.Drawing.Size(594, 25);
             this.menuStrip1.TabIndex = 12;
             this.menuStrip1.Text = "menuStrip1";
             this.menuStrip1.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.menuStrip1_ItemClicked);
@@ -83,9 +85,9 @@
             // 
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripStatusLabel1});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 284);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 352);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(534, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(594, 22);
             this.statusStrip1.TabIndex = 13;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -97,25 +99,30 @@
             // 
             // lvRecorder
             // 
-            this.lvRecorder.BackColor = System.Drawing.SystemColors.Control;
-            this.lvRecorder.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.lvRecorder.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.lvRecorder.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lvRecorder.Font = new System.Drawing.Font("微软雅黑", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.lvRecorder.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lvRecorder.FormattingEnabled = true;
-            this.lvRecorder.ItemHeight = 19;
-            this.lvRecorder.Location = new System.Drawing.Point(0, 0);
+            this.lvRecorder.ItemHeight = 17;
+            this.lvRecorder.Location = new System.Drawing.Point(0, 25);
             this.lvRecorder.Name = "lvRecorder";
-            this.lvRecorder.Size = new System.Drawing.Size(534, 306);
+            this.lvRecorder.Size = new System.Drawing.Size(594, 327);
             this.lvRecorder.TabIndex = 14;
+            // 
+            // toolStripMenuItem5
+            // 
+            this.toolStripMenuItem5.Name = "toolStripMenuItem5";
+            this.toolStripMenuItem5.Size = new System.Drawing.Size(68, 21);
+            this.toolStripMenuItem5.Text = "清除记录";
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(534, 306);
+            this.ClientSize = new System.Drawing.Size(594, 374);
+            this.Controls.Add(this.lvRecorder);
             this.Controls.Add(this.menuStrip1);
             this.Controls.Add(this.statusStrip1);
-            this.Controls.Add(this.lvRecorder);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form1";
             this.Text = "Form1";
@@ -141,6 +148,7 @@
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
         private System.Windows.Forms.ListBox lvRecorder;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem5;
     }
 }
 

@@ -82,17 +82,31 @@ namespace TimoControl
         /// 写文件日志 2018年12月21日 解决多线程写入的问题 编码改为ansi
         /// </summary>
         /// <param name="log"></param>
-        public static void txtLog(string log)
+        public static void Log(string log)
+        {
+            Log(log, "");
+        }
+        /// <summary>
+        /// 写文件日志
+        /// </summary>
+        /// <param name="log">日志内容</param>
+        /// <param name="path">文件名</param>
+        public static void Log(string log,string path)
         {
             if (!Directory.Exists(AppDomain.CurrentDomain.BaseDirectory + "log"))
             {
                 Directory.CreateDirectory(AppDomain.CurrentDomain.BaseDirectory + "log");
             }
-            string filePath = AppDomain.CurrentDomain.BaseDirectory + "log\\" + DateTime.Now.Date.ToString("yyyyMMdd") + ".txt";
+            //if (path!="")
+            //    path = AppDomain.CurrentDomain.BaseDirectory + "log\\" + path;
+            //else
+            //    path = AppDomain.CurrentDomain.BaseDirectory + "log\\" + DateTime.Now.Date.ToString("yyyyMMdd") + ".txt";
 
-            using (FileStream fs = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, 8, FileOptions.Asynchronous))
+            path = path != "" ? AppDomain.CurrentDomain.BaseDirectory + "log\\" + path : AppDomain.CurrentDomain.BaseDirectory + "log\\" + DateTime.Now.Date.ToString("yyyyMMdd") + ".txt";
+
+            using (FileStream fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, 8, FileOptions.Asynchronous))
             {
-                Byte[] dataArray = System.Text.Encoding.Default.GetBytes(log +" "+ DateTime.Now.ToString("G") + System.Environment.NewLine);
+                Byte[] dataArray = System.Text.Encoding.Default.GetBytes(log + " " + DateTime.Now.ToString("G") + System.Environment.NewLine);
                 bool flag = true;
                 long slen = dataArray.Length;
                 long len = 0;
@@ -152,7 +166,7 @@ namespace TimoControl
             }
             catch (Exception ex)
             {
-                txtLog("清除日志失败" + ex.Message);
+                Log("清除日志失败" + ex.Message);
             }
         }
 
@@ -175,7 +189,7 @@ namespace TimoControl
             }
             catch (SQLiteException ex)
             {
-                txtLog("数据库打开失败" + ex.Message);
+                Log("数据库打开失败" + ex.Message);
             }
             return m_dbConnection;
         }
@@ -268,7 +282,7 @@ namespace TimoControl
             }
             catch (Exception ex)
             {
-                txtLog("数据库执行SQL错误" + ex.Message);
+                Log("数据库执行SQL错误" + ex.Message);
                 return false;
             }
 
@@ -342,7 +356,7 @@ namespace TimoControl
             }
             catch (Exception ex)
             {
-                txtLog("发送邮件失败"+ex.Message);
+                Log("发送邮件失败"+ex.Message);
             }
 
         }
@@ -356,7 +370,7 @@ namespace TimoControl
         {
             //throw new NotImplementedException();
             MailMessage mailMessage = (MailMessage)e.UserState;
-            txtLog(string.Format("发送邮件成功 主题 {0}-{1} ", mailMessage.Subject, mailMessage.Body));
+            Log(string.Format("发送邮件成功 主题 {0}-{1} ", mailMessage.Subject, mailMessage.Body));
         }
 
         /// <summary>
@@ -383,6 +397,13 @@ namespace TimoControl
 
         }
 
+        public static string md5(string code,int len)
+        {
+            if (len==32)
+                return System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(code, "MD5").ToLower();
+            else
+                return System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(code, "MD5").ToLower().Substring(8, 16);
+        }
 
     }
 }

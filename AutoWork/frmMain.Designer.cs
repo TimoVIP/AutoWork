@@ -29,14 +29,18 @@
         private void InitializeComponent()
         {
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
-            this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripMenuItem();
+            this.登陆账户 = new System.Windows.Forms.ToolStripMenuItem();
+            this.日志 = new System.Windows.Forms.ToolStripMenuItem();
+            this.配置 = new System.Windows.Forms.ToolStripMenuItem();
+            this.重启 = new System.Windows.Forms.ToolStripMenuItem();
+            this.清空 = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.lvRecorder = new System.Windows.Forms.ListBox();
-            this.toolStripMenuItem5 = new System.Windows.Forms.ToolStripMenuItem();
+            this.登陆优惠大厅 = new System.Windows.Forms.ToolStripMenuItem();
+            this.登陆BB后台 = new System.Windows.Forms.ToolStripMenuItem();
+            this.登陆GPK = new System.Windows.Forms.ToolStripMenuItem();
+            this.登陆彩金后台 = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -44,41 +48,55 @@
             // menuStrip1
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripMenuItem1,
-            this.toolStripMenuItem2,
-            this.toolStripMenuItem3,
-            this.toolStripMenuItem4,
-            this.toolStripMenuItem5});
+            this.登陆账户,
+            this.日志,
+            this.配置,
+            this.重启,
+            this.清空});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(670, 25);
             this.menuStrip1.TabIndex = 9;
             this.menuStrip1.Text = "menuStrip1";
-            this.menuStrip1.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.menuStrip1_ItemClicked);
             // 
-            // toolStripMenuItem1
+            // 登陆账户
             // 
-            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(68, 21);
-            this.toolStripMenuItem1.Text = "登陆账户";
+            this.登陆账户.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.登陆优惠大厅,
+            this.登陆BB后台,
+            this.登陆GPK,
+            this.登陆彩金后台});
+            this.登陆账户.Name = "登陆账户";
+            this.登陆账户.Size = new System.Drawing.Size(68, 21);
+            this.登陆账户.Text = "登陆账户";
             // 
-            // toolStripMenuItem2
+            // 日志
             // 
-            this.toolStripMenuItem2.Name = "toolStripMenuItem2";
-            this.toolStripMenuItem2.Size = new System.Drawing.Size(68, 21);
-            this.toolStripMenuItem2.Text = "查看日志";
+            this.日志.Name = "日志";
+            this.日志.Size = new System.Drawing.Size(68, 21);
+            this.日志.Text = "查看日志";
+            this.日志.Click += new System.EventHandler(this.日志_Click);
             // 
-            // toolStripMenuItem3
+            // 配置
             // 
-            this.toolStripMenuItem3.Name = "toolStripMenuItem3";
-            this.toolStripMenuItem3.Size = new System.Drawing.Size(68, 21);
-            this.toolStripMenuItem3.Text = "查看配置";
+            this.配置.Name = "配置";
+            this.配置.Size = new System.Drawing.Size(68, 21);
+            this.配置.Text = "查看配置";
+            this.配置.Click += new System.EventHandler(this.配置_Click);
             // 
-            // toolStripMenuItem4
+            // 重启
             // 
-            this.toolStripMenuItem4.Name = "toolStripMenuItem4";
-            this.toolStripMenuItem4.Size = new System.Drawing.Size(68, 21);
-            this.toolStripMenuItem4.Text = "重启程序";
+            this.重启.Name = "重启";
+            this.重启.Size = new System.Drawing.Size(68, 21);
+            this.重启.Text = "重启程序";
+            this.重启.Click += new System.EventHandler(this.重启_Click);
+            // 
+            // 清空
+            // 
+            this.清空.Name = "清空";
+            this.清空.Size = new System.Drawing.Size(68, 21);
+            this.清空.Text = "清空显示";
+            this.清空.Click += new System.EventHandler(this.清空_Click);
             // 
             // statusStrip1
             // 
@@ -109,11 +127,33 @@
             this.lvRecorder.Size = new System.Drawing.Size(670, 347);
             this.lvRecorder.TabIndex = 11;
             // 
-            // toolStripMenuItem5
+            // 登陆优惠大厅
             // 
-            this.toolStripMenuItem5.Name = "toolStripMenuItem5";
-            this.toolStripMenuItem5.Size = new System.Drawing.Size(68, 21);
-            this.toolStripMenuItem5.Text = "清空记录";
+            this.登陆优惠大厅.Name = "登陆优惠大厅";
+            this.登陆优惠大厅.Size = new System.Drawing.Size(152, 22);
+            this.登陆优惠大厅.Text = "登陆优惠大厅";
+            this.登陆优惠大厅.Click += new System.EventHandler(this.登陆优惠大厅_Click);
+            // 
+            // 登陆BB后台
+            // 
+            this.登陆BB后台.Name = "登陆BB后台";
+            this.登陆BB后台.Size = new System.Drawing.Size(152, 22);
+            this.登陆BB后台.Text = "登陆BB后台";
+            this.登陆BB后台.Click += new System.EventHandler(this.登陆BB后台_Click);
+            // 
+            // 登陆GPK
+            // 
+            this.登陆GPK.Name = "登陆GPK";
+            this.登陆GPK.Size = new System.Drawing.Size(152, 22);
+            this.登陆GPK.Text = "登陆GPK";
+            this.登陆GPK.Click += new System.EventHandler(this.登陆GPK_Click);
+            // 
+            // 登陆彩金后台
+            // 
+            this.登陆彩金后台.Name = "登陆彩金后台";
+            this.登陆彩金后台.Size = new System.Drawing.Size(152, 22);
+            this.登陆彩金后台.Text = "登陆彩金后台";
+            this.登陆彩金后台.Click += new System.EventHandler(this.登陆彩金后台_Click);
             // 
             // frmMain
             // 
@@ -139,14 +179,18 @@
 
         #endregion
         private System.Windows.Forms.MenuStrip menuStrip1;
-        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem1;
-        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem2;
-        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem3;
-        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem4;
+        private System.Windows.Forms.ToolStripMenuItem 登陆账户;
+        private System.Windows.Forms.ToolStripMenuItem 日志;
+        private System.Windows.Forms.ToolStripMenuItem 配置;
+        private System.Windows.Forms.ToolStripMenuItem 重启;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
         private System.Windows.Forms.ListBox lvRecorder;
-        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem5;
+        private System.Windows.Forms.ToolStripMenuItem 清空;
+        private System.Windows.Forms.ToolStripMenuItem 登陆优惠大厅;
+        private System.Windows.Forms.ToolStripMenuItem 登陆BB后台;
+        private System.Windows.Forms.ToolStripMenuItem 登陆GPK;
+        private System.Windows.Forms.ToolStripMenuItem 登陆彩金后台;
     }
 }
 

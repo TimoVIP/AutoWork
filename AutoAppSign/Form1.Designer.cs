@@ -34,9 +34,7 @@
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem5 = new System.Windows.Forms.ToolStripMenuItem();
-            this.APP签到 = new System.Windows.Forms.ToolStripMenuItem();
-            this.快速充值 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem6 = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.menuStrip1.SuspendLayout();
@@ -63,7 +61,7 @@
             this.toolStripMenuItem2,
             this.toolStripMenuItem3,
             this.toolStripMenuItem4,
-            this.toolStripMenuItem5});
+            this.toolStripMenuItem6});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(522, 25);
@@ -98,28 +96,12 @@
             this.toolStripMenuItem4.Text = "重启程序";
             this.toolStripMenuItem4.Click += new System.EventHandler(this.toolStripMenuItem4_Click);
             // 
-            // toolStripMenuItem5
+            // toolStripMenuItem6
             // 
-            this.toolStripMenuItem5.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.APP签到,
-            this.快速充值});
-            this.toolStripMenuItem5.Name = "toolStripMenuItem5";
-            this.toolStripMenuItem5.Size = new System.Drawing.Size(105, 21);
-            this.toolStripMenuItem5.Text = "查看修改当前ID";
-            // 
-            // APP签到
-            // 
-            this.APP签到.Name = "APP签到";
-            this.APP签到.Size = new System.Drawing.Size(124, 22);
-            this.APP签到.Text = "APP签到";
-            this.APP签到.Click += new System.EventHandler(this.APP签到_Click);
-            // 
-            // 快速充值
-            // 
-            this.快速充值.Name = "快速充值";
-            this.快速充值.Size = new System.Drawing.Size(124, 22);
-            this.快速充值.Text = "快速充值";
-            this.快速充值.Click += new System.EventHandler(this.快速充值_Click);
+            this.toolStripMenuItem6.Name = "toolStripMenuItem6";
+            this.toolStripMenuItem6.Size = new System.Drawing.Size(68, 21);
+            this.toolStripMenuItem6.Text = "清除记录";
+            this.toolStripMenuItem6.Click += new System.EventHandler(this.toolStripMenuItem6_Click);
             // 
             // statusStrip1
             // 
@@ -167,11 +149,9 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem2;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem3;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem4;
-        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem5;
-        private System.Windows.Forms.ToolStripMenuItem APP签到;
-        private System.Windows.Forms.ToolStripMenuItem 快速充值;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem6;
     }
 }
 

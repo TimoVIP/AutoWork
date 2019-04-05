@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // 有关程序集的一般信息由以下
 // 控制。更改这些特性值可修改
 // 与程序集关联的信息。
-[assembly: AssemblyTitle("红包赠送机器人")]
-[assembly: AssemblyDescription("红包赠送机器人")]
+[assembly: AssemblyTitle("入款机器人")]
+[assembly: AssemblyDescription("入款机器人")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("29857287@qq.com")]
-[assembly: AssemblyProduct("AutoDepositRedEnvelope")]
+[assembly: AssemblyProduct("AutoDeposit")]
 [assembly: AssemblyCopyright("Copyright ©  2019")]
 [assembly: AssemblyTrademark("Timo")]
 [assembly: AssemblyCulture("")]

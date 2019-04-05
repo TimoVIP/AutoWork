@@ -36,7 +36,7 @@ namespace TimoControl
             }
             catch (Exception ex)
             {
-                appSittingSet.txtLog("获取配置文件失败" + ex.Message);
+                appSittingSet.Log("获取配置文件失败" + ex.Message);
                 return false;
             }
 
@@ -114,7 +114,7 @@ namespace TimoControl
             }
             catch (WebException ex)
             {
-                appSittingSet.txtLog(string.Format("5hao站登录失败：{0}   ", ex.Message));
+                appSittingSet.Log(string.Format("5hao站登录失败：{0}   ", ex.Message));
                 return false;
             }
             finally
@@ -265,7 +265,7 @@ namespace TimoControl
             }
             catch (WebException ex)
             {
-                appSittingSet.txtLog(string.Format("5hao站获取资料失败：{0}   ", ex.Message));
+                appSittingSet.Log(string.Format("5hao站获取资料失败：{0}   ", ex.Message));
                 return null;
             }
             finally
@@ -461,7 +461,7 @@ namespace TimoControl
             }
             catch (WebException ex)
             {
-                appSittingSet.txtLog(string.Format("5hao站获取银行账户资料失败：{0}   ", ex.Message));
+                appSittingSet.Log(string.Format("5hao站获取银行账户资料失败：{0}   ", ex.Message));
                 return rc;
             }
             finally
@@ -553,7 +553,7 @@ namespace TimoControl
             }
             catch (WebException ex)
             {
-                appSittingSet.txtLog(string.Format("5hao站确认失败：{0}   ", ex.Message));
+                appSittingSet.Log(string.Format("5hao站确认失败：{0}   ", ex.Message));
                 return false;
             }
             finally
@@ -675,7 +675,7 @@ namespace TimoControl
             }
             catch (Exception ex)
             {
-                appSittingSet.txtLog("处理文件失败" + ex.Message);
+                appSittingSet.Log("处理文件失败" + ex.Message);
                 return false;
             }
 
@@ -733,7 +733,7 @@ namespace TimoControl
             }
             catch (Exception ex)
             {
-                appSittingSet.txtLog("处理文件失败" + ex.Message);
+                appSittingSet.Log("处理文件失败" + ex.Message);
                 return null;
             }
 

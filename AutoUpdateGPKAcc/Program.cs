@@ -94,12 +94,10 @@ namespace AutoUpdateGPKAcc
                         platGPK.MemberUpdateMemberState(userinfo);
                         msg += "停用账号操作 ";
                         //更新层级=》黑名单 id levelid
-                        if (userinfo.MemberLevelSettingId != "14")
-                        {
-                            userinfo.MemberLevelSettingId = "14";
-                            b = platGPK.UpadateMemberLevel("1", userinfo);
-                            msg += "层级操作 " + b;
-                        }
+                        userinfo.Province = "0";
+                        userinfo.RegisterDevice = "14";
+                        b = platGPK.UpadateMemberLevel(userinfo);
+                        msg += "层级操作 " + b;
                         appSittingSet.Log(msg);
                     }
                     Console.WriteLine(msg);
@@ -129,7 +127,9 @@ namespace AutoUpdateGPKAcc
                     platGPK.MemberUpdateMemberState(userinfo);
                     msg += "停用账号 ";
                     //更新层级=》黑名单 id levelid
-                    b = platGPK.UpadateMemberLevel("1", userinfo);
+                    userinfo.Province = "0";
+                    userinfo.RegisterDevice = "14";
+                    b = platGPK.UpadateMemberLevel(userinfo);
                     msg += "层级操作 " + b;
                     appSittingSet.Log(msg);
                 }
@@ -159,8 +159,10 @@ namespace AutoUpdateGPKAcc
                     platGPK.MemberUpdateMemberState(userinfo);
                     msg += "停用账号 ";
                     //更新层级=》黑名单 id levelid
-                    userinfo.MemberLevelSettingId = "14";
-                    b = platGPK.UpadateMemberLevel("1", userinfo);
+                    //userinfo.MemberLevelSettingId = "14";
+                    userinfo.Province = "0";
+                    userinfo.RegisterDevice = "14";
+                    b = platGPK.UpadateMemberLevel(userinfo);
                     msg += "层级操作 " + b;
                     appSittingSet.Log(msg);
                 }

@@ -80,8 +80,25 @@ namespace TestDomo_console
                 GameCategories = "[\"BBINbbsport\",\"BBINlottery\",\"BBINvideo\",\"SabaSport\",\"SabaNumber\",\"SabaVirtualSport\",\"AgBr\",\"Mg2Real\",\"Pt2Real\",\"GpiReal\",\"SingSport\",\"AllBetReal\",\"IgLottery\",\"IgLotto\",\"Rg2Real\",\"Rg2Board\",\"Rg2Lottery\",\"Rg2Lottery2\",\"JdbBoard\",\"EvoReal\",\"BgReal\",\"GdReal\",\"Pt3Real\",\"SunbetReal\",\"CmdSport\",\"Sunbet2Real\",\"Mg3Real\",\"KgBoard\",\"LxLottery\",\"EBetReal\",\"ImEsport\",\"OgReal\",\"VrLottery\",\"City761Board\",\"FsBoard\",\"SaReal\",\"ImsSport\",\"IboSport\",\"NwBoard\",\"JsBoard\",\"ThBoard\"]",
             };
 
+            betData bb = new betData()
+            {
+                username = "zhang19800804a",
+                lastCashTime = "2019/04/18 22:00:00",//开始时间
+                lastOprTime = "2019/04/18 23:59:59",//结束时间
+            };
+
+
 
             b = platGPK.loginGPK();
+            //SoketObjetRecordQuery o = platGPK.BetRecordGetInfo(bb);
+
+            string[] KindCategories = appSittingSet.readAppsettings("KindCategories").Split('|');//游戏分类
+            foreach (var s in KindCategories)
+            {
+                bb.GameCategories += platGPK.KindCategories[int.Parse(s)] + ",";
+            }
+            bb.GameCategories = "["+  bb.GameCategories.TrimEnd(',') + "]";
+
 
 
             //b = platWSB.login();
@@ -327,6 +344,34 @@ namespace TestDomo_console
             //SendMailBody mail = new SendMailBody() { MailBody = "<p>您申请的体验金已经送至你的账户</p>", Subject = "您申请的体验金已经送至你的账户", SendMailType = "1", MailRecievers = userinfo.Account };
             //platGPK.SiteMailSendMail(mail);
 
+
+            //
+            //string[]  sLuckNum = appSittingSet.readAppsettings("LuckNum").Split('|');//3@1@88 格式  33333333@888@88888
+
+            //string[] gameNames = appSittingSet.readAppsettings("gameName").Split('|');
+            //betData bb = new betData() { betno= "380944340333", betMoney= 2, aname= "连环夺宝" };
+
+            //foreach (string s in sLuckNum)
+            //{
+            //    if (bb.betno.EndsWith(s.Split('@')[0]))
+            //    {
+            //        bb.betMoney *= decimal.Parse(s.Split('@')[1]);
+            //        if (bb.betMoney > decimal.Parse(s.Split('@')[2]))
+            //        {
+            //            bb.betMoney = decimal.Parse(s.Split('@')[2]);
+            //        }
+            //        break;
+            //    }
+            //}
+
+            //foreach (var g in gameNames[1].Split('@'))
+            //{
+            //    if (g == bb.gamename)
+            //    {
+            //        //flag2 = true;
+            //        break;
+            //    }
+            //}
 
             Console.ReadLine();
         }

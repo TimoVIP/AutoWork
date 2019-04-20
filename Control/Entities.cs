@@ -62,7 +62,7 @@ namespace TimoControl
         /// <summary>
         /// 实际存提
         /// </summary>
-        public bool isReal { get; set; }
+        public bool isReal { get; set; } = true;
         /// <summary>
         /// 前台备注
         /// </summary>
@@ -72,6 +72,7 @@ namespace TimoControl
         /// </summary>
         public string Memo { get; set; }
 
+        public string[] Types { get; set; } = { "Account", "Manual", "ThirdPartyPayment" };
     }
 
     /// <summary>
@@ -129,7 +130,7 @@ namespace TimoControl
         public string Time { get; set; }
     }
 
-    public class SoketObj_etRecordQuery
+    public class SoketObjetRecordQuery
     {
         /// <summary>
         /// 笔数

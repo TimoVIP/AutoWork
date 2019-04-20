@@ -583,7 +583,7 @@ namespace TimoControl
         /// <returns></returns>
         public static bool dbFromFile(string FolderPath)
         {
-            StringBuilder sb = new StringBuilder();
+            List<string> sqllist = new List<string>();
             bool b = true;
             string sql = "";
             //文件夹下所有文本文件
@@ -656,12 +656,11 @@ namespace TimoControl
                                 FileName = file.Name.Replace(".txt", "")
                             };
 
-                            sb.Append("INSERT or ignore INTO DepositInfo ( Account,  Deposit, Balance,Time,FileName,Status ) VALUES ( '" + dep.Account + "', " + dep.Deposit + ", " + dep.Balance + ",'" + dep.Time.ToString("yyyy-MM-dd") + "','" + dep.FileName + "'," + (isFirstRun ? '1' : '0') + " );");
+                            sqllist.Add("INSERT or ignore INTO DepositInfo ( Account,  Deposit, Balance,Time,FileName,Status ) VALUES ( '" + dep.Account + "', " + dep.Deposit + ", " + dep.Balance + ",'" + dep.Time.ToString("yyyy-MM-dd") + "','" + dep.FileName + "'," + (isFirstRun ? '1' : '0') + " );");
                         }
 
-                        sb.Append("INSERT INTO FileHistory ( FileName, Status ) VALUES ( '" + file.Name.Replace(".txt", "") + "', '1' );");
-                        b = appSittingSet.execSql(sb.ToString(),true);
-
+                        sqllist.Add("INSERT INTO FileHistory ( FileName, Status ) VALUES ( '" + file.Name.Replace(".txt", "") + "', '1' );");
+                        b = appSittingSet.execSql(sqllist);
                     }
                     else
                     {

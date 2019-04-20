@@ -3,19 +3,19 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoWork_Plat1", "AutoWork\AutoWork_Plat1.csproj", "{4A33E1D4-93AD-4398-AD77-B4301395F442}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoWork_活动机器人", "AutoWork\AutoWork_活动机器人.csproj", "{4A33E1D4-93AD-4398-AD77-B4301395F442}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoUpdateGPKAcc", "AutoUpdateGPKAcc\AutoUpdateGPKAcc.csproj", "{01C4A839-D792-46AE-8C91-956559C165A3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimoControl", "Control\TimoControl.csproj", "{C47BDECB-D9E8-4723-80FB-D1B8D4F77423}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoWork_Plat2", "AutoWork2\AutoWork_Plat2.csproj", "{3CF8DFE2-BEDA-46AF-9019-E8AD7E8C4E6B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoWork_Plat2_不用", "AutoWork2\AutoWork_Plat2_不用.csproj", "{3CF8DFE2-BEDA-46AF-9019-E8AD7E8C4E6B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoDeposit", "AutoDepositRedEnvelope\AutoDeposit.csproj", "{AF13627C-2F27-4A65-91CF-40BB7C99D855}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoDeposit_微收宝", "AutoDepositRedEnvelope\AutoDeposit_微收宝.csproj", "{AF13627C-2F27-4A65-91CF-40BB7C99D855}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoWork_Plat_5hao", "AutoWork_Plat_5hao\AutoWork_Plat_5hao.csproj", "{4D02A5D6-7971-4BC5-B77F-B399D5A716E0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoAppSign", "AutoAppSign\AutoAppSign.csproj", "{8C3BF7AB-1912-4C84-B1DE-FB12830B7788}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoAppSign签到_快速充值_红包", "AutoAppSign\AutoAppSign签到_快速充值_红包.csproj", "{8C3BF7AB-1912-4C84-B1DE-FB12830B7788}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "测试控制台程序", "TestDomo_console\测试控制台程序.csproj", "{408B9BAD-5A15-48CB-B7B4-256AD0CF53CC}"
 EndProject
@@ -36,6 +36,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "批量处理域名导入", "DomainBat\批量处理域名导入.csproj", "{1C1302AF-1E42-4323-9B7D-B7E4000FAAF3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoRegTest", "AutoRegTest\AutoRegTest.csproj", "{2300351E-7DD7-4BB7-BDCA-8D7BEB6621CD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "其他项目", "其他项目", "{232359D5-F8C9-476B-93C8-5D831AAB8474}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GetInfor", "GetInfor\GetInfor.csproj", "{BCA551A2-38ED-43DB-AA32-E77FA26E83CC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -99,12 +103,19 @@ Global
 		{2300351E-7DD7-4BB7-BDCA-8D7BEB6621CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2300351E-7DD7-4BB7-BDCA-8D7BEB6621CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2300351E-7DD7-4BB7-BDCA-8D7BEB6621CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BCA551A2-38ED-43DB-AA32-E77FA26E83CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BCA551A2-38ED-43DB-AA32-E77FA26E83CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BCA551A2-38ED-43DB-AA32-E77FA26E83CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BCA551A2-38ED-43DB-AA32-E77FA26E83CC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{1C1302AF-1E42-4323-9B7D-B7E4000FAAF3} = {72B9DD82-1690-4092-B6BA-2A2090D1701F}
-		{2300351E-7DD7-4BB7-BDCA-8D7BEB6621CD} = {A44408FB-2030-4726-8CB2-43AD36A5D211}
+		{4A33E1D4-93AD-4398-AD77-B4301395F442} = {A44408FB-2030-4726-8CB2-43AD36A5D211}
+		{8C3BF7AB-1912-4C84-B1DE-FB12830B7788} = {A44408FB-2030-4726-8CB2-43AD36A5D211}
+		{1C1302AF-1E42-4323-9B7D-B7E4000FAAF3} = {A44408FB-2030-4726-8CB2-43AD36A5D211}
+		{2300351E-7DD7-4BB7-BDCA-8D7BEB6621CD} = {232359D5-F8C9-476B-93C8-5D831AAB8474}
+		{BCA551A2-38ED-43DB-AA32-E77FA26E83CC} = {232359D5-F8C9-476B-93C8-5D831AAB8474}
 	EndGlobalSection
 EndGlobal

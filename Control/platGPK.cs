@@ -32,6 +32,14 @@ namespace TimoControl
         /// </summary>
         public static List<string> KindCategories { get; set; }
         /// <summary>
+        /// WebSocket
+        /// </summary>
+        private static WebSocket wsk  { get; set; }
+        /// <summary>
+        /// websoket_id
+        /// </summary>
+        public static string socket_id { get; set; }
+        /// <summary>
         /// 登录GPK
         /// </summary>
         /// <returns></returns>
@@ -391,13 +399,14 @@ namespace TimoControl
 
         /// <summary>
         /// 检查账号 获取转账记录 
-        /// 减去12小时 到美东时间 终止时间再加2分钟 
+        /// 减去12小时 到美东时间 终止时间再加2分钟  13点08分 2019年4月5日 增加
         /// </summary>
         /// <returns></returns>
         public static betData MemberTransactionSearch(betData bb)
         {
             string postUrl = "MemberTransaction/Search";
-            string postData = "{\"Account\":\"" + bb.username + "\",\"IsReal\":\"true\",\"Types\":[\"Account\",\"Manual\",\"ThirdPartyPayment\"]";
+            string postData = "{\"Account\":\"" + bb.username + "\",\"IsReal\":\"" + bb.isReal + "\",\"Types\":" + JsonConvert.SerializeObject(bb.Types);
+            //string ss = JsonConvert.SerializeObject(bb.Types);
             if (bb.lastOprTime != null && bb.lastOprTime != "")
             {
                 DateTime d1;
@@ -405,6 +414,7 @@ namespace TimoControl
                 bb.lastOprTime = d1.AddMinutes(2).AddHours(-12).ToString("yyyy/MM/dd HH:mm:ss");
                 postData = postData + ",\"TimeBegin\":\"" + bb.lastOprTime + "\"";
             }
+
             if (bb.betTime != null && bb.betTime != "")
             {
                 //时间-12 变为美东时间
@@ -414,8 +424,7 @@ namespace TimoControl
                 postData = postData + ",\"TimeEnd\":\"" + bb.betTime + "\"";
             }
             postData = postData + "}";
-
-            JObject jo = GetResponse<JObject>(postUrl, postData, "POST", "");
+           JObject jo = GetResponse<JObject>(postUrl, postData, "POST", "");
 
             try
             {
@@ -433,6 +442,8 @@ namespace TimoControl
                 decimal totalMoney = 0;
                 decimal.TryParse(jo["TotalMoney"].ToString(), out totalMoney);
                 //bb.betMoney = (decimal) ja[0]["Amount"];//记录总金额 后面会改回来
+
+                //第一条记录的数据
                 JArray ja = JArray.FromObject(jo["PageData"]);
                 decimal amount = 0;
                 decimal.TryParse(ja[0]["Amount"].ToString(), out amount);
@@ -446,6 +457,7 @@ namespace TimoControl
                 bb.Id = ja[0]["Id"].ToString();//记录ID
                 bb.memberId = ja[0]["MemberId"].ToString();//记录MemberId
                 bb.lastCashTime = ja[0]["Time"].ToString();
+                //bb.PortalMemo = ja[0]["Memo"].ToString();
                 //bb.lastCashTime = ja[0]["Time"].ToString().Replace("\\", "").Replace("/Date(", "").Replace(")", "").Replace("/","");//计算的时间不对 需要自己来算
                 //bb.lastCashTime = appSittingSet.unixTimeToTime(bb.lastCashTime);//上次存款时间
                 bb.passed = true;
@@ -569,6 +581,58 @@ namespace TimoControl
                 return null;
             }
         }
+
+        /// <summary>
+        /// 获取 投注记录查询 没有开放这个接口 (gpk 关闭)
+        /// </summary>
+        /// <param name="bb"></param>
+        /// <returns></returns>
+        public static SoketObjetRecordQuery BetRecordGetInfo(betData bb)
+        {
+            try
+            {
+                string postUrl = "BetRecord/GetInfo";
+                string postData = "{\"Account\":\"" + bb.username + "\",";
+                if (bb.lastCashTime!=null)
+                {
+                    postData = postData + "\"WagersTimeBegin\":\"" + bb.lastCashTime + "\",";
+                }
+                if (bb.lastOprTime!=null)
+                {
+                    postData = postData + "\"WagersTimeEnd\":\"" + bb.lastOprTime + "\",";
+                    postData = postData + "\"PayoffTimeEnd\":\"" + bb.lastOprTime + "\",";
+                }
+
+                if (bb.GameCategories != null)
+                {
+                    postData = postData + "\"GameCategories\":" + bb.GameCategories + ",";
+                }
+                postData = postData + "\"connectionId\":\"" + connectionId + "\"}";
+
+                string postRefere = "MemberDeposit";
+                JObject jo = GetResponse<JObject>(postUrl, postData, "POST", postRefere);
+                SoketObjetRecordQuery obj = new SoketObjetRecordQuery() { };
+                if (jo != null)
+                {
+                    obj.Count = (int)jo["Count"];
+                    obj.TotalBetAmount = (decimal)jo["TotalBetAmount"];
+                    obj.TotalCommissionable = (decimal)jo["TotalCommissionable"];
+                    obj.TotalPayoff = (decimal)jo["TotalPayoff"];
+                }
+                return obj;
+            }
+            catch (Exception ex)
+            {
+                //如果 操作超时 重新登录一下GPK
+                string msg = "查询投注记录总数错误 " + ex.Message;
+                appSittingSet.Log(msg);
+                return null;
+            }
+        }
+
+
+
+
 
         /// <summary>
         /// 获取账户列表 到数据库 无用到
@@ -1334,16 +1398,19 @@ namespace TimoControl
         /// 保存websocket 数据到数据库 
         /// 异步方法 2019年2月27日
         /// </summary>
-        public static WebSocket SaveSocket2DB(WebSocket ws, string gamename)
+        public static void SaveSocket2DB()
         {
-            if (ws==null || connectionToken != connectionToken_old)
+            if (wsk==null || connectionToken != connectionToken_old ||wsk.IsAlive== false)
             {
-                ws= WebSocketConnect(gamename);
+                wsk= WebSocketConnect();
             }
-            return ws;
         }
 
-        public static WebSocket WebSocketConnect(string gamename)
+        /// <summary>
+        /// 连接websocket
+        /// </summary>
+        /// <returns></returns>
+        public static WebSocket WebSocketConnect()
         {
             string url = "ws://" + url_gpk_base.Replace("http://", "").Replace("/", "") + "/signalr/connect?transport=webSockets&clientProtocol=1.5&connectionToken=" + System.Web.HttpUtility.UrlEncode(connectionToken) + "&connectionData=%5B%7B%22name%22%3A%22mainhub%22%7D%5D&tid=8";
             WebSocket ws = new WebSocket(url);
@@ -1366,7 +1433,7 @@ namespace TimoControl
                     if (jo["M"][0]["M"].ToString() == "BetRecordQueryCtrl_searchComplete")
                     {
                         //保存到数据库
-                        string sql = string.Format("INSERT INTO record (username,gamename,subminttime,betno,chargeMoney,pass,msg,aid) VALUES ( '__socket', '{3}', datetime(CURRENT_TIMESTAMP,'localtime'), '{0}', {1}, 0, '{2}', 1002 );", jo["M"][0]["A"][0]["Count"], jo["M"][0]["A"][0]["TotalCommissionable"], jo["M"][0]["A"][0]["TotalPayoff"], gamename);
+                        string sql = string.Format("INSERT INTO record (username,gamename,subminttime,betno,chargeMoney,pass,msg,aid) VALUES ( '__socket', '{3}', datetime(CURRENT_TIMESTAMP,'localtime'), '{0}', {1}, 0, '{2}', 1002 );", jo["M"][0]["A"][0]["Count"], jo["M"][0]["A"][0]["TotalCommissionable"], jo["M"][0]["A"][0]["TotalPayoff"], socket_id);
                         bool b = appSittingSet.execSql(sql);
                     }
                 }
@@ -1378,9 +1445,11 @@ namespace TimoControl
             };
             ws.OnClose += (sender, e) =>
             {
-                appSittingSet.Log("websocket is close" + e.Code + e.Reason + "已经重连，状态" + ws.IsAlive);
+                appSittingSet.Log("websocket is close " + e.Code +" "+ e.Reason + "已经重连，状态" + ws.IsAlive);
                 //WebSocketConnect(aid);
-                loginGPK();
+                //loginGPK();
+                wsk = null;
+                SaveSocket2DB();
             };
             ws.Connect();
             return ws;
@@ -1390,13 +1459,13 @@ namespace TimoControl
         /// 从数据库获取websoket数据 2019年2月27日
         /// </summary>
         /// <returns></returns>
-        public static SoketObj_etRecordQuery getSoketDataFromDb(string  aid)
+        public static SoketObjetRecordQuery getSoketDataFromDb(string  aid)
         {
-            SoketObj_etRecordQuery so = null;
+            SoketObjetRecordQuery so = null;
             DataTable dt = appSittingSet.getDataTableBySql("select  * from record where aid= " + aid + " order by rowid desc limit 1;");
             if (dt.Rows.Count>0)
             {
-                 so = new SoketObj_etRecordQuery()
+                 so = new SoketObjetRecordQuery()
                 {
                     Count = (int)dt.Rows[0]["betno"],
                      TotalCommissionable = (decimal)dt.Rows[0]["TotalBetAmount"],
@@ -1411,15 +1480,16 @@ namespace TimoControl
         /// 是否需要增加一个范围
         /// </summary>
         /// <returns></returns>
-        public static object getSoketDataFromDbCompare(string gamename, out decimal chargeMoney)
+        public static object getSoketDataFromDbCompare( out decimal chargeMoney)
         {
             int count1,count2 = 0;
             decimal TotalBetAmount1, TotalBetAmount2 = 0;
             decimal TotalPayoff1, TotalPayoff2 = 0;
-            //DataTable dt = appSittingSet.getDataTableBySql("select  * from record where gamename = " + gamename + " and aid=1002 order by rowid desc limit 2;");
-            DataTable dt = appSittingSet.getDataTableBySql("select  * from record where  aid=1002 order by rowid desc limit 2;");
+            string sql = "select  * from record where gamename = '" + socket_id + "' and aid=1002 order by rowid desc limit 2;";
+            //sql = "select  * from record where  aid=1002 order by rowid desc limit 2;";
+            DataTable dt = appSittingSet.getDataTableBySql(sql);
             //2条记录 并且为同一组
-            if (dt.Rows.Count == 2 && (dt.Rows[0]["gamename"].ToString() == dt.Rows[1]["gamename"].ToString()))
+            if (dt.Rows.Count == 2 )
             {
                 count1 =Convert.ToInt16(dt.Rows[0]["betno"]);
                 count2 = Convert.ToInt16(dt.Rows[1]["betno"]);

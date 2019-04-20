@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.SqlClient;
 
 namespace TimoControl
 {
@@ -34,7 +35,7 @@ namespace TimoControl
                 MySqlDataAdapter command = new MySqlDataAdapter(SQLString, connection);
                 command.Fill(ds);
             }
-            catch (System.Data.SqlClient.SqlException ex)
+            catch (SqlException ex)
             {
                 throw new Exception(ex.Message);
             }
@@ -65,9 +66,10 @@ namespace TimoControl
                         cmd.Parameters.AddRange(para.ToArray());
                     }
                     int rows = cmd.ExecuteNonQuery();
+                    cmd.Parameters.Clear();
                     return rows;
                 }
-                catch (System.Data.SqlClient.SqlException e)
+                catch (SqlException e)
                 {
                     connection.Close();
                     throw e;
@@ -77,6 +79,35 @@ namespace TimoControl
                     cmd.Dispose();
                     connection.Close();
                 }
+            }
+        }
+
+        //执行多条SQL语句，实现数据库事务。 
+        /// <summary> 
+        /// 执行多条SQL语句，实现数据库事务。 
+        /// </summary> 
+        /// <param name="SQLStringList">多条SQL语句</param> 
+        public static bool ExecuteNoQueryTran(List<String> SQLStringList)
+        {
+            MySqlConnection connection = conn();
+            MySqlCommand cmd = new MySqlCommand();
+            MySqlTransaction tx = connection.BeginTransaction();
+            cmd.Connection = connection;
+            cmd.Transaction = tx;
+            try
+            {
+                foreach (var item in SQLStringList)
+                {
+                    cmd.CommandText = item;
+                    cmd.ExecuteNonQuery();
+                }
+                tx.Commit();
+                return true;
+            }
+            catch
+            {
+                tx.Rollback();
+                return false;
             }
         }
 
@@ -102,7 +133,7 @@ namespace TimoControl
                 }
                 return rows;
             }
-            catch (System.Data.SqlClient.SqlException e)
+            catch (SqlException e)
             {
                 connection.Close();
                 throw e;
@@ -128,7 +159,7 @@ namespace TimoControl
                     MySqlDataReader sdr = cmd.ExecuteReader();
                     return sdr.HasRows;
                 }
-                catch (System.Data.SqlClient.SqlException e)
+                catch (SqlException e)
                 {
                     connection.Close();
                     throw e;
@@ -168,7 +199,7 @@ namespace TimoControl
                     object o = cmd.ExecuteScalar();
                     return o;
                 }
-                catch (System.Data.SqlClient.SqlException e)
+                catch (SqlException e)
                 {
                     connection.Close();
                     throw e;

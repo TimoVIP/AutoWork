@@ -281,35 +281,34 @@ namespace TimoControl
                 }
 
 
-                    HtmlDocument htmlDocument = new HtmlDocument();
-                    htmlDocument.LoadHtml(ret_html);
-                    HtmlNode node1 = htmlDocument.DocumentNode.SelectSingleNode("//table//tbody");
-                    if (node1 == null)
-                    {
-                        return list;
-                    }
+                HtmlDocument htmlDocument = new HtmlDocument();
+                htmlDocument.LoadHtml(ret_html);
+                HtmlNode node1 = htmlDocument.DocumentNode.SelectSingleNode("//table//tbody");
+                if (node1 == null)
+                {
+                    return list;
+                }
 
-                    if (node1.ChildNodes.Count < 2)
-                    {
-                        return list;
-                    }
+                if (node1.ChildNodes.Count < 2)
+                {
+                    return list;
+                }
 
-                    StringBuilder sbsql = new StringBuilder();
-
-                    for (int i = 1; i <= node1.SelectNodes("//tbody//tr").Count; i++)
-                    {
-                        string bbid = node1.SelectSingleNode("/html/body/div[3]/div/table/tbody/tr[" + i + "]/td[1]/input").Attributes["value"].Value;
-                        string username = node1.SelectSingleNode("/html/body/div[3]/div/table/tbody/tr[" + i + "]/td[3]").InnerText;
-                        decimal betmony = 0;
-                        decimal.TryParse(node1.SelectSingleNode("/html/body/div[3]/div/table/tbody/tr[" + i + "]/td[4]").InnerText, out betmony);
-                        string time = node1.SelectSingleNode("/html/body/div[3]/div/table/tbody/tr[" + i + "]/td[6]").InnerText;
-                        list.Add(new betData() { username = username, betMoney = betmony, bbid = bbid, betTime = time });
-                        sbsql.AppendFormat("INSERT or ignore  INTO applyList ( username, money, time,id,status)  VALUES (  '{0}', '{1}', '{2}', '{3}','0' );", username, betmony, time,bbid);
-                    }
+                List<string> sqllist = new List<string>();
+                for (int i = 1; i <= node1.SelectNodes("//tbody//tr").Count; i++)
+                {
+                    string bbid = node1.SelectSingleNode("/html/body/div[3]/div/table/tbody/tr[" + i + "]/td[1]/input").Attributes["value"].Value;
+                    string username = node1.SelectSingleNode("/html/body/div[3]/div/table/tbody/tr[" + i + "]/td[3]").InnerText;
+                    decimal betmony = 0;
+                    decimal.TryParse(node1.SelectSingleNode("/html/body/div[3]/div/table/tbody/tr[" + i + "]/td[4]").InnerText, out betmony);
+                    string time = node1.SelectSingleNode("/html/body/div[3]/div/table/tbody/tr[" + i + "]/td[6]").InnerText;
+                    list.Add(new betData() { username = username, betMoney = betmony, bbid = bbid, betTime = time });
+                    sqllist.Add(string.Format("INSERT or ignore  INTO applyList ( username, money, time,id,status)  VALUES (  '{0}', '{1}', '{2}', '{3}','0' );", username, betmony, time, bbid));
+                }
 
                 try
                 {
-                    bool b = appSittingSet.execSql(sbsql.ToString(), true);
+                    bool b = appSittingSet.execSql(sqllist);
                     if (!b)
                     {
                         return null;

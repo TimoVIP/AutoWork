@@ -148,13 +148,12 @@ namespace DomainBat
                 //    Console.WriteLine("处理完毕");
                 //else
                 //    Console.WriteLine("处理完毕,但是有不等数据");
-                file.CopyTo(Environment.CurrentDirectory + "\\log\\" +DateTime.Now.Date.ToString("yyyyMMdd")+ file.Name,true);
+                file.CopyTo(Environment.CurrentDirectory + "\\log\\" + file.Name+DateTime.Now.Date.ToString("yyyyMMddHHmmssfff"),true);
                 file.Delete();
-                Console.WriteLine("处理完毕,按任意键退出...");
 
             }
 
-
+            Console.WriteLine("处理完毕,按任意键退出...");
             Console.ReadKey(true);
         }
     }

@@ -202,17 +202,18 @@ namespace TimoControl
         public static void recorderDb(betData bb)
         {
             SQLiteConnection m_dbConnection = get_dbConnection();
-            string Str_time="";
-            if (bb.betTime!=null)
-            {
-                Str_time = bb.betTime;
-            }
-            if (bb.lastCashTime!=null)
-            {
-                Str_time = bb.lastCashTime;
-            }
+            //string Str_time="";
+            //if (bb.betTime!=null)
+            //{
+            //    Str_time = bb.betTime;
+            //}
+            //if (bb.lastCashTime!=null)
+            //{
+            //    Str_time = bb.lastCashTime;
+            //}
 
-            string sql1 = "insert into record (username, gamename,betno,chargeMoney,pass,msg,subminttime,aid) values ('" + bb.username + "', '" + bb.gamename + "','" + bb.betno + "'," + bb.betMoney + "," + (bb.passed == true ? 1 : 0) + ",'" + Str_time + "','"+ DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd HH:mm:ss") + "' , "+bb.aid+")";
+            string sql1 = "insert into record (username, gamename,betno,chargeMoney,pass,msg,subminttime,aid) values ('" + bb.username + "', '" + bb.gamename + "','" + bb.betno + "'," + bb.betMoney + "," + (bb.passed == true ? 1 : 0) + ",'" + bb.msg + "','"+ DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd HH:mm:ss") + "' , "+bb.aid+")";
+
             SQLiteCommand command1 = new SQLiteCommand(sql1, m_dbConnection);
             command1.ExecuteNonQuery();
             m_dbConnection.Close();
@@ -222,7 +223,7 @@ namespace TimoControl
         /// 查询是否存在记录
         /// </summary>
         /// <param name="sql"></param>
-        /// <returns></returns>
+        /// <returns> true 存在记录</returns>
         public static bool recorderDbCheck(string sql)
         {
             SQLiteConnection m_dbConnection = get_dbConnection();
@@ -238,56 +239,45 @@ namespace TimoControl
 
         public static bool execSql(string sql)
         {
-            return execSql(sql, false);
+            //return execSql(sql, false);
+            List<string> list = new List<string>();
+                list.Add(sql);
+            return execSql( list);
         }
 
         /// <summary>
-        /// 批量执行SQL
+        /// 批量执行SQL 使用了事务
         /// </summary>
         /// <param name="sql"></param>
-        /// <param name="use_trans"></param>
         /// <returns></returns>
-        public static bool execSql(string sql,bool use_trans)
+        public static bool execSql(List<string> sql_list)
         {
+            SQLiteConnection m_dbConnection = get_dbConnection();
+            SQLiteTransaction trans = m_dbConnection.BeginTransaction();
+            SQLiteCommand command = new SQLiteCommand();
             try
             {
-                int i = 0;
-                SQLiteConnection m_dbConnection = get_dbConnection();
-                SQLiteCommand command = new SQLiteCommand(sql, m_dbConnection);
-                if (use_trans)
+                foreach (var item in sql_list)
                 {
-                    SQLiteTransaction trans = m_dbConnection.BeginTransaction();
-                    try
-                    {
-                        command.Transaction = trans;
-                        i= command.ExecuteNonQuery();
-                        trans.Commit();
-                    }
-                    catch (Exception)
-                    {
-                        trans.Rollback();
-                        command.Dispose();
-                        m_dbConnection.Close();
-                        return false;
-                    }
-                }
-                else
-                {
-                    i= command.ExecuteNonQuery();
+                    command.CommandText = item;
+                    command.Connection = m_dbConnection;
+                    command.ExecuteNonQuery();
                 }
 
+                trans.Commit();
                 command.Dispose();
                 m_dbConnection.Close();
-                return Convert.ToBoolean( i);
+                return true;
             }
-            catch (Exception ex)
+            catch (SQLiteException ex)
             {
+                trans.Rollback();
+                command.Dispose();
+                m_dbConnection.Close();
                 Log("数据库执行SQL错误" + ex.Message);
                 return false;
             }
-
         }
-
 
         public static object execScalarSql(string sql)
         {

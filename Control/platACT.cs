@@ -8,6 +8,9 @@ using System.Web;
 
 namespace TimoControl
 {
+    /// <summary>
+    /// 优惠大厅
+    /// </summary>
     public static class platACT
     {
 
@@ -92,6 +95,7 @@ namespace TimoControl
 
         /// <summary>
         /// 获取注单数据列表 尾数 消除奖
+        /// 第一列 用户名 第二列 手机号/注单号 第四列时间
         /// </summary>
         /// <returns></returns>
         public static List<betData> getActData(string aid)
@@ -251,6 +255,7 @@ namespace TimoControl
 
         /// <summary>
         /// 获取活动列表数据 以小博大
+        /// 第一列 用户名 第三列时间
         /// </summary>
         /// <param name="aid"></param>
         /// <returns></returns>

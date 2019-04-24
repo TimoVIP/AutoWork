@@ -110,7 +110,9 @@ namespace TimoControl
         public string RegisterDevice { get; set; }
         public string RegisterUrl { get; set; }
         public string MemberLevelSettingId { get; set; }
-
+        public string Name { get; set; }
+        public string QQ { get; set; }
+        public DateTime JoinTime { get; set; }
     }
 
     /// <summary>

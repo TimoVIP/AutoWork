@@ -15,6 +15,14 @@ namespace TimoControl
     public static class  appSittingSet
     {
         /// <summary>
+        /// 日志文件夹路劲
+        /// </summary>
+        public static string logPath = AppDomain.CurrentDomain.BaseDirectory + "log";
+        /// <summary>
+        /// 日志文件路径
+        /// </summary>
+        private static string logFilePath = logPath+"\\" + DateTime.Now.Date.ToString("yyyyMMdd") + ".txt";
+        /// <summary>
         /// 读取AppSet节点
         /// </summary>
         /// <param name="key"></param>
@@ -90,19 +98,15 @@ namespace TimoControl
         /// 写文件日志
         /// </summary>
         /// <param name="log">日志内容</param>
-        /// <param name="path">文件名</param>
+        /// <param name="path">文件名 不含有文件夹路径</param>
         public static void Log(string log,string path)
         {
-            if (!Directory.Exists(AppDomain.CurrentDomain.BaseDirectory + "log"))
+            if (!Directory.Exists(logPath))
             {
-                Directory.CreateDirectory(AppDomain.CurrentDomain.BaseDirectory + "log");
+                Directory.CreateDirectory(logPath);
             }
-            //if (path!="")
-            //    path = AppDomain.CurrentDomain.BaseDirectory + "log\\" + path;
-            //else
-            //    path = AppDomain.CurrentDomain.BaseDirectory + "log\\" + DateTime.Now.Date.ToString("yyyyMMdd") + ".txt";
 
-            path = path != "" ? AppDomain.CurrentDomain.BaseDirectory + "log\\" + path : AppDomain.CurrentDomain.BaseDirectory + "log\\" + DateTime.Now.Date.ToString("yyyyMMdd") + ".txt";
+            path = path != "" ? logPath + "\\" + path : logFilePath;
 
             using (FileStream fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, 8, FileOptions.Asynchronous))
             {
@@ -141,9 +145,7 @@ namespace TimoControl
 
         public static void showLogFile()
         {
-            string filePath = AppDomain.CurrentDomain.BaseDirectory + "log\\" + DateTime.Now.Date.ToString("yyyyMMdd") + ".txt";
-            System.Diagnostics.Process.Start("notepad.exe", filePath);
-            
+            System.Diagnostics.Process.Start("notepad.exe", logFilePath);
         }
 
         /// <summary>
@@ -154,7 +156,7 @@ namespace TimoControl
         {
             try
             {
-                DirectoryInfo di = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory + "log");
+                DirectoryInfo di = new DirectoryInfo(logPath);
                 FileInfo[] fs = di.GetFiles("*.txt", SearchOption.AllDirectories);
                 foreach (var item in fs)
                 {
@@ -279,7 +281,7 @@ namespace TimoControl
             }
         }
 
-        public static object execScalarSql(string sql)
+        public static string execScalarSql(string sql)
         {
             SQLiteConnection m_dbConnection = get_dbConnection();
 
@@ -287,7 +289,7 @@ namespace TimoControl
             object o = command.ExecuteScalar();
             command.Dispose();
             m_dbConnection.Close();
-            return o;
+            return o==null?"":o.ToString();
         }
 
         public static DataTable getDataTableBySql(string sql)

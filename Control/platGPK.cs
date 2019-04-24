@@ -34,7 +34,7 @@ namespace TimoControl
         /// <summary>
         /// WebSocket
         /// </summary>
-        private static WebSocket wsk  { get; set; }
+        public static WebSocket wsk  { get; set; }
         /// <summary>
         /// websoket_id
         /// </summary>
@@ -129,6 +129,9 @@ namespace TimoControl
                             }
                             //获取游戏列表 登陆获取一次 2019年3月1日 12点55分
                             KindCategories = GetKindCategories();
+
+                            //连接socket
+                            wsk = WebSocketConnect();
                             return true;
                         }
                         else
@@ -1199,6 +1202,9 @@ namespace TimoControl
                     dd.SexString = jo["Member"]["SexString"].ToString();
                     dd.Wallet = decimal.Parse(jo["Member"]["Wallet"].ToString());
                     dd.MemberLevelSettingId = jo["Member"]["MemberLevelSettingId"].ToString();
+                    dd.Name = jo["Member"]["Name"].ToString();
+                    dd.QQ = jo["Member"]["QQ"].ToString();
+                    dd.JoinTime =DateTime.Parse( jo["Member"]["JoinTime"].ToString());//注册时间
                     if (jo["Member"]["LatestLogin"]!=null && jo["Member"]["LatestLogin"].ToString().Length>0)
                     {
                         dd.LatestLogin_IP = jo["Member"]["LatestLogin"]["IP"].ToString();
@@ -1393,7 +1399,7 @@ namespace TimoControl
                 appSittingSet.Log(msg);
             }
         }
-
+        /*
         /// <summary>
         /// 保存websocket 数据到数据库 
         /// 异步方法 2019年2月27日
@@ -1404,7 +1410,25 @@ namespace TimoControl
             {
                 wsk= WebSocketConnect();
             }
+
+            if (connectionToken != connectionToken_old)
+            {
+                wsk = WebSocketConnect();
+            }
+
+            if (wsk==null)
+            {
+                wsk = WebSocketConnect();
+            }
+            else
+            {
+                if (wsk.IsAlive == false)
+                {
+                    wsk = WebSocketConnect();
+                }
+            }
         }
+        */
 
         /// <summary>
         /// 连接websocket
@@ -1412,10 +1436,12 @@ namespace TimoControl
         /// <returns></returns>
         public static WebSocket WebSocketConnect()
         {
+
             string url = "ws://" + url_gpk_base.Replace("http://", "").Replace("/", "") + "/signalr/connect?transport=webSockets&clientProtocol=1.5&connectionToken=" + System.Web.HttpUtility.UrlEncode(connectionToken) + "&connectionData=%5B%7B%22name%22%3A%22mainhub%22%7D%5D&tid=8";
             WebSocket ws = new WebSocket(url);
+            ws.SslConfiguration.EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12 | System.Security.Authentication.SslProtocols.Tls11 | System.Security.Authentication.SslProtocols.Tls;
             ws.Origin = url_gpk_base;
-            foreach (System.Net.Cookie item in platGPK.cookie.GetCookies(new Uri(url_gpk_base)))
+            foreach (Cookie item in cookie.GetCookies(new Uri(url_gpk_base)))
             {
                 ws.SetCookie(new WebSocketSharp.Net.Cookie(item.Name, item.Value, item.Path, item.Domain));
             }
@@ -1446,12 +1472,25 @@ namespace TimoControl
             ws.OnClose += (sender, e) =>
             {
                 appSittingSet.Log("websocket is close " + e.Code +" "+ e.Reason + "已经重连，状态" + ws.IsAlive);
-                //WebSocketConnect(aid);
                 //loginGPK();
-                wsk = null;
-                SaveSocket2DB();
+                ws.Connect();
+
+                //wsk = null;
+                //SaveSocket2DB();
             };
-            ws.Connect();
+            //if (!ws.IsAlive)
+            //{
+            //    ws.Connect();
+            //}
+            //ws.Connect();
+            ws.Log.Level = LogLevel.Trace;
+            ws.Log.File = appSittingSet.logPath+"\\socket"+ DateTime.Now.Date.ToString("yyyyMMdd") + ".txt";
+            if (wsk!=null && wsk.ReadyState!= WebSocketState.Closed)
+            {
+                wsk.Close();
+                wsk = null;
+            }
+            wsk = ws;
             return ws;
         }
 

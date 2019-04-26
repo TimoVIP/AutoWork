@@ -131,7 +131,7 @@ namespace TimoControl
                             KindCategories = GetKindCategories();
 
                             //连接socket
-                            wsk = WebSocketConnect();
+                            //wsk = WebSocketConnect();
                             return true;
                         }
                         else
@@ -1436,10 +1436,15 @@ namespace TimoControl
         /// <returns></returns>
         public static WebSocket WebSocketConnect()
         {
-
+            //先断开已经有得
+            if (wsk!=null)
+            {
+                wsk.Close(CloseStatusCode.Normal, "主动关闭");
+                wsk = null;
+            }
             string url = "ws://" + url_gpk_base.Replace("http://", "").Replace("/", "") + "/signalr/connect?transport=webSockets&clientProtocol=1.5&connectionToken=" + System.Web.HttpUtility.UrlEncode(connectionToken) + "&connectionData=%5B%7B%22name%22%3A%22mainhub%22%7D%5D&tid=8";
             WebSocket ws = new WebSocket(url);
-            ws.SslConfiguration.EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12 | System.Security.Authentication.SslProtocols.Tls11 | System.Security.Authentication.SslProtocols.Tls;
+            //ws.SslConfiguration.EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12 | System.Security.Authentication.SslProtocols.Tls11 | System.Security.Authentication.SslProtocols.Tls; //加了会报错 This instance does not use a secure connection.
             ws.Origin = url_gpk_base;
             foreach (Cookie item in cookie.GetCookies(new Uri(url_gpk_base)))
             {
@@ -1471,19 +1476,21 @@ namespace TimoControl
             };
             ws.OnClose += (sender, e) =>
             {
-                appSittingSet.Log("websocket is close " + e.Code +" "+ e.Reason + "已经重连，状态" + ws.IsAlive);
+
                 //loginGPK();
                 ws.Connect();
-
+                appSittingSet.Log("websocket is close " + e.Code + " " + e.Reason + "已经重连，状态" + ws.IsAlive);
                 //wsk = null;
                 //SaveSocket2DB();
             };
+
             //if (!ws.IsAlive)
             //{
             //    ws.Connect();
             //}
-            //ws.Connect();
-            ws.Log.Level = LogLevel.Trace;
+
+            ws.Connect();
+            ws.Log.Level = LogLevel.Info;
             ws.Log.File = appSittingSet.logPath+"\\socket"+ DateTime.Now.Date.ToString("yyyyMMdd") + ".txt";
             if (wsk!=null && wsk.ReadyState!= WebSocketState.Closed)
             {
@@ -1519,12 +1526,12 @@ namespace TimoControl
         /// 是否需要增加一个范围
         /// </summary>
         /// <returns></returns>
-        public static object getSoketDataFromDbCompare( out decimal chargeMoney)
+        public static object getSoketDataFromDbCompare( out decimal chargeMoney,string groupid)
         {
             int count1,count2 = 0;
             decimal TotalBetAmount1, TotalBetAmount2 = 0;
             decimal TotalPayoff1, TotalPayoff2 = 0;
-            string sql = "select  * from record where gamename = '" + socket_id + "' and aid=1002 order by rowid desc limit 2;";
+            string sql = "select  * from record where gamename = '" + groupid + "' and aid=1002 order by rowid desc limit 2;";
             //sql = "select  * from record where  aid=1002 order by rowid desc limit 2;";
             DataTable dt = appSittingSet.getDataTableBySql(sql);
             //2条记录 并且为同一组

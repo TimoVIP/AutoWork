@@ -20,7 +20,6 @@ namespace AutoAppSign
         static string[] AutoCls;
         static string[] aname;
         static string[] Act4Stander;
-        static string MaxID = "0";
         static string[] connectionString;
         static decimal rate = 0;
         static string[] FiliterGroups;
@@ -198,21 +197,21 @@ namespace AutoAppSign
             ISchedulerFactory schedf = new StdSchedulerFactory();
             //加入作业调度池中
             sched = schedf.GetScheduler();
-
+            //清除一周前的数据、日志文件
+            if (AutoCls[1] == "1")
+            {
+                sched.ScheduleJob(JobBuilder.Create<MyJob0>().Build(), TriggerBuilder.Create().WithCronSchedule("1 0 8 1/1 * ? ").Build());
+            }
             //0 6 12 18 小时10:10执行 登陆
             if (AutoCls[2] == "1")
             {
                 sched.ScheduleJob(JobBuilder.Create<MyJob1>().Build(), TriggerBuilder.Create().WithCronSchedule("10 10 0,6,12,18 * * ? ").Build());
             }
 
-            //清除一周前的数据、日志文件
-            if (AutoCls[1] == "1")
-            {
-                sched.ScheduleJob(JobBuilder.Create<MyJob0>().Build(), TriggerBuilder.Create().WithCronSchedule("1 0 8 1/1 * ? ").Build());
-            }
+
             if (aname[1]=="1")
             {
-                //10秒一次 app签到
+                //app签到
                 sched.ScheduleJob(JobBuilder.Create<MyJob2>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval[0]).RepeatForever()).Build());
                 //初始化app签到数据 重要
                 MySQLHelper.connectionString = connectionString[0];
@@ -220,18 +219,11 @@ namespace AutoAppSign
             }
             if (aname[3]=="1")
             {
-                //5秒一次 快速充值
+                //快速充值
                 sched.ScheduleJob(JobBuilder.Create<MyJob3>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval[1]).RepeatForever()).Build());
             }
-            //if (aname[5]=="1")
-            //{
-            //    //8秒一次 金沙组红包
-            //    sched.ScheduleJob(JobBuilder.Create<MyJob4>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval ).RepeatForever()).Build());
-            //}
             if (aname[5]=="1")
             {
-                //15秒一次 新葡京组红包
-                //sched.ScheduleJob(JobBuilder.Create<MyJob5>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval[2]).RepeatForever()).Build());
                 //红包
                 sched.ScheduleJob(JobBuilder.Create<MyJob6>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval[2]).RepeatForever()).Build());
             }
@@ -283,13 +275,7 @@ namespace AutoAppSign
             public void Execute(IJobExecutionContext context)
             {
                 //更改状态 status 1未处理默认，2已经处理 不符合的也是1  ， 但是apply 默认为0，处理后为1（手动处理的数据 0 ）
-
-
-                //查询上次处理的ID
-                //string sql = "select maxid from cs_max_id LIMIT 1;";
                 MySQLHelper.connectionString = connectionString[0];
-                //MaxID =MySQLHelper.GetScalar(sql).ToString();
-
                 //查询数据库 获取待处理的数据
                 //sql = string.Format("select b.tel,a.score,a.id from cs_zhangdan a LEFT JOIN cs_user b on a.uid=  b.id where type='dh' and a.`status`=1 and a.id>{0} ORDER BY a.id DESC LIMIT 100;", MaxID);
                 string sql = "select b.tel,a.score,a.id from cs_zhangdan a LEFT JOIN cs_user b on a.uid=  b.id where type='dh' and apply=0 ORDER BY a.id DESC LIMIT 50;";
@@ -315,7 +301,7 @@ namespace AutoAppSign
                         aname = aname[0],
                     };
 
-                    //数据库是否存在
+                    //SQLite数据库是否存在
                     sql = string.Format("select * from record where  bbid={0}  and type=1003", bb.bbid);
                     if (appSittingSet.recorderDbCheck(sql))
                     {
@@ -409,6 +395,10 @@ namespace AutoAppSign
                     //platGPK.MemberTransactionSearch(bb);
                     //string memo  = bb.PortalMemo;
 
+                    //记录到数据库SQLite
+                    sql = string.Format("insert into record values({0},'{1}','{2}',datetime(CURRENT_TIMESTAMP,'localtime'),1003)  ", bb.bbid, bb.Memo, bb.username);
+                    appSittingSet.execSql(sql);
+
                     //加钱 充值的部分 
                     sql = "select * from cs_zhangdan where apply=1 and id= " + bb.bbid+";";
                     b= MySQLHelper.Exsist(sql);
@@ -420,12 +410,7 @@ namespace AutoAppSign
                         MySQLHelper.ExecuteSql(sql);
                     }
 
-                    //appSittingSet.Log("编号" + bb.bbid + "" + bb.username + "充值");
 
-
-                    //记录到数据库SQLite
-                    sql = string.Format("insert into record values({0},'{1}','{2}',datetime(CURRENT_TIMESTAMP,'localtime'),1003)  ", bb.bbid, bb.Memo, bb.username);
-                    appSittingSet.execSql(sql);
                     appSittingSet.Log(bb.aname + "编号" + bb.bbid + "用户" + bb.username + "处理成功");
                     MyWrite(bb.aname + "编号" + bb.bbid + "用户" + bb.username + "处理成功");
                 }

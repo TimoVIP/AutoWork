@@ -120,6 +120,9 @@ namespace AutoWork_Plat1
             ISchedulerFactory schedf = new StdSchedulerFactory();
             sched = schedf.GetScheduler();
 
+            //1小时一次发送心跳
+            sched.ScheduleJob(JobBuilder.Create<MyJobHeartBeat>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInHours(1).RepeatForever()).Build());
+
             //清除一周前的数据、日志文件
             if (AutoCls[1] == "1")
             {
@@ -168,6 +171,20 @@ namespace AutoWork_Plat1
 
             //开始运行
             sched.Start();
+        }
+        /// <summary>
+        /// 规定时间发送心跳
+        /// </summary>
+        public class MyJobHeartBeat : IJob
+        {
+            public void Execute(IJobExecutionContext context)
+            {
+                //发送心跳
+                if (platGPK.wsk != null && platGPK.wsk.ReadyState == WebSocketSharp.WebSocketState.Open)
+                {
+                    platGPK.wsk.Ping();
+                }
+            }
         }
 
         /// <summary>
@@ -1453,12 +1470,6 @@ namespace AutoWork_Plat1
         {
             public void Execute(IJobExecutionContext context)
             {
-                //发送心跳
-                if (platGPK.wsk!=null && platGPK.wsk.ReadyState== WebSocketSharp.WebSocketState.Open)
-                {
-                    platGPK.wsk.Ping();
-                }
-
 
                 List<betData> list = platACT.getActData2(actInfo[15]);
                 //list.Add(new betData() { username = "wlf5577558", betTime = "2018-12-29 21:50:59", bbid = "738215", passed = true, aid = "40" });//默认等于合格
@@ -1474,7 +1485,7 @@ namespace AutoWork_Plat1
                 }
 
                 //2019年4月19日 如果大于10条 说明socket有问题，重连
-                if (list.Count>10)
+                if (list.Count>10 || platGPK.wsk == null)
                 {
                     platGPK.WebSocketConnect();
                 }
@@ -1654,13 +1665,14 @@ namespace AutoWork_Plat1
 
                     //2次投注记录 有效投注 是否相等 同一个socket_id 取bbid
                     //platGPK.socket_id = DateTime.Now.Millisecond.ToString() + DateTime.Now.Second.ToString();
-                    platGPK.socket_id = bb.bbid;
+                    //platGPK.socket_id = bb.bbid;
                     //启动sokect
                     //platGPK.SaveSocket2DB();
-                    if (platGPK.wsk == null)
-                    {
-                        platGPK.WebSocketConnect();                        
-                    }
+
+                    //if (platGPK.wsk == null)
+                    //{
+                    //    platGPK.WebSocketConnect();                        
+                    //}
 
 
                     Thread.Sleep(500);
@@ -1709,7 +1721,7 @@ namespace AutoWork_Plat1
                     Thread.Sleep(500);
                     //查询一次数据库 看是否符合
                     decimal chargeMoney = 0;
-                    object o = platGPK.getSoketDataFromDbCompare( out chargeMoney);
+                    object o = platGPK.getSoketDataFromDbCompare( out chargeMoney,bb.bbid);
                     if (o != null)
                     {
                         if (!(bool)o)
@@ -1816,6 +1828,7 @@ namespace AutoWork_Plat1
                         appSittingSet.Log(msg);
 
                         //记录到sqlite数据库
+                        bb.msg = bb.lastCashTime;//用到了这个判断单笔时间
                         appSittingSet.recorderDb(bb);
                     }
                     else
@@ -2211,8 +2224,13 @@ namespace AutoWork_Plat1
 
         private void 登陆GPK_Click(object sender, EventArgs e)
         {
-            string msg = string.Format("GPK站登录{0} ", platGPK.loginGPK() ? "成功" : "失败");
+            bool b = platGPK.loginGPK();
+            string msg = string.Format("GPK站登录{0} ", b? "成功" : "失败");
             appSittingSet.Log(msg);
+            if (b)
+            {
+                platGPK.WebSocketConnect();//重连websocket
+            }
             MyWrite(msg);
         }
 

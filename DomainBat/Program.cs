@@ -38,17 +38,6 @@ namespace DomainBat
             Console.Title = "自动添加域名CDN程序";
             if (fs.Length > 0)
             {
-                //先登陆一遍
-                //bool b = platGPK.loginGPK();
-                //if (!b)
-                //{
-                //    Console.WriteLine("GPK登陆失败");
-                //    return;
-                //}
-                //else
-                //{
-                //    Console.WriteLine("GPK登陆成功");
-                //}
                 foreach (var file in fs)
                 {
                     Console.WriteLine("发现待处理文件 " + file.FullName);

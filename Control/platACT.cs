@@ -19,9 +19,51 @@ namespace TimoControl
         private static string act_pwd { get; set; }
         private static string act_uid { get; set; }
         //private static int aid { get; set; }
-        private static CookieContainer ct_yh { get; set; }
+        private static CookieContainer ct_yh { get; set; } = new CookieContainer();
         //public static betData bb { get; set; }
 
+        public static string getHtml( string postUrl,string postData)
+        {
+            try
+            {
+                HttpWebRequest request = WebRequest.Create(postUrl) as HttpWebRequest;
+
+                request.ProtocolVersion = HttpVersion.Version11;
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | SecurityProtocolType.Tls11;
+                ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
+
+                request.Method = "POST";
+                request.UserAgent = "Mozilla/4.0";
+                request.ContentType = "application/x-www-form-urlencoded; charset=utf-8";
+
+                byte[] bytes = Encoding.UTF8.GetBytes(postData);
+                request.ContentLength = bytes.Length;
+                Stream newStream = request.GetRequestStream();
+                newStream.Write(bytes, 0, bytes.Length);
+                newStream.Close();
+
+                request.CookieContainer = ct_yh;
+
+                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
+
+                string ret_html = reader.ReadToEnd();
+                ct_yh.Add(response.Cookies);
+
+                reader.Close();
+                reader.Dispose();
+                request.Abort();
+                response.Close();
+                response.Dispose();
+                return ret_html;
+            }
+            catch (WebException ex)
+            {
+                appSittingSet.Log($"活动页错误信息{postUrl}-{ex.Message}");
+                return null;
+            }
+
+        }
         /// <summary>
         /// 登录优惠大厅并跳转
         /// </summary>
@@ -51,7 +93,9 @@ namespace TimoControl
                 //ServicePointManager.DefaultConnectionLimit = 50;
                 //ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls;
 
-
+                //string postUrl = url_act_base + "Public/login.html";
+                //string postData =  string.Format("user={0}&password={1}", act_acc, act_pwd);
+                //string ret_html = getHtml(postUrl, postData);
 
                 HttpWebRequest request = WebRequest.Create(url_act_base + "Public/login.html") as HttpWebRequest;
 
@@ -194,7 +238,7 @@ namespace TimoControl
                     loginActivity();
                     return null;
                 }
-                appSittingSet.Log("获取活动列表失败：" + ex.Message);
+                appSittingSet.Log("获取活动列表失败1：" + ex.Message);
                 return null;
             }
 
@@ -359,7 +403,7 @@ namespace TimoControl
                 //    loginActivity();
                 //    return null;
                 //}
-                appSittingSet.Log("获取活动列表失败：" + ex.Message);
+                appSittingSet.Log("获取活动列表失败2：" + ex.Message);
                 return null;
             }
 
@@ -371,10 +415,10 @@ namespace TimoControl
         /// <param name="aid"></param>
         /// <param name="bb"></param>
         /// <returns></returns>
-        public static betData getActData2_time(string aid,betData bb)
+        public static betData getActData2_time(betData bb)
         {
       //https://3730yh.com/8943h4812iun4i32.php/Submissions/index/aid/38.html?status=1&p=1&start=&end=&username=rr435800&psize=1
-            string url_act_list = url_act_base + "Submissions/index/aid/" + aid + ".html?status=1&p=1&start=&end=&username="+bb.username+"&psize=1"; //未处理0 分页1条
+            string url_act_list = url_act_base + "Submissions/index/aid/" + bb.aid + ".html?status=1&p=1&start=&end=&username="+bb.username+"&psize=1"; //未处理0 分页1条
             HttpWebRequest request = WebRequest.Create(url_act_list) as HttpWebRequest;
             request.ProtocolVersion = HttpVersion.Version11;
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
@@ -455,7 +499,7 @@ namespace TimoControl
                 //    loginActivity();
                 //    return null;
                 //}
-                appSittingSet.Log("获取活动列表失败：" + ex.Message);
+                appSittingSet.Log("获取活动列表失败3：" + ex.Message);
                 return null;
             }
 

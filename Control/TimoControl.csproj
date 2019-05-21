@@ -80,6 +80,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ActFromDB.cs" />
     <Compile Include="AMESTime.cs" />
     <Compile Include="appSittingSet.cs" />
     <Compile Include="AsynFileHelp.cs" />

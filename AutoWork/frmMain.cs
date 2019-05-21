@@ -7,6 +7,10 @@ using TimoControl;
 using System.Text.RegularExpressions;
 using System.Text;
 using System.Threading;
+using System.IO;
+using System.Linq;
+using System.Collections.Concurrent;
+using System.Threading.Tasks;
 
 namespace AutoWork_Plat1
 {
@@ -82,10 +86,10 @@ namespace AutoWork_Plat1
                 StringBuilder sb = new StringBuilder();
                 for (int i = 0; i < actInfo.Length; i += 3)
                 {
-                    sb.Append(" " + actInfo[i + 1]);
-                    sb.Append(actInfo[i + 2] == "1" ? "(开)" : "(关)");
+                    sb.Append(actInfo[i + 1]);
+                    sb.Append(actInfo[i + 2] == "1" ? "开 " : "关 ");
                 }
-                sb.Append(" " + Prob[0] + "0%随机拒绝" + (Prob[1] == "1" ? "(开)" : "(关)"));
+                //sb.Append(" " + Prob[0] + "0%随机拒绝" + (Prob[1] == "1" ? "开" : "关"));
                 this.Text = platname;
                 this.toolStripStatusLabel1.Text = sb.ToString();
                 this.Icon = new System.Drawing.Icon(AutoWork.Properties.Resources.favicon, 256, 256);
@@ -98,13 +102,19 @@ namespace AutoWork_Plat1
                 notify.Click += Notify_Click;
                 notify.Icon = new System.Drawing.Icon(AutoWork.Properties.Resources.favicon, 256, 256);
                 notify.BalloonTipClicked += Notify_BalloonTipClicked;
+
+                //创建日志目录
+                if (!Directory.Exists(appSittingSet.logPath))
+                {
+                    Directory.CreateDirectory(appSittingSet.logPath);
+                }
+
             }
             catch (Exception ex)
             {
                 MyWrite("获取配置文件失败，请配置文件后重新启动程序" + ex.Message);
                 return;
             }
-
         }
 
 
@@ -126,12 +136,12 @@ namespace AutoWork_Plat1
             //清除一周前的数据、日志文件
             if (AutoCls[1] == "1")
             {
-                sched.ScheduleJob(JobBuilder.Create<MyJob0>().Build(), TriggerBuilder.Create().WithCronSchedule("1 0 8 * * ? ").Build());
+                sched.ScheduleJob(JobBuilder.Create<MyJob_cls>().Build(), TriggerBuilder.Create().WithCronSchedule("1 0 8 * * ? ").Build());
             }
             if (AutoCls[2] == "1")
             {
                 //0 6 12 18 小时1:10s 执行 登陆
-                sched.ScheduleJob(JobBuilder.Create<MyJob1>().Build(), TriggerBuilder.Create().WithCronSchedule("10 1 0,6,12,18 * * ? ").Build());
+                sched.ScheduleJob(JobBuilder.Create<MyJob_login>().Build(), TriggerBuilder.Create().WithCronSchedule("10 1 0,6,12,18 * * ? ").Build());
             }
             //5秒一次 消除奖
             if (actInfo[2] == "1")
@@ -161,12 +171,30 @@ namespace AutoWork_Plat1
             //笔笔救援活动
             if (actInfo[17] == "1")
             {
+                platGPK.needsocket = true;
                 sched.ScheduleJob(JobBuilder.Create<MyJob7>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval[5]).RepeatForever()).Build());
             }
-            //送18活动
+            ////登陆有礼
+            //if (actInfo[20] == "1")
+            //{
+            //    sched.ScheduleJob(JobBuilder.Create<MyJob8>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval[6]).RepeatForever()).Build());
+            //}
+            ////存款即送
+            //if (actInfo[23] == "1")
+            //{
+            //    sched.ScheduleJob(JobBuilder.Create<MyJob9>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval[7]).RepeatForever()).Build());
+            //}
+
+
+            //登陆有礼
             if (actInfo[20] == "1")
             {
-                sched.ScheduleJob(JobBuilder.Create<MyJob8>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval[6]).RepeatForever()).Build());
+                sched.ScheduleJob(JobBuilder.Create<MyJob10>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval[6]).RepeatForever()).Build());
+            }
+            //存款即送
+            if (actInfo[23] == "1")
+            {
+                sched.ScheduleJob(JobBuilder.Create<MyJob11>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval[7]).RepeatForever()).Build());
             }
 
             //开始运行
@@ -190,7 +218,7 @@ namespace AutoWork_Plat1
         /// <summary>
         /// 每天8:00:01 执行 删除一周前的日志 数据库一周前的数据
         /// </summary>
-        public class MyJob0 : IJob
+        public class MyJob_cls : IJob
         {
             public void Execute(IJobExecutionContext context)
             {
@@ -206,7 +234,7 @@ namespace AutoWork_Plat1
         /// <summary>
         /// /0 6 12 18 小时登录
         /// </summary>
-        public class MyJob1 : IJob
+        public class MyJob_login : IJob
         {
             public void Execute(IJobExecutionContext context)
             {
@@ -819,7 +847,8 @@ namespace AutoWork_Plat1
                 {
                     
                     //获取上一次的时间
-                    betData bb = platACT.getActData2_time(actInfo[6], item);
+                    item.aid = actInfo[6];
+                    betData bb = platACT.getActData2_time(item);
                     if (bb == null)
                     {
                         return;
@@ -925,6 +954,44 @@ namespace AutoWork_Plat1
                     {
                         bb.passed = false;
                         bb.msg = "申请期间账户余额不能有任何变动！R";
+                        bool b = platACT.confirmAct(bb);
+                        if (b)
+                        {
+                            string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", bb.username, bb.passed ? "通过" : "不通过", bb.msg);
+                            MyWrite(msg);
+                            appSittingSet.Log(msg);
+                        }
+                        return;
+                    }
+
+
+
+
+
+                    //三天前只能投注电子的 2019年5月13日 Timo
+                    List<string> _list = platGPK.KindCategories;
+                    foreach (var s in KindCategories)
+                    {
+                        _list.RemoveAt(int.Parse(s));
+                    }
+                    bb.gamename = "";
+                    foreach (var _s in _list)
+                    {
+                        bb.gamename += "&types=" + string.Join("&types=", _s.Replace("\"", "").Split(',').Skip(1).ToArray());
+                    }
+
+                    bb.lastCashTime = DateTime.Now.Date.AddDays(-4).ToString("yyyy/MM/dd");
+                    bb.lastOprTime = DateTime.Now.Date.AddDays(-2).ToString("yyyy/MM/dd");
+
+                    bb = platGPK.GetDetailInfo(bb);
+                    if (bb == null)
+                    {
+                        return;//查询失败，什么都不干
+                    }
+                    if (!bb.passed || bb.total_money >0)
+                    {
+                        bb.passed = false;
+                        bb.msg = "近3天有效投注必须为电子！R";
                         bool b = platACT.confirmAct(bb);
                         if (b)
                         {
@@ -1115,8 +1182,10 @@ namespace AutoWork_Plat1
                         continue;
                     }
 
+
                     //获取详细信息
                     Gpk_UserDetail userinfo = platGPK.GetUserDetail(bb.username);
+                    /*
                     //手机号是否匹配 12点44分 2019年4月2日
                     if (userinfo.Mobile.Trim() != item.PortalMemo.Trim())
                     {
@@ -1136,6 +1205,8 @@ namespace AutoWork_Plat1
                         platGPK.UpadateMemberLevel(userinfo);
                         continue;
                     }
+
+                    */
                     //历史记录 注册 和绑定银行卡的时间间隔 大于1分钟 机器注册
                     string sr = platGPK.GetUserLoadHistory(userinfo, "申请加入会员,建立银行帐户资讯", new Random().Next(Act4Set[3], Act4Set[4]));
                     if (sr.Contains("同IP其他") || sr.Contains("未绑定银行卡"))
@@ -1484,11 +1555,41 @@ namespace AutoWork_Plat1
                     return;
                 }
 
-                //2019年4月19日 如果大于10条 说明socket有问题，重连
-                if (list.Count>10 || platGPK.wsk == null)
+                //如果最后一条的时间大于10分钟就重新连接
+                DateTime dt = DateTime.Parse(list[list.Count - 1].betTime);
+                if (platGPK.wsk == null)
                 {
+                    appSittingSet.Log("连接websocekt");
                     platGPK.WebSocketConnect();
                 }
+                else
+                {
+                    if (DateTime.Now.AddMinutes(10) > dt || list.Count > 5 || platGPK.wsk.ReadyState != WebSocketSharp.WebSocketState.Open)
+                    {
+                        appSittingSet.Log("连接websocekt");
+                        platGPK.WebSocketConnect();
+                    }
+                }
+
+
+                //if ((DateTime.Now.AddMinutes(10) > dt || list.Count > 5) && (platGPK.wsk != null && platGPK.wsk.ReadyState != WebSocketSharp.WebSocketState.Open))
+                //{
+                //    appSittingSet.Log("连接websocekt");
+                //    platGPK.WebSocketConnect();       
+                //}
+
+                //2019年4月19日 如果大于10条 说明socket有问题，重连
+                //if (list.Count > 10 || platGPK.wsk == null)
+                //{
+                //    appSittingSet.Log("连接websocekt");
+                //    platGPK.WebSocketConnect();
+                //}
+
+                //方法2
+                //if (list.Count > 10 || platGPK.cws==null)
+                //{
+                //    platGPK.WebSocketConnect2();
+                //}
 
                 foreach (var item in list)
                 {
@@ -1665,7 +1766,7 @@ namespace AutoWork_Plat1
 
                     //2次投注记录 有效投注 是否相等 同一个socket_id 取bbid
                     //platGPK.socket_id = DateTime.Now.Millisecond.ToString() + DateTime.Now.Second.ToString();
-                    //platGPK.socket_id = bb.bbid;
+                    platGPK.socket_id = bb.bbid;
                     //启动sokect
                     //platGPK.SaveSocket2DB();
 
@@ -1721,7 +1822,7 @@ namespace AutoWork_Plat1
                     Thread.Sleep(500);
                     //查询一次数据库 看是否符合
                     decimal chargeMoney = 0;
-                    object o = platGPK.getSoketDataFromDbCompare( out chargeMoney,bb.bbid);
+                    object o = platGPK.getSoketDataFromDbCompare(out chargeMoney);
                     if (o != null)
                     {
                         if (!(bool)o)
@@ -1855,13 +1956,15 @@ namespace AutoWork_Plat1
             }
         }
         /// <summary>
-        /// 作业8 送18
+        /// 五一七天乐 登陆有礼
         /// </summary>
         [DisallowConcurrentExecution]
         public class MyJob8 : IJob
         {
             public void Execute(IJobExecutionContext context)
             {
+                //DateTime dt = DateTime.Parse("2019/05/01 00:00:01");
+                DateTime dt = DateTime.Parse("2019/05/18 00:00:01");
                 List<betData> list = platACT.getActData2(actInfo[18]);
                 if (list == null)
                 {
@@ -1876,7 +1979,7 @@ namespace AutoWork_Plat1
 
                 foreach (var item in list)
                 {
-                    item.aid = actInfo[18];
+                    //item.aid = actInfo[18];
                     item.aname = actInfo[19];
                     //判断是否提交过 同一用户  只能一次
                     string sql = "select * from record where pass=1 and aid =" + item.aid+ " and LOWER(username)='" + item.username.ToLower() + "'  ";
@@ -1916,11 +2019,11 @@ namespace AutoWork_Plat1
                     }
                     else
                     {
-                        if (userinfo.JoinTime>DateTime.Parse("2019/05/01 12:00:01"))
+                        if (userinfo.JoinTime>dt.AddHours(-12))
                         {
                             //回填拒绝
                             item.passed = false;
-                            item.msg = "注册时间必须要 2019/05/01 00:00:01 之前 R";
+                            item.msg = "注册时间必须要美东时间"+dt.ToString("yyyy/MM/dd HH:mm:ss") + "之前 R";
                             bool r1 = platACT.confirmAct(item);
                             if (r1)
                             {
@@ -1954,8 +2057,32 @@ namespace AutoWork_Plat1
                         }
                     }
 
-                    //判断是否有存款记录
-                    item.betTime = DateTime.Parse("2019/04/01 23:57:59").AddHours(12).ToString("yyyy/MM/dd HH:mm:ss");
+                    //判断 层级是否在 列表之中
+                    foreach (var s in FiliterGroups)
+                    {
+                        if (userinfo.MemberLevelSettingId == s)
+                        {
+                            item.passed = false;
+                            item.msg = "经查询，您的账号目前不享有此优惠！ R";
+                            break;
+                        }
+                    }
+                    if (!item.passed)
+                    {
+                        //不满足条件 级别
+                        bool r1 = platACT.confirmAct(item);
+                        if (r1)
+                        {
+                            string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                            MyWrite(msg);
+                            appSittingSet.Log(msg);
+                        }
+                        return;
+                    }
+
+                    //判断是否有存款记录 5.1前>=1
+                    item.lastOprTime = "";
+                    item.betTime = dt.AddHours(12).ToString("yyyy/MM/dd HH:mm:ss");
                     betData bb = platGPK.MemberTransactionSearch(item);
                     if (bb == null)
                     {
@@ -1965,7 +2092,7 @@ namespace AutoWork_Plat1
                     {
                         //没有交易记录 存款小于1 不过
                         item.passed = false;
-                        item.msg = "存款不足，不符合条件";
+                        item.msg = dt.ToString("yyyy/MM/dd") +"前存款不足，不符合条件";
                         bool r1 = platACT.confirmAct(item);
                         if (r1)
                         {
@@ -2026,7 +2153,7 @@ namespace AutoWork_Plat1
                     }
                     */
                     //更新操作 加钱
-                    item.betMoney = Act4Set[6];//先写死 不会更改
+                    item.betMoney = 18;//先写死 不会更改
                     item.AuditType = "None";
                     item.Audit = bb.betMoney;
                     item.Memo = bb.aname;
@@ -2049,9 +2176,9 @@ namespace AutoWork_Plat1
                     }
 
                     //更新等级
-                    userinfo.Province = memberLevel[5];
-                    userinfo.RegisterDevice = memberLevel[4];
-                    platGPK.UpadateMemberLevel(userinfo);
+                    //userinfo.Province = memberLevel[5];
+                    //userinfo.RegisterDevice = memberLevel[4];
+                    //platGPK.UpadateMemberLevel(userinfo);
 
                     //开启 不可跨区登陆  2019年2月28日11点43分
                     //userinfo.SexString = "true";
@@ -2079,6 +2206,986 @@ namespace AutoWork_Plat1
 
             }
         }
+
+        /// <summary>
+        /// 五一七天乐 存款即送
+        /// </summary>
+        [DisallowConcurrentExecution]
+        public class MyJob9 : IJob
+        {
+            public void Execute(IJobExecutionContext context)
+            {
+                //DateTime dt = DateTime.Parse("2019/05/01 00:00:01");
+                DateTime dt = DateTime.Parse("2019/05/18 00:00:01");
+                List<betData> list = platACT.getActData2(actInfo[21]);
+                //List<betData> list = new List<betData>();
+                //list.Add(new betData() { username = "zr97987", bbid = "1470906", betTime = "2019-04-29 18:47", aid = actInfo[21] });
+                //list.Add(new betData() { username = "mg1995", bbid = "1492880", betTime = "2019-05-01 20:50", aid = actInfo[21] });
+                if (list == null)
+                {
+                    MyWrite(actInfo[22] + " 没有获取到新的注单，等待下次执行 ");
+                    return;
+                }
+                if (list.Count == 0)
+                {
+                    MyWrite(actInfo[22] + "没有新的注单，等待下次执行 ");
+                    return;
+                }
+
+                foreach (var item in list)
+                {
+                    item.aid = actInfo[21];
+                    item.aname = actInfo[22];
+                    //判断是否提交过 同一用户  只能一次
+                    string sql = "select * from record where pass=1 and aid =" + item.aid+ " and LOWER(username)='" + item.username.ToLower() + "'  ";
+                    if (appSittingSet.recorderDbCheck(sql))
+                    {
+                        item.passed = false;
+                        item.msg = "您好，同一账号只能申请一次，申请不通过！R";
+                        bool b = platACT.confirmAct(item);
+                        if (b)
+                        {
+                            string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                            MyWrite(msg);
+                            appSittingSet.Log(msg);
+                        }
+                        continue;
+                    }
+
+                    //获取详细信息
+                    Gpk_UserDetail userinfo = platGPK.GetUserDetail(item.username);
+                    if (userinfo == null)
+                    {
+                        //回填拒绝
+                        item.passed = false;
+                        item.msg = "账号有误";
+                        bool r1 = platACT.confirmAct(item);
+                        if (r1)
+                        {
+                            string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                            MyWrite(msg);
+                            appSittingSet.Log(msg);
+                        }
+                        //更新等级 拒绝
+                        //userinfo.Province = memberLevel[9];
+                        //userinfo.RegisterDevice = memberLevel[8];
+                        //platGPK.UpadateMemberLevel(userinfo);
+                        continue;
+                    }
+                    else
+                    {
+                        if (userinfo.JoinTime>dt.AddHours(-12))
+                        {
+                            //回填拒绝
+                            item.passed = false;
+                            item.msg = "注册时间必须要 "+dt.ToString("yyyy/MM/dd HH:mm:ss") + " 之前 R";
+                            bool r1 = platACT.confirmAct(item);
+                            if (r1)
+                            {
+                                string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                                MyWrite(msg);
+                                appSittingSet.Log(msg);
+                            }
+                            //更新等级 拒绝
+                            //userinfo.Province = memberLevel[9];
+                            //userinfo.RegisterDevice = memberLevel[8];
+                            //platGPK.UpadateMemberLevel(userinfo);
+                            continue;
+                        }
+                        if (userinfo.BankAccount == null || userinfo.BankAccount=="")
+                        {
+                            //回填拒绝
+                            item.passed = false;
+                            item.msg = "未绑定银行卡 R";
+                            bool r1 = platACT.confirmAct(item);
+                            if (r1)
+                            {
+                                string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                                MyWrite(msg);
+                                appSittingSet.Log(msg);
+                            }
+                            //更新等级 拒绝
+                            //userinfo.Province = memberLevel[9];
+                            //userinfo.RegisterDevice = memberLevel[8];
+                            //platGPK.UpadateMemberLevel(userinfo);
+                            continue;
+                        }
+                    }
+
+                    //判断 层级是否在 列表之中
+                    foreach (var s in FiliterGroups)
+                    {
+                        if (userinfo.MemberLevelSettingId == s)
+                        {
+                            item.passed = false;
+                            item.msg = "经查询，您的账号目前不享有此优惠！ R";
+                            break;
+                        }
+                    }
+                    if (!item.passed)
+                    {
+                        //不满足条件 级别
+                        bool r1 = platACT.confirmAct(item);
+                        if (r1)
+                        {
+                            string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                            MyWrite(msg);
+                            appSittingSet.Log(msg);
+                        }
+                        return;
+                    }
+
+
+
+                    //这一次存款的数目 和时间
+                    //查询gpk 记录 级别 存款金额、总次数 账户 ？？余额?? 最后存款时间 
+                    item.lastOprTime = dt.AddHours(12).AddMinutes(-2).ToString("yyyy/MM/dd HH:mm:ss") ;
+                    //item.betTime = "";
+                    //item.isReal = false; //测试 正式取消掉 或者设置为true 默认true
+                    betData bb= platGPK.MemberTransactionSearch(item);
+                    if (bb == null)
+                    {
+                        continue;//异常
+                    }
+                    if (!bb.passed)
+                    {
+                        //账号不存在？
+                        bb.msg = "经查询，您的账号此时间段无交易记录 R";
+                        bool r1 = platACT.confirmAct(bb);
+                        if (r1)
+                        {
+                            string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", bb.username, bb.passed ? "通过" : "不通过", bb.msg);
+                            MyWrite(msg);
+                            appSittingSet.Log(msg);
+                        }
+                        continue;
+                    }
+
+                    //计算送的钱
+                    decimal hb = 0;
+                    bool ok = false;
+                    if (bb.betMoney>=10 )
+                    {
+                        hb= 10;
+                        ok = true;
+                        bb.Audit = (bb.betMoney + 10) * 5;
+                    }
+                    if (bb.betMoney >= 20 )
+                    {
+                        hb= 20;
+                        ok = true;
+                        bb.Audit = (bb.betMoney + 20) * 9;
+                    }
+
+
+                    //判断是否有进行投注 起始时间 要加上 处理的时间间隔  @@账户变动@@
+                    item.lastOprTime = item.betTime;
+                    object ba = platGPK.BetRecordSearch(item);
+                    if (ba == null)
+                    {
+                        continue;//查询失败，什么都不干
+                    }
+                    if (!(bool)ba)
+                    {
+                        item.passed = false;
+                        item.msg = "申请期间账户余额不能有任何变动！R";
+                        bool b = platACT.confirmAct(item);
+                        if (b)
+                        {
+                            string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                            MyWrite(msg);
+                            appSittingSet.Log(msg);
+                        }
+                        continue;
+                    }
+
+
+
+
+                    //判断是否有存款记录 5.1前>=1
+                    item.lastOprTime = "";
+                    item.betTime = dt.AddHours(12).ToString("yyyy/MM/dd HH:mm:ss");
+                    bb = platGPK.MemberTransactionSearch(item);
+                    if (bb == null)
+                    {
+                        continue;//异常
+                    }
+                    if (!bb.passed )
+                    {
+                        //没有记录 
+                        if (ok)
+                        {
+                            //送 10
+                            bb.betMoney = 10;
+                            bb.passed = true;
+                        }
+                        else
+                        {
+                            //存款不符合要求
+                            item.passed = false;
+                            item.msg = "此次存款不符合条件 最低10元 R";
+                            bool r1 = platACT.confirmAct(item);
+                            if (r1)
+                            {
+                                string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                                MyWrite(msg);
+                                appSittingSet.Log(msg);
+                            }
+                            //更新等级 拒绝
+                            //userinfo.Province = memberLevel[9];
+                            //userinfo.RegisterDevice = memberLevel[8];
+                            //platGPK.UpadateMemberLevel(userinfo);
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        if (bb.total_money>=1)
+                        {
+                            //有记录>1 >20 就送
+                            if (hb==20)
+                            {
+                                //送 20
+                                bb.betMoney = 20;
+                                bb.passed = true;
+                            }
+                            else
+                            {
+                                //存款不足 5.1号前有过存款记录，此次最低存20元才又送
+                                item.passed = false;
+                                item.msg = "此次需要最低存款20元才能参与活动，不符合条件 R";
+                                bool r1 = platACT.confirmAct(item);
+                                if (r1)
+                                {
+                                    string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                                    MyWrite(msg);
+                                    appSittingSet.Log(msg);
+                                }
+                                //更新等级 拒绝
+                                //userinfo.Province = memberLevel[9];
+                                //userinfo.RegisterDevice = memberLevel[8];
+                                //platGPK.UpadateMemberLevel(userinfo);
+                                continue;
+                            }
+                        }
+                        else
+                        {
+                            //有记录 不大于1元 不送
+                            item.passed = false;
+                            item.msg = dt.ToString("yyyy/MM/dd") +"前存款不足，不符合条件R";
+                            bool r1 = platACT.confirmAct(item);
+                            if (r1)
+                            {
+                                string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                                MyWrite(msg);
+                                appSittingSet.Log(msg);
+                            }
+                            //更新等级 拒绝
+                            //userinfo.Province = memberLevel[9];
+                            //userinfo.RegisterDevice = memberLevel[8];
+                            //platGPK.UpadateMemberLevel(userinfo);
+                            continue;
+                        }
+                    }
+
+                    /*
+                    //历史记录 注册 和绑定银行卡的时间间隔 大于1分钟 机器注册
+                    string sr = platGPK.GetUserLoadHistory(userinfo, "申请加入会员,建立银行帐户资讯", new Random().Next(Act4Set[8], Act4Set[9]));
+                    if (sr.Contains("ERR"))
+                    {
+                        continue;
+                    }
+                    if (sr.Contains("同IP其他") || sr.Contains("未绑定"))
+                    {
+                        item.passed = false;
+                        item.msg = sr;
+                        bool r1 = platACT.confirmAct(item);
+                        if (r1)
+                        {
+                            string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                            MyWrite(msg);
+                            appSittingSet.Log(msg);
+                        }
+                        //更新等级 拒绝
+                        userinfo.Province = memberLevel[9];
+                        userinfo.RegisterDevice = memberLevel[8];
+                        platGPK.UpadateMemberLevel(userinfo);
+                        continue;
+                    }
+
+                    //同ip几个人申请 5
+                    int cu = platGPK.GetUserCountSameIP(userinfo.LatestLogin_IP);
+                    if (cu >= Act4Set[7])
+                    {
+                        item.passed = false;
+                        item.msg = "同IP其他会员已申请过！R";
+                        bool r1 = platACT.confirmAct(item);
+                        if (r1)
+                        {
+                            string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                            MyWrite(msg);
+                            appSittingSet.Log(msg);
+                        }
+                        //更新等级 拒绝
+                        userinfo.Province = memberLevel[9];
+                        userinfo.RegisterDevice = memberLevel[8];
+                        platGPK.UpadateMemberLevel(userinfo);
+                        continue;
+                    }
+                    */
+                    //更新操作 加钱
+
+                    bb.AuditType = "Discount";
+                    //bb.Audit = bb.betMoney;
+                    bb.Memo = bb.aname;
+                    bb.Type = 5;
+
+                    bool fr = platGPK.MemberDepositSubmit(item);
+                    if (fr)
+                    {
+                        string msg = string.Format("用户{0}处理，存入金额{1} ,活动名称{2} ", item.username, item.betMoney, item.aname);
+                        MyWrite(msg);
+                        appSittingSet.Log(msg);
+
+                        //记录到sqlite数据库
+                        appSittingSet.recorderDb(item);
+                    }
+                    else
+                    {
+                        //充钱失败的情况 ？
+                        continue;
+                    }
+
+                    //更新等级
+                    //userinfo.Province = memberLevel[5];
+                    //userinfo.RegisterDevice = memberLevel[4];
+                    //platGPK.UpadateMemberLevel(userinfo);
+
+                    //开启 不可跨区登陆  2019年2月28日11点43分
+                    //userinfo.SexString = "true";
+                    //platGPK.UpdateCrossRegionLogin(userinfo);
+
+                    //发送站内信 14点09分 2019年4月2日
+                    //if (mailbody[3] == "1")
+                    //{
+                    //    SendMailBody mail = new SendMailBody() { Subject = mailbody[4], MailBody = mailbody[5], SendMailType = "1", MailRecievers = userinfo.Account };
+                    //    platGPK.SiteMailSendMail(mail);
+                    //}
+
+                    //回填 操作结果
+                    item.msg = "恭喜您，您申请的<" + item.aname + ">已通过活动专员的检验 R";
+                    item.passed = true;
+                    bool r = platACT.confirmAct(item);
+                    if (r)
+                    {
+                        string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                        MyWrite(msg);
+                        appSittingSet.Log(msg);
+                    }
+
+                }
+
+            }
+        }
+
+
+        /// <summary>
+        /// 520礼惠五月 登陆有礼
+        /// </summary>
+        [DisallowConcurrentExecution]
+        public class MyJob10 : IJob
+        {
+            public void Execute(IJobExecutionContext context)
+            {
+                //DateTime dt = DateTime.Parse("2019/05/01 00:00:01");
+                DateTime dt = DateTime.Parse("2019/05/20 00:00:01");
+
+
+                List<betData> list = platACT.getActData2(actInfo[18]);
+                //_list = ActFromDB.getActData(actInfo[18],_list);
+
+
+                if (list == null)
+                {
+                    MyWrite(actInfo[19] + " 没有获取到新的注单，等待下次执行 ");
+                    return;
+                }
+                if (list.Count == 0)
+                {
+                    MyWrite(actInfo[19] + "没有新的注单，等待下次执行 ");
+                    return;
+                }
+
+                MySQLHelper.connectionString = appSittingSet.readAppsettings("MySqlConnect").Split('|')[0];
+                foreach (var item in list)
+                {
+                    //item.aid = actInfo[18];
+                    item.aname = actInfo[19];
+                    //判断是否之前提交过 5.1活动
+                    string sql = $"select count(id) from e_submissions where aid= {item.aid}  and LOWER(username)='{item.username.ToLower()}' and status=1;";
+                    object o = MySQLHelper.GetScalar(sql);
+                    if (int.Parse(o.ToString()) > 1)
+                    {
+                        item.passed = false;
+                        item.msg = "您好，同一账号只能申请一次，申请不通过！R";
+                        bool b = platACT.confirmAct(item);
+                        if (b)
+                        {
+                            string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                            MyWrite(msg);
+                            appSittingSet.Log(msg);
+                        }
+                        continue;
+                    }
+
+                    //判断是否提交过 同一用户  只能一次
+                    sql = $"select * from record where pass=1 and aid ={item.aid } and LOWER(username)='{ item.username.ToLower() }'  ";
+                    if (appSittingSet.recorderDbCheck(sql))
+                    {
+                        item.passed = false;
+                        item.msg = "您好，同一账号只能申请一次，申请不通过！R";
+                        bool b = platACT.confirmAct(item);
+                        if (b)
+                        {
+                            string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                            MyWrite(msg);
+                            appSittingSet.Log(msg);
+                        }
+                        continue;
+                    }
+
+                    //获取详细信息
+                    Gpk_UserDetail userinfo = platGPK.GetUserDetail(item.username);
+                    if (userinfo == null)
+                    {
+                        //回填拒绝
+                        item.passed = false;
+                        item.msg = "账号有误";
+                        bool r1 = platACT.confirmAct(item);
+                        if (r1)
+                        {
+                            string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                            MyWrite(msg);
+                            appSittingSet.Log(msg);
+                        }
+                        //更新等级 拒绝
+                        //userinfo.Province = memberLevel[9];
+                        //userinfo.RegisterDevice = memberLevel[8];
+                        //platGPK.UpadateMemberLevel(userinfo);
+                        continue;
+                    }
+                    else
+                    {
+                        if (userinfo.JoinTime>dt.AddHours(-12))
+                        {
+                            //回填拒绝
+                            item.passed = false;
+                            item.msg = "注册时间必须要美东时间"+dt.ToString("yyyy/MM/dd HH:mm:ss") + "之前 R";
+                            bool r1 = platACT.confirmAct(item);
+                            if (r1)
+                            {
+                                string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                                MyWrite(msg);
+                                appSittingSet.Log(msg);
+                            }
+                            //更新等级 拒绝
+                            //userinfo.Province = memberLevel[9];
+                            //userinfo.RegisterDevice = memberLevel[8];
+                            //platGPK.UpadateMemberLevel(userinfo);
+                            continue;
+                        }
+                        if (userinfo.BankAccount == null || userinfo.BankAccount=="")
+                        {
+                            //回填拒绝
+                            item.passed = false;
+                            item.msg = "未绑定银行卡 R";
+                            bool r1 = platACT.confirmAct(item);
+                            if (r1)
+                            {
+                                string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                                MyWrite(msg);
+                                appSittingSet.Log(msg);
+                            }
+                            //更新等级 拒绝
+                            //userinfo.Province = memberLevel[9];
+                            //userinfo.RegisterDevice = memberLevel[8];
+                            //platGPK.UpadateMemberLevel(userinfo);
+                            continue;
+                        }
+                    }
+
+                    //判断 层级是否在 列表之中
+                    foreach (var s in FiliterGroups)
+                    {
+                        if (userinfo.MemberLevelSettingId == s)
+                        {
+                            item.passed = false;
+                            item.msg = "经查询，您的账号目前不享有此优惠！ R";
+                            break;
+                        }
+                    }
+                    if (!item.passed)
+                    {
+                        //不满足条件 级别
+                        bool r1 = platACT.confirmAct(item);
+                        if (r1)
+                        {
+                            string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                            MyWrite(msg);
+                            appSittingSet.Log(msg);
+                        }
+                        return;
+                    }
+
+                    //判断在xx之前 是否有存款记录 >=1
+                    //item.lastOprTime = "";
+                    item.betTime = dt.AddHours(12).ToString("yyyy/MM/dd HH:mm:ss");
+                    betData bb = platGPK.MemberTransactionSearch(item);
+                    if (bb == null)
+                    {
+                        continue;//异常
+                    }
+                    if (!bb.passed || bb.total_money<1)
+                    {
+                        //没有交易记录 存款小于1 不过
+                        item.passed = false;
+                        item.msg = dt.ToString("yyyy/MM/dd") +"前存款不足，不符合条件";
+                        bool r1 = platACT.confirmAct(item);
+                        if (r1)
+                        {
+                            string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                            MyWrite(msg);
+                            appSittingSet.Log(msg);
+                        }
+                        //更新等级 拒绝
+                        //userinfo.Province = memberLevel[9];
+                        //userinfo.RegisterDevice = memberLevel[8];
+                        //platGPK.UpadateMemberLevel(userinfo);
+                        continue;
+                    }
+
+                    /*
+                    //历史记录 注册 和绑定银行卡的时间间隔 大于1分钟 机器注册
+                    string sr = platGPK.GetUserLoadHistory(userinfo, "申请加入会员,建立银行帐户资讯", new Random().Next(Act4Set[8], Act4Set[9]));
+                    if (sr.Contains("ERR"))
+                    {
+                        continue;
+                    }
+                    if (sr.Contains("同IP其他") || sr.Contains("未绑定"))
+                    {
+                        item.passed = false;
+                        item.msg = sr;
+                        bool r1 = platACT.confirmAct(item);
+                        if (r1)
+                        {
+                            string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                            MyWrite(msg);
+                            appSittingSet.Log(msg);
+                        }
+                        //更新等级 拒绝
+                        userinfo.Province = memberLevel[9];
+                        userinfo.RegisterDevice = memberLevel[8];
+                        platGPK.UpadateMemberLevel(userinfo);
+                        continue;
+                    }
+
+                    //同ip几个人申请 5
+                    int cu = platGPK.GetUserCountSameIP(userinfo.LatestLogin_IP);
+                    if (cu >= Act4Set[7])
+                    {
+                        item.passed = false;
+                        item.msg = "同IP其他会员已申请过！R";
+                        bool r1 = platACT.confirmAct(item);
+                        if (r1)
+                        {
+                            string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                            MyWrite(msg);
+                            appSittingSet.Log(msg);
+                        }
+                        //更新等级 拒绝
+                        userinfo.Province = memberLevel[9];
+                        userinfo.RegisterDevice = memberLevel[8];
+                        platGPK.UpadateMemberLevel(userinfo);
+                        continue;
+                    }
+                    */
+                    //更新操作 加钱
+                    item.betMoney = 5.2M;//先写死 不会更改
+                    item.AuditType = "Discount";
+                    item.Audit = bb.betMoney * 5;
+                    item.Memo = bb.aname;
+                    item.Type = 5;
+                    item.passed = true;
+                    bool fr = platGPK.MemberDepositSubmit(item);
+                    if (fr)
+                    {
+                        string msg = string.Format("用户{0}处理，存入金额{1} ,活动名称{2} ", item.username, item.betMoney, item.aname);
+                        MyWrite(msg);
+                        appSittingSet.Log(msg);
+
+                        //记录到sqlite数据库
+                        appSittingSet.recorderDb(item);
+                    }
+                    else
+                    {
+                        //充钱失败的情况 ？
+                        continue;
+                    }
+
+                    //更新等级
+                    //userinfo.Province = memberLevel[5];
+                    //userinfo.RegisterDevice = memberLevel[4];
+                    //platGPK.UpadateMemberLevel(userinfo);
+
+                    //开启 不可跨区登陆  2019年2月28日11点43分
+                    //userinfo.SexString = "true";
+                    //platGPK.UpdateCrossRegionLogin(userinfo);
+
+                    //发送站内信 14点09分 2019年4月2日
+                    //if (mailbody[3] == "1")
+                    //{
+                    //    SendMailBody mail = new SendMailBody() { Subject = mailbody[4], MailBody = mailbody[5], SendMailType = "1", MailRecievers = userinfo.Account };
+                    //    platGPK.SiteMailSendMail(mail);
+                    //}
+
+                    //回填 操作结果
+                    item.msg = "恭喜您，您申请的<" + item.aname + ">已通过活动专员的检验 R";
+                    item.passed = true;
+                    bool r = platACT.confirmAct(item);
+                    if (r)
+                    {
+                        string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                        MyWrite(msg);
+                        appSittingSet.Log(msg);
+                    }
+
+                }
+
+            }
+        }
+
+
+
+        /// <summary>
+        /// 520礼惠五月 存款即送
+        /// </summary>
+        [DisallowConcurrentExecution]
+        public class MyJob11 : IJob
+        {
+            public void Execute(IJobExecutionContext context)
+            {
+                //DateTime dt = DateTime.Parse("2019/05/01 00:00:01");
+                DateTime dt = DateTime.Parse("2019/05/20 00:00:01");
+                List<betData> list = platACT.getActData2(actInfo[21]);
+                //List<betData> list = new List<betData>();
+                //list.Add(new betData() { username = "zr97987", bbid = "1470906", betTime = "2019-04-29 18:47", aid = actInfo[21] });
+                //list.Add(new betData() { username = "mg1995", bbid = "1492880", betTime = "2019-05-01 20:50", aid = actInfo[21] });
+                if (list == null)
+                {
+                    MyWrite(actInfo[22] + " 没有获取到新的注单，等待下次执行 ");
+                    return;
+                }
+                if (list.Count == 0)
+                {
+                    MyWrite(actInfo[22] + "没有新的注单，等待下次执行 ");
+                    return;
+                }
+
+
+                //MySQLHelper.connectionString = appSittingSet.readAppsettings("MySqlConnect").Split('|')[0];
+                foreach (var item in list)
+                {
+                    //item.aid = actInfo[21];
+                    item.aname = actInfo[22];
+
+                    //判断5.1 是否有提交
+                    string sql = $"select count(id) from e_submissions where aid= {item.aid}  and LOWER(username)='{item.username}' and status=1;";
+                    object o = MySQLHelper.GetScalar(sql);
+                    if (int.Parse(o.ToString())> 1)
+                    {
+                        item.passed = false;
+                        item.msg = "您好，同一账号只能申请一次，申请不通过！R";
+                        bool b = platACT.confirmAct(item);
+                        if (b)
+                        {
+                            string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                            MyWrite(msg);
+                            appSittingSet.Log(msg);
+                        }
+                        continue;
+                    }
+
+                    //判断是否提交过 同一用户  只能一次
+                    sql = $"select * from record where pass=1 and aid ={item.aid } and LOWER(username)='{ item.username.ToLower() }'  ";
+                    if (appSittingSet.recorderDbCheck(sql))
+                    {
+                        item.passed = false;
+                        item.msg = "您好，同一账号只能申请一次，申请不通过！R";
+                        bool b = platACT.confirmAct(item);
+                        if (b)
+                        {
+                            string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                            MyWrite(msg);
+                            appSittingSet.Log(msg);
+                        }
+                        continue;
+                    }
+
+                    //获取详细信息
+                    Gpk_UserDetail userinfo = platGPK.GetUserDetail(item.username);
+                    if (userinfo == null)
+                    {
+                        //回填拒绝
+                        item.passed = false;
+                        item.msg = "账号有误";
+                        bool r1 = platACT.confirmAct(item);
+                        if (r1)
+                        {
+                            string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                            MyWrite(msg);
+                            appSittingSet.Log(msg);
+                        }
+                        //更新等级 拒绝
+                        //userinfo.Province = memberLevel[9];
+                        //userinfo.RegisterDevice = memberLevel[8];
+                        //platGPK.UpadateMemberLevel(userinfo);
+                        continue;
+                    }
+                    else
+                    {
+                        if (userinfo.JoinTime>dt.AddHours(-12))
+                        {
+                            //回填拒绝
+                            item.passed = false;
+                            item.msg = "注册时间必须要 "+dt.ToString("yyyy/MM/dd HH:mm:ss") + " 之前 R";
+                            bool r1 = platACT.confirmAct(item);
+                            if (r1)
+                            {
+                                string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                                MyWrite(msg);
+                                appSittingSet.Log(msg);
+                            }
+                            //更新等级 拒绝
+                            //userinfo.Province = memberLevel[9];
+                            //userinfo.RegisterDevice = memberLevel[8];
+                            //platGPK.UpadateMemberLevel(userinfo);
+                            continue;
+                        }
+                        if (userinfo.BankAccount == null || userinfo.BankAccount=="")
+                        {
+                            //回填拒绝
+                            item.passed = false;
+                            item.msg = "未绑定银行卡 R";
+                            bool r1 = platACT.confirmAct(item);
+                            if (r1)
+                            {
+                                string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                                MyWrite(msg);
+                                appSittingSet.Log(msg);
+                            }
+                            //更新等级 拒绝
+                            //userinfo.Province = memberLevel[9];
+                            //userinfo.RegisterDevice = memberLevel[8];
+                            //platGPK.UpadateMemberLevel(userinfo);
+                            continue;
+                        }
+                    }
+
+                    //判断 层级是否在 列表之中
+                    foreach (var s in FiliterGroups)
+                    {
+                        if (userinfo.MemberLevelSettingId == s)
+                        {
+                            item.passed = false;
+                            item.msg = "经查询，您的账号目前不享有此优惠！ R";
+                            break;
+                        }
+                    }
+                    if (!item.passed)
+                    {
+                        //不满足条件 级别
+                        bool r1 = platACT.confirmAct(item);
+                        if (r1)
+                        {
+                            string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                            MyWrite(msg);
+                            appSittingSet.Log(msg);
+                        }
+                        return;
+                    }
+
+
+
+                    //这一次存款的数目 和时间
+                    //查询gpk 记录 级别 存款金额、总次数 账户 ？？余额?? 最后存款时间 
+                    item.lastOprTime = dt.AddHours(12).AddMinutes(-2).ToString("yyyy/MM/dd HH:mm:ss") ;
+                    //item.betTime = "";
+                    //item.isReal = false; //测试 正式取消掉 或者设置为true 默认true
+                    betData bb= platGPK.MemberTransactionSearch(item);
+                    if (bb == null)
+                    {
+                        continue;//异常
+                    }
+                    if (!bb.passed)
+                    {
+                        //账号不存在？
+                        bb.msg = "经查询，您的账号此时间段无交易记录 请联系客服R";
+                        bool r1 = platACT.confirmAct(bb);
+                        if (r1)
+                        {
+                            string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", bb.username, bb.passed ? "通过" : "不通过", bb.msg);
+                            MyWrite(msg);
+                            appSittingSet.Log(msg);
+                        }
+                        continue;
+                    }
+                    if (bb.betMoney==15 )
+                    {
+                        bb.betMoney = 20;
+                    }
+                    //if (bb.betMoney-15>(decimal)0.01 && bb.betMoney-15 <1)
+                    //{
+                    //    bb.betMoney = 20;
+                    //}
+                    else
+                    {
+                        //存款不符合要求？
+                        bb.passed = false;
+                        bb.msg = "经查询，你的存款不符合要求，需存款15元才能参与活动 R";
+                        bool r1 = platACT.confirmAct(bb);
+                        if (r1)
+                        {
+                            string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", bb.username, bb.passed ? "通过" : "不通过", bb.msg);
+                            MyWrite(msg);
+                            appSittingSet.Log(msg);
+                        }
+                        continue;
+                    }
+
+
+                    //判断是否有进行投注 起始时间 要加上 处理的时间间隔  @@账户变动@@
+                    item.lastOprTime = item.betTime;
+                    //lastCashTime
+                    object ba = platGPK.BetRecordSearch(item);
+                    if (ba == null)
+                    {
+                        continue;//查询失败，什么都不干
+                    }
+                    if (!(bool)ba)
+                    {
+                        item.passed = false;
+                        item.msg = "申请期间账户余额不能有任何变动！R";
+                        bool b = platACT.confirmAct(item);
+                        if (b)
+                        {
+                            string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                            MyWrite(msg);
+                            appSittingSet.Log(msg);
+                        }
+                        continue;
+                    }
+
+
+                    /*
+                    //历史记录 注册 和绑定银行卡的时间间隔 大于1分钟 机器注册
+                    string sr = platGPK.GetUserLoadHistory(userinfo, "申请加入会员,建立银行帐户资讯", new Random().Next(Act4Set[8], Act4Set[9]));
+                    if (sr.Contains("ERR"))
+                    {
+                        continue;
+                    }
+                    if (sr.Contains("同IP其他") || sr.Contains("未绑定"))
+                    {
+                        item.passed = false;
+                        item.msg = sr;
+                        bool r1 = platACT.confirmAct(item);
+                        if (r1)
+                        {
+                            string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                            MyWrite(msg);
+                            appSittingSet.Log(msg);
+                        }
+                        //更新等级 拒绝
+                        userinfo.Province = memberLevel[9];
+                        userinfo.RegisterDevice = memberLevel[8];
+                        platGPK.UpadateMemberLevel(userinfo);
+                        continue;
+                    }
+
+                    //同ip几个人申请 5
+                    int cu = platGPK.GetUserCountSameIP(userinfo.LatestLogin_IP);
+                    if (cu >= Act4Set[7])
+                    {
+                        item.passed = false;
+                        item.msg = "同IP其他会员已申请过！R";
+                        bool r1 = platACT.confirmAct(item);
+                        if (r1)
+                        {
+                            string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                            MyWrite(msg);
+                            appSittingSet.Log(msg);
+                        }
+                        //更新等级 拒绝
+                        userinfo.Province = memberLevel[9];
+                        userinfo.RegisterDevice = memberLevel[8];
+                        platGPK.UpadateMemberLevel(userinfo);
+                        continue;
+                    }
+                    */
+                    //更新操作 加钱
+
+                    bb.AuditType = "None";
+                    //bb.Audit = bb.betMoney;
+                    bb.Memo = bb.aname;
+                    bb.Type = 5;
+
+                    bool fr = platGPK.MemberDepositSubmit(item);
+                    if (fr)
+                    {
+                        string msg = string.Format("用户{0}处理，存入金额{1} ,活动名称{2} ", item.username, item.betMoney, item.aname);
+                        MyWrite(msg);
+                        appSittingSet.Log(msg);
+
+                        //记录到sqlite数据库
+                        appSittingSet.recorderDb(item);
+                    }
+                    else
+                    {
+                        //充钱失败的情况 ？
+                        continue;
+                    }
+
+                    //更新等级
+                    //userinfo.Province = memberLevel[5];
+                    //userinfo.RegisterDevice = memberLevel[4];
+                    //platGPK.UpadateMemberLevel(userinfo);
+
+                    //开启 不可跨区登陆  2019年2月28日11点43分
+                    //userinfo.SexString = "true";
+                    //platGPK.UpdateCrossRegionLogin(userinfo);
+
+                    //发送站内信 14点09分 2019年4月2日
+                    //if (mailbody[3] == "1")
+                    //{
+                    //    SendMailBody mail = new SendMailBody() { Subject = mailbody[4], MailBody = mailbody[5], SendMailType = "1", MailRecievers = userinfo.Account };
+                    //    platGPK.SiteMailSendMail(mail);
+                    //}
+
+                    //回填 操作结果
+                    item.msg = "恭喜您，您申请的<" + item.aname + ">已通过活动专员的检验 R";
+                    item.passed = true;
+                    bool r = platACT.confirmAct(item);
+                    if (r)
+                    {
+                        string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                        MyWrite(msg);
+                        appSittingSet.Log(msg);
+                    }
+
+                }
+
+            }
+        }
+
         #endregion
 
         #region 公共方法
@@ -2153,7 +3260,7 @@ namespace AutoWork_Plat1
             mycls = ClsListItem;
 
             //先登录一遍
-            MyJob1 myjob1 = new MyJob1();
+            MyJob_login myjob1 = new MyJob_login();
             myjob1.Execute(null);
 
             //启动调度
@@ -2168,7 +3275,7 @@ namespace AutoWork_Plat1
             {
                 sched.Shutdown();
             }
-            appSittingSet.sendEmail(platname + " 程序关闭", "程序关闭 ");
+            //appSittingSet.sendEmail(platname + " 程序关闭", "程序关闭 ");
             notify.Dispose();
         }
 
@@ -2227,10 +3334,11 @@ namespace AutoWork_Plat1
             bool b = platGPK.loginGPK();
             string msg = string.Format("GPK站登录{0} ", b? "成功" : "失败");
             appSittingSet.Log(msg);
-            if (b)
-            {
-                platGPK.WebSocketConnect();//重连websocket
-            }
+            //if (b)
+            //{
+            //    platGPK.WebSocketConnect();//重连websocket 
+            //    //platGPK.WebSocketConnect2();//重连websocket                
+            //}
             MyWrite(msg);
         }
 

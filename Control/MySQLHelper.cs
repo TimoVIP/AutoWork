@@ -12,13 +12,25 @@ namespace TimoControl
 
         public static MySqlConnection conn()
         {
-            //connectionString = appSittingSet.readAppsettings("MySqlConnect");
-            MySqlConnection connection = new MySqlConnection(connectionString);
-            if (connection.State== ConnectionState.Closed)
+            try
             {
-                connection.Open();
+                if (connectionString==null)
+                {
+                    connectionString = appSittingSet.readAppsettings("MySqlConnect").Split('|')[0];
+                }
+
+                MySqlConnection connection = new MySqlConnection(connectionString);
+                if (connection.State== ConnectionState.Closed)
+                {
+                    connection.Open();
+                }
+                return connection;
             }
-            return connection;
+            catch (MySqlException ex)
+            {
+                throw;
+            }
+
         }
 
         /// <summary>

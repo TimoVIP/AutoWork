@@ -19,9 +19,9 @@ namespace TimoControl
         /// </summary>
         public static string logPath = AppDomain.CurrentDomain.BaseDirectory + "log";
         /// <summary>
-        /// 日志文件路径
+        /// 日志文件路径 不会换日期 取消
         /// </summary>
-        private static string logFilePath = logPath+"\\" + DateTime.Now.Date.ToString("yyyyMMdd") + ".txt";
+        //private static string logFilePath;
         /// <summary>
         /// 读取AppSet节点
         /// </summary>
@@ -101,13 +101,15 @@ namespace TimoControl
         /// <param name="path">文件名 不含有文件夹路径</param>
         public static void Log(string log,string path)
         {
-            if (!Directory.Exists(logPath))
-            {
-                Directory.CreateDirectory(logPath);
-            }
 
-            path = path != "" ? logPath + "\\" + path : logFilePath;
+            if (path!="")
+                path = logPath + "\\" + path;
+            else
+                path = logPath + "\\" +  DateTime.Now.Date.ToString("yyyyMMdd") + ".txt";
 
+            //path = logPath +"\\"+ path != "" ?  path : DateTime.Now.Date.ToString("yyyyMMdd") + ".txt";
+
+            //logFilePath = path;
             using (FileStream fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, 8, FileOptions.Asynchronous))
             {
                 Byte[] dataArray = System.Text.Encoding.Default.GetBytes(log + " " + DateTime.Now.ToString("G") + System.Environment.NewLine);
@@ -145,9 +147,16 @@ namespace TimoControl
 
         public static void showLogFile()
         {
-            System.Diagnostics.Process.Start("notepad.exe", logFilePath);
+            showLogFile("");
         }
-
+        public static void showLogFile(string path)
+        {
+            if (path != "")
+                path = logPath + "\\" + path;
+            else
+                path = logPath + "\\" + DateTime.Now.Date.ToString("yyyyMMdd") + ".txt";
+            System.Diagnostics.Process.Start("notepad.exe", path);
+        }
         /// <summary>
         /// 删除几天前的log
         /// </summary>

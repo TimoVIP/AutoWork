@@ -3,6 +3,7 @@ using Quartz.Impl;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -26,7 +27,7 @@ namespace AutoAppSign
         static string uid;
         static string sql_cz_select;
         static string sql_cz_upadte;
-
+        static string[] KindCategories;
         public Form1()
         {
             InitializeComponent();
@@ -46,6 +47,8 @@ namespace AutoAppSign
             uid=  appSittingSet.readAppsettings("uid");
             sql_cz_select =  appSittingSet.readAppsettings("sql_cz_select");
             sql_cz_upadte =  appSittingSet.readAppsettings("sql_cz_upadte");
+
+            KindCategories = appSittingSet.readAppsettings("KindCategories").Split('|');//游戏分类
 
             notify = new NotifyIcon();
             notify.BalloonTipTitle = "提示";
@@ -278,7 +281,7 @@ namespace AutoAppSign
                 MySQLHelper.connectionString = connectionString[0];
                 //查询数据库 获取待处理的数据
                 //sql = string.Format("select b.tel,a.score,a.id from cs_zhangdan a LEFT JOIN cs_user b on a.uid=  b.id where type='dh' and a.`status`=1 and a.id>{0} ORDER BY a.id DESC LIMIT 100;", MaxID);
-                string sql = "select b.tel,a.score,a.id from cs_zhangdan a LEFT JOIN cs_user b on a.uid=  b.id where type='dh' and apply=0 ORDER BY a.id DESC LIMIT 50;";
+                string sql = "select b.tel,a.score,a.id from cs_zhangdan a LEFT JOIN cs_user b on a.uid=  b.id where type='dh' and apply=0 ORDER BY a.id DESC LIMIT 10;";
                 DataTable dt = MySQLHelper.Query(sql).Tables[0];
                 if (dt.Rows.Count < 1)
                 {
@@ -288,39 +291,161 @@ namespace AutoAppSign
                     return;
                 }
 
-                betData bb = null;
+                //先把dt 的内容 放入list 里面 去重
+                List<betData> list = new List<betData>();
                 foreach (DataRow dr in dt.Rows)
                 {
-                    //去gpk 比较数据 是否符合条件
-
-                    bb = new betData()
+                    betData b = new betData()
                     {
                         bbid = dr["id"].ToString(),
                         wallet = dr["score"].ToString(),
                         username = dr["tel"].ToString(),
                         aname = aname[0],
                     };
+                    if (!list.Exists(x => x.bbid == b.bbid))
+                    {
+                        list.Add(b);
+                    }
+                }
+
+                /*
+                //线程循环
+                Parallel.ForEach(list, (item) =>
+                {
 
                     //SQLite数据库是否存在
-                    sql = string.Format("select * from record where  bbid={0}  and type=1003", bb.bbid);
+                    sql = string.Format("select * from record where  bbid={0}  and type=1003", item.bbid);
                     if (appSittingSet.recorderDbCheck(sql))
                     {
                         //更改为status2 已处理
-                        sql = "update cs_zhangdan set status=2,apply=1 where id= " + bb.bbid + ";";
+                        sql = "update cs_zhangdan set status=2,apply=1 where id= " + item.bbid + ";";
                         MySQLHelper.ExecuteSql(sql);
-                        //拒绝 重新查datatable
                         return;
                         //continue;
                     }
 
                     //当月存款大于100
-                    bb.lastOprTime = DateTime.Now.AddDays(-DateTime.Now.Day + 1).ToString("yyyy/MM/dd") + " 12:00:00";
-                    bb.betTime = DateTime.Now.AddHours(12).ToString("yyyy/MM/dd HH:mm:ss");
-                    bb = platGPK.MemberTransactionSearch(bb);
-                    if (bb == null)
+                    item.lastOprTime = DateTime.Now.AddDays(-DateTime.Now.Day + 1).ToString("yyyy/MM/dd") + " 12:00:00";
+                    item.betTime = DateTime.Now.AddHours(12).ToString("yyyy/MM/dd HH:mm:ss");
+                    item = platGPK.MemberTransactionSearch(item);
+                    if (item == null)
                     {
                         return;
                         //continue;
+                    }
+
+                    if (!item.passed || item.total_money < 100)
+                    {
+                        item.passed = false;
+                        item.msg = "存款不足";
+                        sql = "update cs_zhangdan set   apply=1 where id=" + item.bbid + ";";
+                        MySQLHelper.ExecuteSql(sql);
+                        //拒绝
+                        //continue;
+                        return;
+                    }
+
+                    //当月电子有效投注500以上
+                    item = platGPK.GetDetailInfo(item);
+                    if (item == null)
+                    {
+                        return;
+                        //continue;
+                    }
+                    if (!item.passed || item.total_money < 500)
+                    {
+                        item.passed = false;
+                        item.msg = "投注不足";
+                        sql = "update cs_zhangdan set  apply=1 where id=" + item.bbid + ";";
+                        MySQLHelper.ExecuteSql(sql);
+                        //拒绝
+                        //continue;
+                        return;
+                    }
+
+                    //判断 层级是否在 列表之中
+                    foreach (var s in FiliterGroups)
+                    {
+                        if (item.level == s)
+                        {
+                            item.passed = false;
+                            item.msg = "层级不符合";
+                            break;
+                        }
+                    }
+                    if (!item.passed)
+                    {
+                        sql = "update cs_zhangdan set apply=1 where id=" + item.bbid + ";";
+                        MySQLHelper.ExecuteSql(sql);
+                        //拒绝
+                        //continue;
+                        return;
+                    }
+
+                    //计算 需要加钱 的数字 
+                    for (int i = Act4Stander.Length - 1; i > 0; i -= 2)
+                    {
+                        if (item.wallet.ToString() == Act4Stander[i - 1])
+                        {
+                            item.betMoney = decimal.Parse(Act4Stander[i]);
+                            break;
+                        }
+                    }
+
+                    //加钱
+                    item.AuditType = "Discount";
+                    item.Audit = item.betMoney;
+                    item.Memo = item.aname + item.bbid;
+                    item.Type = 5;
+                    bool b = false;
+
+                    //充钱
+                    b = platGPK.MemberDepositSubmit(item);
+                    if (b)
+                    {
+                        //更改状态 回填
+                        sql = "update cs_zhangdan set status=2,apply=1 where id= " + item.bbid + ";";
+                        MySQLHelper.ExecuteSql(sql);
+                        //记录到数据库SQLite
+                        sql = string.Format("insert into record values({0},'{1}','{2}',datetime(CURRENT_TIMESTAMP,'localtime'),1003)  ", item.bbid, bb.Memo, item.username);
+                        appSittingSet.execSql(sql);
+                    }
+
+                    //写消息
+                    appSittingSet.Log(item.aname + "编号" + item.bbid + "用户" + item.username + "处理成功");
+                    MyWrite(item.aname + "编号" + item.bbid + "用户" + item.username + "处理成功");
+                });
+
+                */
+                foreach (var item in list)
+                {
+                    betData bb = item;
+                    string log;
+                    //SQLite数据库是否存在
+                    sql = string.Format("select * from record where  bbid={0}  and type=1003", bb.bbid);
+                    if (appSittingSet.recorderDbCheck(sql))
+                    {
+                        //更改为status2 已处理
+                        bb.msg = "已经处理过";
+                        bb.passed = false;
+                        sql = "update cs_zhangdan set status=2,apply=1 where id= " + bb.bbid + ";";
+                        MySQLHelper.ExecuteSql(sql);
+                        log = string.Format("{4}编号{0}用户{1}处理为{2}{3}", bb.bbid, bb.username, bb.passed ? "通过" : "不通过", bb.msg,bb.aname);
+                        appSittingSet.Log(log);
+                        MyWrite(log);
+                        //拒绝 重新查datatable
+                        //return;
+                        continue;
+                    }
+
+                    //当月存款大于100
+                    item.lastOprTime = DateTime.Now.AddDays(-DateTime.Now.Day + 1).ToString("yyyy/MM/dd") + " 12:00:00";
+                    item.betTime = DateTime.Now.AddHours(12).ToString("yyyy/MM/dd HH:mm:ss");
+                    bb = platGPK.MemberTransactionSearch(item);
+                    if (bb == null)
+                    {
+                        //return;
+                        continue;
                     }
 
                     if (!bb.passed || bb.total_money < 100)
@@ -329,13 +454,24 @@ namespace AutoAppSign
                         bb.msg = "存款不足";
                         sql = "update cs_zhangdan set   apply=1 where id=" + bb.bbid + ";";
                         MySQLHelper.ExecuteSql(sql);
+                        log = string.Format("{4}编号{0}用户{1}处理为{2}{3}", bb.bbid, bb.username, bb.passed ? "通过" : "不通过", bb.msg, bb.aname);
+                        appSittingSet.Log(log);
+                        MyWrite(log);
                         //拒绝
-                        //continue;
-                        return;
+                        continue;
+                        //return;
                     }
 
                     //当月电子有效投注500以上
+                    bb.gamename = null;
+                    bb.lastCashTime = DateTime.Now.AddDays(-DateTime.Now.Day + 1).ToString("yyyy/MM/dd");
+                    bb.lastOprTime = DateTime.Now.Date.ToString("yyyy/MM/dd");
+                    foreach (var s in KindCategories)
+                    {
+                        bb.gamename += "&types=" + string.Join("&types=", platGPK.KindCategories[int.Parse(s)].Replace("\"", "").Split(',').Skip(1).ToArray());
+                    }
                     bb = platGPK.GetDetailInfo(bb);
+
                     if (bb == null)
                     {
                         return;
@@ -347,9 +483,12 @@ namespace AutoAppSign
                         bb.msg = "投注不足";
                         sql = "update cs_zhangdan set  apply=1 where id=" + bb.bbid + ";";
                         MySQLHelper.ExecuteSql(sql);
+                        log = string.Format("{4}编号{0}用户{1}处理为{2}{3}", bb.bbid, bb.username, bb.passed ? "通过" : "不通过", bb.msg, bb.aname);
+                        appSittingSet.Log(log);
+                        MyWrite(log);
                         //拒绝
-                        //continue;
-                        return;
+                        continue;
+                        //return;
                     }
 
                     //判断 层级是否在 列表之中
@@ -366,9 +505,12 @@ namespace AutoAppSign
                     {
                         sql = "update cs_zhangdan set apply=1 where id=" + bb.bbid + ";";
                         MySQLHelper.ExecuteSql(sql);
+                        log = string.Format("{4}编号{0}用户{1}处理为{2}{3}", bb.bbid, bb.username, bb.passed ? "通过" : "不通过", bb.msg, bb.aname);
+                        appSittingSet.Log(log);
+                        MyWrite(log);
                         //拒绝
-                        //continue;
-                        return;
+                        continue;
+                        //return;
                     }
 
                     //计算 需要加钱 的数字 
@@ -386,7 +528,9 @@ namespace AutoAppSign
                     bb.Audit = bb.betMoney;
                     bb.Memo = bb.aname + bb.bbid;
                     bb.Type = 5;
+                    //bb.passed = true;
                     bool b = false;
+                    bb.msg = "充值";
                     //先查询一下 优惠活动的记录是否有送 如果有记录就不送
                     //bb.isReal = false;
                     //bb.Types = new string[] { "Bonus" };
@@ -395,13 +539,13 @@ namespace AutoAppSign
                     //platGPK.MemberTransactionSearch(bb);
                     //string memo  = bb.PortalMemo;
 
-                    //记录到数据库SQLite
-                    sql = string.Format("insert into record values({0},'{1}','{2}',datetime(CURRENT_TIMESTAMP,'localtime'),1003)  ", bb.bbid, bb.Memo, bb.username);
-                    appSittingSet.execSql(sql);
+
+
+
 
                     //加钱 充值的部分 
-                    sql = "select * from cs_zhangdan where apply=1 and id= " + bb.bbid+";";
-                    b= MySQLHelper.Exsist(sql);
+                    sql = "select * from cs_zhangdan where apply=1 and id= " + bb.bbid + ";";
+                    b = MySQLHelper.Exsist(sql);
                     if (!b)
                     {
                         b = platGPK.MemberDepositSubmit(bb);
@@ -410,9 +554,13 @@ namespace AutoAppSign
                         MySQLHelper.ExecuteSql(sql);
                     }
 
+                    //记录到数据库SQLite
+                    sql = string.Format("insert into record values({0},'{1}','{2}',datetime(CURRENT_TIMESTAMP,'localtime'),1003)  ", bb.bbid, bb.Memo, bb.username);
+                    appSittingSet.execSql(sql);
 
-                    appSittingSet.Log(bb.aname + "编号" + bb.bbid + "用户" + bb.username + "处理成功");
-                    MyWrite(bb.aname + "编号" + bb.bbid + "用户" + bb.username + "处理成功");
+                    log = string.Format("{4}编号{0}用户{1}处理为{2}{3}", bb.bbid, bb.username, bb.passed ? "通过" : "不通过", bb.msg, bb.aname);
+                    appSittingSet.Log(log);
+                    MyWrite(log);
                 }
             }
         }
@@ -431,6 +579,7 @@ namespace AutoAppSign
                 //查询数据库 获取待处理的数据
                 string sql = "SELECT a.`id`, `order_no`,`username`,`order_amount`,title,addtime FROM `e_order` a left join e_bank b on a.bid=b.id WHERE a.`status`=2  ORDER BY id DESC LIMIT 100;";
                 DataTable dt = MySQLHelper.Query(sql).Tables[0];
+
                 if (dt.Rows.Count>0)
                 {
                     betData bb = null;
@@ -451,6 +600,7 @@ namespace AutoAppSign
                         };
 
                         //判断用户是否存在
+                        //betData bbt = new betData() {username = "yang133983" };//测试
                         Gpk_UserDetail user = platGPK.GetUserDetail(bb.username);
                         if (user==null)
                         {

@@ -71,8 +71,11 @@ namespace TimoControl
         /// 备注
         /// </summary>
         public string Memo { get; set; }
-
+        /// <summary>
+        /// 存款类型
+        /// </summary>
         public string[] Types { get; set; } = { "Account", "Manual", "ThirdPartyPayment" };
+
     }
 
     /// <summary>

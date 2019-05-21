@@ -14,6 +14,7 @@ using System.Windows.Forms;
 using mshtml;
 using Newtonsoft.Json.Linq;
 using System.Threading.Tasks;
+using System.Net.Sockets;
 
 namespace TestDomo_console
 {
@@ -90,14 +91,16 @@ namespace TestDomo_console
 
 
             b = platGPK.loginGPK();
+
+
             //SoketObjetRecordQuery o = platGPK.BetRecordGetInfo(bb);
 
-            string[] KindCategories = appSittingSet.readAppsettings("KindCategories").Split('|');//游戏分类
-            foreach (var s in KindCategories)
-            {
-                bb.GameCategories += platGPK.KindCategories[int.Parse(s)] + ",";
-            }
-            bb.GameCategories = "["+  bb.GameCategories.TrimEnd(',') + "]";
+            //string[] KindCategories = appSittingSet.readAppsettings("KindCategories").Split('|');//游戏分类
+            //foreach (var s in KindCategories)
+            //{
+            //    bb.GameCategories += platGPK.KindCategories[int.Parse(s)] + ",";
+            //}
+            //bb.GameCategories = "["+  bb.GameCategories.TrimEnd(',') + "]";
 
 
 
@@ -309,7 +312,12 @@ namespace TestDomo_console
             ws.Close();
 
             */
+
             #endregion
+
+
+
+
             #region
             //Console.WriteLine("请选择：1全部更新；2全部取回；3人工提出");
             //string sw= Console.ReadLine();
@@ -373,16 +381,60 @@ namespace TestDomo_console
             //    }
             //}
 
+
+
+
+
+
+            //List<betData> list = ActFromDB.getActData("30");
+            string[] KindCategories = appSittingSet.readAppsettings("KindCategories").Split('|');//游戏分类
+
+            foreach (var s in KindCategories)
+            {
+                bb.GameCategories += platGPK.KindCategories[int.Parse(s)] + ",";
+            }
+            bb.GameCategories = "[" + bb.GameCategories.TrimEnd(',') + "]";
+
+            betData bb1 = new betData();
+            betData bb2 = new betData();
+            bb.gamename = null;
+            bb.lastCashTime = DateTime.Now.Date.AddDays(-4).ToString("yyyy/MM/dd");
+            bb.lastOprTime = DateTime.Now.Date.AddDays(-2).ToString("yyyy/MM/dd");
+
+
+            object ba = platGPK.BetRecordSearch(bb);
+            foreach (var s in KindCategories)
+            {
+
+                bb.gamename += "&types=" + string.Join("&types=", platGPK.KindCategories[int.Parse(s)].Replace("\"","").Split(',').Skip(1).ToArray());
+            }
+
+            bb1 = platGPK.GetDetailInfo(bb);
+            bb.gamename = "";
+            foreach (var s in platGPK.KindCategories)
+            {
+                bb.gamename += "&types=" + string.Join("&types=", s.Replace("\"", "").Split(',').Skip(1).ToArray());
+            }
+            bb2 = platGPK.GetDetailInfo(bb);
+
+            if (Math.Abs( bb1.total_money -bb2.total_money) >10)
+            {
+                //拒绝
+
+            }
             Console.ReadLine();
         }
 
+
+
         #region ClientWebSocket
 
-        readonly ClientWebSocket _webSocket = new ClientWebSocket();
-        readonly CancellationToken _cancellation = new CancellationToken();
+             ClientWebSocket _webSocket = new ClientWebSocket();
+             CancellationToken _cancellation = new CancellationToken();
 
         public async void WebSocket(string url)
         {
+
             try
             {
                 //建立连接
@@ -470,6 +522,7 @@ namespace TestDomo_console
             }
 
         #endregion
+
 
 
     }

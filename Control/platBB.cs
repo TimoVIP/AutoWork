@@ -343,10 +343,10 @@ namespace TimoControl
 
                 //2018-11-22 10:49:37 增加重复提交判断
                 //同一注单只能一次 同游戏同用户一天只能一次 美东时间的一天内
-                string sql = "select * from record where (betno='" + bb.betno + "' and pass=1) or (username='" + bb.username + "' and gamename='" + bb.gamename + "' and pass=1 and subminttime > '" + DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd") + " 00:00:01' and  subminttime < '" + DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd") + " 23:59:59') ";
-                //string sql = "select * from record where (betno='" + bb.betno + "' and pass=1) or (username='" + bb.username + "' and gamename='" + bb.gamename + "' and pass=1 and date(subminttime)='" + DateTime.Now.AddHours(-12).Date + "') ";
-                //string sql = "select * from record where (betno='" + bb.betno + "' and pass=1) or (username='" + bb.username + "' and gamename='" + bb.gamename + "' and pass=1 and date(date(subminttime),time(subminttime),'-0.5 days')='" + DateTime.Now.Date + "') ";
-                //string sql = "select * from record where (betno='"+bb.betno+"') or (username='"+bb.username+"' and gamename='"+bb.gamename+"' and pass=1 and subminttime > '" + DateTime.Now.Date.ToString("yyyy-MM-dd HH:mm:ss") + "' and  subminttime < '" + DateTime.Now.Date.AddDays(1).AddSeconds(-1).ToString("yyyy-MM-dd HH:mm:ss") + "') ";
+                string sql = "select * from record where (betno='" + bb.betno + "' and pass=1) or (username='" + bb.username + "' and gamename='" + bb.gamename + "' and pass=1 and subtime > '" + DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd") + " 00:00:01' and  subtime < '" + DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd") + " 23:59:59') ";
+                //string sql = "select * from record where (betno='" + bb.betno + "' and pass=1) or (username='" + bb.username + "' and gamename='" + bb.gamename + "' and pass=1 and date(subtime)='" + DateTime.Now.AddHours(-12).Date + "') ";
+                //string sql = "select * from record where (betno='" + bb.betno + "' and pass=1) or (username='" + bb.username + "' and gamename='" + bb.gamename + "' and pass=1 and date(date(subtime),time(subtime),'-0.5 days')='" + DateTime.Now.Date + "') ";
+                //string sql = "select * from record where (betno='"+bb.betno+"') or (username='"+bb.username+"' and gamename='"+bb.gamename+"' and pass=1 and subtime > '" + DateTime.Now.Date.ToString("yyyy-MM-dd HH:mm:ss") + "' and  subtime < '" + DateTime.Now.Date.AddDays(1).AddSeconds(-1).ToString("yyyy-MM-dd HH:mm:ss") + "') ";
                 if (appSittingSet.recorderDbCheck(sql))
                 {
                     bb.passed = false;
@@ -829,6 +829,8 @@ namespace TimoControl
                 //{"result":false,"message":"Username is invalid","code":669001005,"response_code":"6YclV1547618491"}
                 if (!(bool)jo["result"])
                 {
+                    //{"result":false,"message":"In maintenance","code":667046002,"data":{"maintenance":true,"infinite_time":false,"start_at":"2019-05-28 21:00:00","end_at":"2019-05-28 22:40:00"},"response_code":"KGdZi1559096693"}
+                    //维护
                     return false;
                 }
 

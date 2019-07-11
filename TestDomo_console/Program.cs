@@ -15,6 +15,11 @@ using mshtml;
 using Newtonsoft.Json.Linq;
 using System.Threading.Tasks;
 using System.Net.Sockets;
+using System.Collections;
+using System.Configuration;
+using System.Xml.Linq;
+using System.Net;
+using System.Text.RegularExpressions;
 
 namespace TestDomo_console
 {
@@ -83,14 +88,17 @@ namespace TestDomo_console
 
             betData bb = new betData()
             {
-                username = "zhang19800804a",
+                username = "liuling6600",
+                bbid = "1728654",
+                passed = false,
+                msg = "此活动需存款1元以上，并且电子游艺的有效投注达到100元以上! test",
                 lastCashTime = "2019/04/18 22:00:00",//开始时间
                 lastOprTime = "2019/04/18 23:59:59",//结束时间
             };
 
 
 
-            b = platGPK.loginGPK();
+            //b = platGPK.loginGPK();
 
 
             //SoketObjetRecordQuery o = platGPK.BetRecordGetInfo(bb);
@@ -266,7 +274,7 @@ namespace TestDomo_console
                         //Console.WriteLine(jo["M"][0]["A"][0]["TotalPayoff"]);
 
                         //保存到数据库
-                        string sql = string.Format("INSERT INTO record (username,gamename,subminttime,betno,chargeMoney,pass,msg,aid) VALUES ( '{0}', '', datetime(CURRENT_TIMESTAMP,'localtime'), '{1}', {2}, 0, '{3}', 1002 );",tanxi1.username, jo["M"][0]["A"][0]["Count"], jo["M"][0]["A"][0]["TotalCommissionable"], jo["M"][0]["A"][0]["TotalPayoff"]);
+                        string sql = string.Format("INSERT INTO record (username,gamename,subtime,betno,chargeMoney,pass,msg,aid) VALUES ( '{0}', '', datetime(CURRENT_TIMESTAMP,'localtime'), '{1}', {2}, 0, '{3}', 1002 );",tanxi1.username, jo["M"][0]["A"][0]["Count"], jo["M"][0]["A"][0]["TotalCommissionable"], jo["M"][0]["A"][0]["TotalPayoff"]);
                         appSittingSet.execSql(sql);
                         //停止
                         //ws.Close();
@@ -387,6 +395,8 @@ namespace TestDomo_console
 
 
             //List<betData> list = ActFromDB.getActData("30");
+            /*
+
             string[] KindCategories = appSittingSet.readAppsettings("KindCategories").Split('|');//游戏分类
 
             foreach (var s in KindCategories)
@@ -422,108 +432,61 @@ namespace TestDomo_console
                 //拒绝
 
             }
+
+            */
+
+
+
+
+            //Hashtable myEndpointConfig = (Hashtable)ConfigurationManager.GetSection("appconfig");
+
+            /*
+            string filePath = Application.ExecutablePath + ".config";
+            var xe = XElement.Load(filePath);//改成xml的路径，或者用流，具体参考MSDN
+            var aa = xe.Element("appconfig").Attribute("configSource").Value;
+            var xns = xe.GetDefaultNamespace();
+            var minlevelattr = xe.Descendants(xns + "rules").Elements(xns + "logger").Attributes("minlevel").FirstOrDefault();
+            if (minlevelattr != null)
+            {
+                minlevelattr.Value = "debug"; //改成你想要的值
+            }
+            xe.Save("t.xml");//保存路径
+
+            */
+
+
+            //ConfigurationManager.GetSection("appconfig")
+
+            //Console.WriteLine(myEndpointConfig["GPK"]);
+
+            /*
+            b =ActDataFromWeb.login();
+            //List<betData> list = ActDataFromWeb.getActData("39");
+            //b = ActDataFromWeb.confirmAct(bb);
+            bb.username = "dtgaiys2017";
+            bb.aid = "38";
+            bb = ActDataFromWeb.getData2_time(bb);
+           b = platACT.loginActivity();
+
+
+            //platACT.getActData("40");
+            //List<betData>  list = platACT.getActData("53");
+
+
+    */
+            //string postUrl = "http://2019.ip138.com/ic.asp";
+            //HttpWebRequest request = WebRequest.Create(postUrl) as HttpWebRequest;
+            //HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            //StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.Default);
+            //var ret_html = reader.ReadToEnd().ToString();
+            //var ip = ret_html.Substring(ret_html.IndexOf("[") + 1, (ret_html.LastIndexOf("]") - ret_html.IndexOf("[") - 1));
+            //var ip1 = Regex.Match(ret_html, @"(?i)(?<=\[)(.*)(?=\])");
+
+            //b = platBB.loginBB();
+
+            List<betData> list = platACT.getActData("53");
+
             Console.ReadLine();
         }
-
-
-
-        #region ClientWebSocket
-
-             ClientWebSocket _webSocket = new ClientWebSocket();
-             CancellationToken _cancellation = new CancellationToken();
-
-        public async void WebSocket(string url)
-        {
-
-            try
-            {
-                //建立连接
-                //var url = "ws://121.40.165.18:8800";
-                await _webSocket.ConnectAsync(new Uri(url),CancellationToken.None);
-                var bsend = new byte[1024];
-                await _webSocket.SendAsync(new ArraySegment<byte>(bsend), WebSocketMessageType.Binary, true, CancellationToken.None); //发送数据
-                while (true)
-                {
-                    var result = new byte[1024];
-                    await _webSocket.ReceiveAsync(new ArraySegment<byte>(result), CancellationToken.None);//接受数据
-                    //var lastbyte = ByteCut(result, 0x00);
-                    //var str = Encoding.UTF8.GetString(lastbyte, 0, lastbyte.Length);
-                    Console.WriteLine(Encoding.UTF8.GetString(result));
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-        }
-        #endregion
-        #region 不用代码
-        private static string ExecuteScript()
-        {
-            string sCode = @"function test() { var wsServer = ""ws://sts.tjuim.com/signalr/connect?transport=webSockets&clientProtocol=1.5&connectionToken=S4BsUiRNJIuEWfllUxJunQJwNCum%2BGFFPg78w8z4kp7kRylVvwud5DXjIPFcZf%2BSQh8QbOM7APENYKeUOQTeZINx6zU726XQ65yFP2P9APCiRkF4&connectionData=%5B%7B%22name%22%3A%22mainhub%22%7D%5D&tid=2"";
-            var websocket = new WebSocket(wsServer);
-            websocket.onopen = function(evt) {  };
-            websocket.onclose = function(evt) {  };
-            websocket.onmessage = function(evt) { return evt.data;};
-            websocket.onerror = function(evt) {  }; }";
-            MSScriptControl.ScriptControl scriptControl = new MSScriptControl.ScriptControl();
-            scriptControl.UseSafeSubset = true;
-            scriptControl.Language = "JScript";
-            scriptControl.AddCode(sCode);
-            try
-            {
-                string str = scriptControl.Eval("test()").ToString();
-                return str;
-            }
-            catch (Exception ex)
-            {
-                string str = ex.Message;
-            }
-            return null;
-        }
-
-        public static object RunByJSCodeProvider()
-        {
-            //string md5 = DevCommon.MD5GenerateHashString(scriptCode);
-            //if (this.msjsAssemblyTypeList.ContainsKey(md5))
-            //{
-            //    Type _evaluateType = this.msjsAssemblyTypeList[md5];
-            //    object obj = _evaluateType.InvokeMember("JsRun", BindingFlags.InvokeMethod,
-            //            null, null, null);
-            //    return obj;
-            //}
-            //else
-            //{
-                string scriptCode  = @" var wsServer = ""ws://sts.tjuim.com/signalr/connect?transport=webSockets&clientProtocol=1.5&connectionToken=S4BsUiRNJIuEWfllUxJunQJwNCum%2BGFFPg78w8z4kp7kRylVvwud5DXjIPFcZf%2BSQh8QbOM7APENYKeUOQTeZINx6zU726XQ65yFP2P9APCiRkF4&connectionData=%5B%7B%22name%22%3A%22mainhub%22%7D%5D&tid=2"";
-            var websocket = new WebSocket(wsServer);
-            websocket.onopen = function(evt) {  };
-            websocket.onclose = function(evt) {  };
-            websocket.onmessage = function(evt) { return evt.data;};
-            websocket.onerror = function(evt) {  }; ";
-            StringBuilder sb = new StringBuilder();
-                sb.Append("package Stdio{");
-                sb.Append(" public class JScript {");
-                sb.Append("     public static function JsRun() {");
-                sb.Append(scriptCode);
-                sb.Append("     }");
-                sb.Append(" }");
-                sb.Append("}");
-
-                CompilerParameters parameters = new CompilerParameters();
-                parameters.GenerateInMemory = true;
-                CodeDomProvider _provider = new Microsoft.JScript.JScriptCodeProvider();
-                CompilerResults results = _provider.CompileAssemblyFromSource(parameters, sb.ToString());
-                Assembly assembly = results.CompiledAssembly;
-                Type _evaluateType = assembly.GetType("Stdio.JScript");
-                object obj = _evaluateType.InvokeMember("JsRun", BindingFlags.InvokeMethod,
-                null, null, null);
-
-                return obj;
-            }
-
-        #endregion
-
-
-
     }
 }

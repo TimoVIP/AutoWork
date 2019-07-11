@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Web;
 using System.Web.Configuration;
+using System.Collections;
 
 namespace TimoControl
 {
@@ -39,7 +40,19 @@ namespace TimoControl
             else
             {
                 if (ConfigurationManager.AppSettings[key] == null)
-                    return "";
+                {
+                    if (readConfig()==null)
+                    {
+                        return "";
+                    }
+                    object a = readConfig()[key];
+                    if (a==null)
+                        return ""; 
+                    else
+                        return readConfig()[key].ToString();
+                    //return readConfig()[key]==null? "": readConfig()[key].ToString();
+                    //return "";
+                }
                 else
                     return ConfigurationManager.AppSettings[key].ToString();
             }
@@ -84,6 +97,23 @@ namespace TimoControl
             ConfigurationManager.RefreshSection("appSettings");
         }
 
+        //public static Hashtable readConfig()
+        //{
+        //    return readConfig(null);
+        //}
+        public static Hashtable readConfig(string SectionName= "appconfig")
+        {
+            try
+            {
+                Hashtable myConfig = (Hashtable)ConfigurationManager.GetSection(SectionName);
+                return myConfig;
+            }
+            catch (Exception ex)
+            {
+                Log(ex.Message);
+                return null;
+            }
+        }
 
         private static Dictionary<long, long> lockDic = new Dictionary<long, long>();
         /// <summary>
@@ -101,7 +131,8 @@ namespace TimoControl
         /// <param name="path">文件名 不含有文件夹路径</param>
         public static void Log(string log,string path)
         {
-
+            if (!Directory.Exists(logPath))
+                Directory.CreateDirectory(logPath);
             if (path!="")
                 path = logPath + "\\" + path;
             else
@@ -207,6 +238,7 @@ namespace TimoControl
 
         /// <summary>
         /// 记录到SQLite数据库 记录的是提交时间 需要考虑是否正确 MSG
+        /// alter table record add bbid INTEGER;
         /// MSG 记录提交到活动站的时间
         /// </summary>
         /// <param name="bb"></param>
@@ -223,9 +255,11 @@ namespace TimoControl
             //    Str_time = bb.lastCashTime;
             //}
 
-            string sql1 = "insert into record (username, gamename,betno,chargeMoney,pass,msg,subminttime,aid) values ('" + bb.username + "', '" + bb.gamename + "','" + bb.betno + "'," + bb.betMoney + "," + (bb.passed == true ? 1 : 0) + ",'" + bb.msg + "','"+ DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd HH:mm:ss") + "' , "+bb.aid+")";
 
-            SQLiteCommand command1 = new SQLiteCommand(sql1, m_dbConnection);
+            string sql = $"insert  or ignore into record (username, gamename,betno,chargeMoney,pass,msg,subtime,aid,bbid) values ('{ bb.username}', '{ bb.gamename}','{bb.betno }',{ bb.betMoney },{(bb.passed == true ? 1 : 0) },'{ bb.msg }','{DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd HH:mm:ss") }' , {bb.aid},{bb.bbid})";
+
+
+            SQLiteCommand command1 = new SQLiteCommand(sql, m_dbConnection);
             command1.ExecuteNonQuery();
             m_dbConnection.Close();
         }
@@ -245,7 +279,21 @@ namespace TimoControl
             reader.Close();
             m_dbConnection.Close();
             return b;
+        }
+        public static bool recorderDbCheck(string sql,out DataTable dt)
+        {
+            SQLiteConnection m_dbConnection = get_dbConnection();
 
+            SQLiteCommand command = new SQLiteCommand(sql, m_dbConnection);
+            SQLiteDataReader reader = command.ExecuteReader();
+
+            dt = new DataTable();
+            dt.Load(reader);
+
+            bool b = reader.HasRows; 
+            reader.Close();
+            m_dbConnection.Close();
+            return b;
         }
 
         public static bool execSql(string sql)
@@ -314,6 +362,56 @@ namespace TimoControl
             m_dbConnection.Close();
             return dt;
         }
+
+        #region 获取本地数据库 实体
+        public static betData getOneFromLocDbByID(string id)
+        {
+            string sql = $"select * from record where bbid = {id}";
+            DataTable dt = getDataTableBySql(sql);
+            if (dt.Rows.Count>0)
+            {
+                betData bb = new betData() {
+                    bbid = id,
+                    gamename = dt.Rows[0]["gamename"].ToString(),
+                    betTime = dt.Rows[0]["subtime"].ToString(),
+                    betno = dt.Rows[0]["betno"].ToString(),
+                    betMoney = (decimal)dt.Rows[0]["chargeMoney"],
+                    passed = (bool)dt.Rows[0]["pass"],
+                    msg = dt.Rows[0]["msg"].ToString(),
+                    aid = dt.Rows[0]["aid"].ToString(),
+                };
+                return bb;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public static List< betData> getListFromLocDbBySql(string sql)
+        {
+            DataTable dt = getDataTableBySql(sql);
+            List<betData> list = new List<betData>();
+            foreach (DataRow dr in dt.Rows)
+            {
+                betData b = new betData() {
+                    bbid = dr["bbid"].ToString(),
+                    gamename = dr["gamename"].ToString(),
+                    betTime = dr["subtime"].ToString(),
+                    betno = dr["betno"].ToString(),
+                    //betMoney = (decimal)dr["chargeMoney"],
+                    passed = (bool)dr["pass"],
+                    msg = dr["msg"].ToString(),
+                    aid = dr["aid"].ToString(),
+                };
+                if (!list.Exists(x => x.bbid == b.bbid))
+                {
+                    list.Add(b);
+                }
+            }
+            return list;
+        }
+        #endregion
 
         /// <summary>
         /// 发邮件

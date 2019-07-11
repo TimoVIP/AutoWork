@@ -1,12 +1,14 @@
 ﻿using Quartz;
 using Quartz.Impl;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml.Linq;
 using TimoControl;
 
 namespace AutoAppSign
@@ -25,30 +27,29 @@ namespace AutoAppSign
         static decimal rate = 0;
         static string[] FiliterGroups;
         static string uid;
-        static string sql_cz_select;
-        static string sql_cz_upadte;
+        //static string sql_hb_select;
+        //static string sql_hb_upadte;
         static string[] KindCategories;
+        static Hashtable myConfig;
         public Form1()
         {
             InitializeComponent();
-            platname = appSittingSet.readAppsettings("platname");
-            string[] ss = appSittingSet.readAppsettings("Interval").Split('|');
-            interval = new int[ss.Length];
-            for (int i = 0; i < ss.Length; i++)
-            {
-                interval[i] = int.Parse(ss[i]);
-            }
-            AutoCls = appSittingSet.readAppsettings("AutoCls").Split('|');
-            aname = appSittingSet.readAppsettings("aname").Split(new char[] { '|', '@' }, StringSplitOptions.RemoveEmptyEntries);
-            Act4Stander = appSittingSet.readAppsettings("Act4Stander").Split(new char[] { '|', '@' }, StringSplitOptions.RemoveEmptyEntries);
-            connectionString = appSittingSet.readAppsettings("MySqlConnect").Split('|');
-            rate=Convert.ToDecimal( appSittingSet.readAppsettings("Rate"));
-            FiliterGroups = appSittingSet.readAppsettings("FiliterGroups").Split('|');
-            uid=  appSittingSet.readAppsettings("uid");
-            sql_cz_select =  appSittingSet.readAppsettings("sql_cz_select");
-            sql_cz_upadte =  appSittingSet.readAppsettings("sql_cz_upadte");
+            myConfig = appSittingSet.readConfig();
 
-            KindCategories = appSittingSet.readAppsettings("KindCategories").Split('|');//游戏分类
+            platname = myConfig["platname"].ToString();
+
+            interval = Array.ConvertAll(myConfig["Interval"].ToString().Split('|'), int.Parse);
+            AutoCls = myConfig["AutoCls"].ToString().Split('|');
+            aname = myConfig["aname"].ToString().Split(new char[] { '|', '@' }, StringSplitOptions.RemoveEmptyEntries);
+            Act4Stander = myConfig["Act4Stander"].ToString().Split(new char[] { '|', '@' }, StringSplitOptions.RemoveEmptyEntries);
+            connectionString = myConfig["MySqlConnect"].ToString().Split('|');
+            rate=Convert.ToDecimal(myConfig["Rate"]);
+            FiliterGroups = myConfig["FiliterGroups"].ToString().Split('|');
+            uid = myConfig["uid"].ToString();
+            //sql_hb_select = myConfig["sql_hb_select"].ToString();
+            //sql_hb_upadte = myConfig["sql_hb_upadte"].ToString();
+
+            KindCategories = myConfig["KindCategories"].ToString().Split('|');//游戏分类
 
             notify = new NotifyIcon();
             notify.BalloonTipTitle = "提示";
@@ -93,7 +94,7 @@ namespace AutoAppSign
             mycls = ClsListItem;
 
             //先登陆一次
-            MyJob1 myjob1 = new MyJob1();
+            MyJobLogin myjob1 = new MyJobLogin();
             myjob1.Execute(null);
             //开始调度
             start();
@@ -203,32 +204,36 @@ namespace AutoAppSign
             //清除一周前的数据、日志文件
             if (AutoCls[1] == "1")
             {
-                sched.ScheduleJob(JobBuilder.Create<MyJob0>().Build(), TriggerBuilder.Create().WithCronSchedule("1 0 8 1/1 * ? ").Build());
+                sched.ScheduleJob(JobBuilder.Create<MyJobCls>().Build(), TriggerBuilder.Create().WithCronSchedule("1 0 8 1/1 * ? ").Build());
             }
             //0 6 12 18 小时10:10执行 登陆
             if (AutoCls[2] == "1")
             {
-                sched.ScheduleJob(JobBuilder.Create<MyJob1>().Build(), TriggerBuilder.Create().WithCronSchedule("10 10 0,6,12,18 * * ? ").Build());
+                sched.ScheduleJob(JobBuilder.Create<MyJobLogin>().Build(), TriggerBuilder.Create().WithCronSchedule("10 10 0,6,12,18 * * ? ").Build());
             }
 
 
             if (aname[1]=="1")
             {
                 //app签到
-                sched.ScheduleJob(JobBuilder.Create<MyJob2>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval[0]).RepeatForever()).Build());
-                //初始化app签到数据 重要
-                MySQLHelper.connectionString = connectionString[0];
-                MySQLHelper.ExecuteSql("update cs_zhangdan set apply=1 WHERE type='dh' and apply=0 ;");
+                sched.ScheduleJob(JobBuilder.Create<MyJob1>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval[0]).RepeatForever()).Build());
+                //if (myConfig["platno"].ToString()!="3")
+                //{
+                //    //初始化app签到数据 重要
+                //    MySQLHelper.connectionString = connectionString[0];
+                //    MySQLHelper.ExecuteSql("update cs_zhangdan set apply=1 WHERE type='dh' and apply=0 ;");
+                //}
+
             }
             if (aname[3]=="1")
             {
                 //快速充值
-                sched.ScheduleJob(JobBuilder.Create<MyJob3>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval[1]).RepeatForever()).Build());
+                sched.ScheduleJob(JobBuilder.Create<MyJob2>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval[1]).RepeatForever()).Build());
             }
             if (aname[5]=="1")
             {
                 //红包
-                sched.ScheduleJob(JobBuilder.Create<MyJob6>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval[2]).RepeatForever()).Build());
+                sched.ScheduleJob(JobBuilder.Create<MyJob3>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval[2]).RepeatForever()).Build());
             }
             //开始运行
             sched.Start();
@@ -236,7 +241,7 @@ namespace AutoAppSign
         /// <summary>
         /// 每天8:00:01 执行 删除一周前的日志 数据库一周前的数据
         /// </summary>
-        public class MyJob0 : IJob
+        public class MyJobCls : IJob
         {
             public void Execute(IJobExecutionContext context)
             {
@@ -253,7 +258,7 @@ namespace AutoAppSign
         /// <summary>
         /// /0 6 12 18 小时登录
         /// </summary>
-        public class MyJob1 : IJob
+        public class MyJobLogin : IJob
         {
             public void Execute(IJobExecutionContext context)
             {
@@ -273,16 +278,14 @@ namespace AutoAppSign
         ///处理app 签到 积分兑换  提交活动 从数据库获取数据，然后gpk后台提交充值
         /// </summary>
         [DisallowConcurrentExecution]
-        public class MyJob2 : IJob
+        public class MyJob1 : IJob
         {
             public void Execute(IJobExecutionContext context)
             {
                 //更改状态 status 1未处理默认，2已经处理 不符合的也是1  ， 但是apply 默认为0，处理后为1（手动处理的数据 0 ）
                 MySQLHelper.connectionString = connectionString[0];
                 //查询数据库 获取待处理的数据
-                //sql = string.Format("select b.tel,a.score,a.id from cs_zhangdan a LEFT JOIN cs_user b on a.uid=  b.id where type='dh' and a.`status`=1 and a.id>{0} ORDER BY a.id DESC LIMIT 100;", MaxID);
-                string sql = "select b.tel,a.score,a.id from cs_zhangdan a LEFT JOIN cs_user b on a.uid=  b.id where type='dh' and apply=0 ORDER BY a.id DESC LIMIT 10;";
-                DataTable dt = MySQLHelper.Query(sql).Tables[0];
+                DataTable dt = MySQLHelper.Query(myConfig["sql_qd_select"].ToString()).Tables[0];
                 if (dt.Rows.Count < 1)
                 {
                     //没有记录
@@ -295,16 +298,27 @@ namespace AutoAppSign
                 List<betData> list = new List<betData>();
                 foreach (DataRow dr in dt.Rows)
                 {
-                    betData b = new betData()
+                    //去重复 如果不存在 加到list
+                    string re = appSittingSet.execScalarSql($"select status from record where  bbid={dr[0].ToString()}  and type=1003;");
+                    if (re=="")
                     {
-                        bbid = dr["id"].ToString(),
-                        wallet = dr["score"].ToString(),
-                        username = dr["tel"].ToString(),
-                        aname = aname[0],
-                    };
-                    if (!list.Exists(x => x.bbid == b.bbid))
-                    {
+                        betData b = new betData()
+                        {
+                            bbid = dr[0].ToString(),
+                            username = dr[1].ToString(),
+                            wallet = dr[2].ToString(),
+                            aname = aname[0],
+                            Memo="积分兑换-"+ dr[0].ToString(),
+                        };
                         list.Add(b);
+                    }
+                    else if(re=="1")
+                    {
+                        MySQLHelper.ExecuteSql(string.Format(myConfig["sql_qd_upadte_succeed"].ToString(), dr[0].ToString()));
+                    }
+                    else
+                    {
+                        MySQLHelper.ExecuteSql(string.Format(myConfig["sql_qd_upadte_failure"].ToString(), dr[0].ToString()));
                     }
                 }
 
@@ -422,21 +436,20 @@ namespace AutoAppSign
                     betData bb = item;
                     string log;
                     //SQLite数据库是否存在
-                    sql = string.Format("select * from record where  bbid={0}  and type=1003", bb.bbid);
-                    if (appSittingSet.recorderDbCheck(sql))
-                    {
-                        //更改为status2 已处理
-                        bb.msg = "已经处理过";
-                        bb.passed = false;
-                        sql = "update cs_zhangdan set status=2,apply=1 where id= " + bb.bbid + ";";
-                        MySQLHelper.ExecuteSql(sql);
-                        log = string.Format("{4}编号{0}用户{1}处理为{2}{3}", bb.bbid, bb.username, bb.passed ? "通过" : "不通过", bb.msg,bb.aname);
-                        appSittingSet.Log(log);
-                        MyWrite(log);
-                        //拒绝 重新查datatable
-                        //return;
-                        continue;
-                    }
+                    //if (appSittingSet.recorderDbCheck($"select * from record where  bbid={bb.bbid}  and type=1003"))
+                    //{
+                    //    //更改为status2 已处理
+                    //    bb.msg = "已经处理过";
+                    //    bb.passed = false;
+                    //    sql = "update cs_zhangdan set status=2,apply=1 where id= " + bb.bbid + ";";
+                    //    MySQLHelper.ExecuteSql(sql);
+                    //    log = string.Format("{4}编号{0}用户{1}处理为{2}{3}", bb.bbid, bb.username, bb.passed ? "通过" : "不通过", bb.msg,bb.aname);
+                    //    appSittingSet.Log(log);
+                    //    MyWrite(log);
+                    //    //拒绝 重新查datatable
+                    //    //return;
+                    //    continue;
+                    //}
 
                     //当月存款大于100
                     item.lastOprTime = DateTime.Now.AddDays(-DateTime.Now.Day + 1).ToString("yyyy/MM/dd") + " 12:00:00";
@@ -452,9 +465,14 @@ namespace AutoAppSign
                     {
                         bb.passed = false;
                         bb.msg = "存款不足";
-                        sql = "update cs_zhangdan set   apply=1 where id=" + bb.bbid + ";";
-                        MySQLHelper.ExecuteSql(sql);
-                        log = string.Format("{4}编号{0}用户{1}处理为{2}{3}", bb.bbid, bb.username, bb.passed ? "通过" : "不通过", bb.msg, bb.aname);
+                        //sql = $"update cs_zhangdan set   apply=1 where id={bb.bbid};";
+                        //sql = string.Format("update qd_bonus_record set distribute_status = 2 where id = {0}", bb.bbid);
+                        //$"update qd_bonus_record set distribute_status = 2 where id = { bb.bbid }";
+
+                        int eff = MySQLHelper.ExecuteSql(string.Format(myConfig["sql_qd_upadte_failure"].ToString(), bb.bbid));
+                        //记录到数据库SQLite 失败状态
+                        appSittingSet.execSql($"insert into record values({bb.bbid},'{bb.Memo}','{bb.username}',datetime(CURRENT_TIMESTAMP,'localtime'),1003,0);");
+                        log = $"{bb.aname}-编号-{bb.bbid}-用户-{bb.username}-处理为-{(bb.passed ? "通过" : "不通过")}-{bb.msg}";
                         appSittingSet.Log(log);
                         MyWrite(log);
                         //拒绝
@@ -481,9 +499,11 @@ namespace AutoAppSign
                     {
                         bb.passed = false;
                         bb.msg = "投注不足";
-                        sql = "update cs_zhangdan set  apply=1 where id=" + bb.bbid + ";";
-                        MySQLHelper.ExecuteSql(sql);
-                        log = string.Format("{4}编号{0}用户{1}处理为{2}{3}", bb.bbid, bb.username, bb.passed ? "通过" : "不通过", bb.msg, bb.aname);
+                        //sql = "update cs_zhangdan set  apply=1 where id=" + bb.bbid + ";";
+                        MySQLHelper.ExecuteSql(string.Format(myConfig["sql_qd_upadte_failure"].ToString(), bb.bbid));
+                        //记录到数据库SQLite 失败状态
+                        appSittingSet.execSql($"insert into record values({bb.bbid},'{bb.Memo}','{bb.username}',datetime(CURRENT_TIMESTAMP,'localtime'),1003,0);");
+                        log = $"{bb.aname}-编号-{bb.bbid}-用户-{bb.username}-处理为-{(bb.passed ? "通过" : "不通过")}-{bb.msg}";
                         appSittingSet.Log(log);
                         MyWrite(log);
                         //拒绝
@@ -503,9 +523,12 @@ namespace AutoAppSign
                     }
                     if (!bb.passed)
                     {
-                        sql = "update cs_zhangdan set apply=1 where id=" + bb.bbid + ";";
-                        MySQLHelper.ExecuteSql(sql);
-                        log = string.Format("{4}编号{0}用户{1}处理为{2}{3}", bb.bbid, bb.username, bb.passed ? "通过" : "不通过", bb.msg, bb.aname);
+                        //sql = "update cs_zhangdan set apply=1 where id=" + bb.bbid + ";";
+                        //MySQLHelper.ExecuteSql(sql);
+                        MySQLHelper.ExecuteSql(string.Format(myConfig["sql_qd_upadte_failure"].ToString(), bb.bbid));
+                        //记录到数据库SQLite 失败状态
+                        appSittingSet.execSql($"insert into record values({bb.bbid},'{bb.Memo}','{bb.username}',datetime(CURRENT_TIMESTAMP,'localtime'),1003,0);");
+                        log = $"{bb.aname}-编号-{bb.bbid}-用户-{bb.username}-处理为-{(bb.passed ? "通过" : "不通过")}-{bb.msg}";
                         appSittingSet.Log(log);
                         MyWrite(log);
                         //拒绝
@@ -514,6 +537,7 @@ namespace AutoAppSign
                     }
 
                     //计算 需要加钱 的数字 
+                    bb.wallet = Math.Abs(int.Parse(bb.wallet)).ToString();
                     for (int i = Act4Stander.Length - 1; i > 0; i -= 2)
                     {
                         if (bb.wallet.ToString() == Act4Stander[i - 1])
@@ -544,6 +568,16 @@ namespace AutoAppSign
 
 
                     //加钱 充值的部分 
+                    b = platGPK.MemberDepositSubmit(bb);
+                    MySQLHelper.ExecuteSql(string.Format(myConfig["sql_qd_upadte_succeed"].ToString(), bb.bbid));
+                    //记录到数据库SQLite 成功
+                    string sql = $"insert into record values({bb.bbid},'{bb.Memo}','{bb.username}',datetime(CURRENT_TIMESTAMP,'localtime'),1003,1);";
+                    appSittingSet.execSql(sql);
+                    log = $"{bb.aname}-编号-{bb.bbid}-用户-{bb.username}-处理为-{(bb.passed ? "通过" : "不通过")}-{bb.msg}";
+                    appSittingSet.Log(log);
+                    MyWrite(log);
+
+                    /*
                     sql = "select * from cs_zhangdan where apply=1 and id= " + bb.bbid + ";";
                     b = MySQLHelper.Exsist(sql);
                     if (!b)
@@ -561,6 +595,8 @@ namespace AutoAppSign
                     log = string.Format("{4}编号{0}用户{1}处理为{2}{3}", bb.bbid, bb.username, bb.passed ? "通过" : "不通过", bb.msg, bb.aname);
                     appSittingSet.Log(log);
                     MyWrite(log);
+
+                */
                 }
             }
         }
@@ -570,15 +606,15 @@ namespace AutoAppSign
         /// 切记不要改线程循环 gpk会提交多次 原因不明 数据库状态未更改过来 如果是网页版 可以用线程循环
         /// </summary>
         [DisallowConcurrentExecution]
-        public class MyJob3 : IJob
+        public class MyJob2 : IJob
         {
             public void Execute(IJobExecutionContext context)
             {
                 MySQLHelper.connectionString = connectionString[1];
-
+                string sql = "";
                 //查询数据库 获取待处理的数据
-                string sql = "SELECT a.`id`, `order_no`,`username`,`order_amount`,title,addtime FROM `e_order` a left join e_bank b on a.bid=b.id WHERE a.`status`=2  ORDER BY id DESC LIMIT 100;";
-                DataTable dt = MySQLHelper.Query(sql).Tables[0];
+                //string sql = "SELECT a.`id`, `order_no`,`username`,`order_amount`,title,addtime FROM `e_order` a left join e_bank b on a.bid=b.id WHERE a.`status`=2  ORDER BY id DESC LIMIT 100;";
+                DataTable dt = MySQLHelper.Query(myConfig["sql_cz_select"].ToString()).Tables[0];
 
                 if (dt.Rows.Count>0)
                 {
@@ -602,62 +638,60 @@ namespace AutoAppSign
                         //判断用户是否存在
                         //betData bbt = new betData() {username = "yang133983" };//测试
                         Gpk_UserDetail user = platGPK.GetUserDetail(bb.username);
-                        if (user==null)
+                        if (user == null)
                         {
                             //更改状态 为 100
                             //sql = "update `e_order` set `status`=100 , uid='" + uid + "',handletime =unix_timestamp(now()) where id= " + bb.bbid + ";";
-                            sql = string.Format("update `e_order` set `status`=100 , uid='{0}',handletime =unix_timestamp(now()) where id= {1};", uid, bb.bbid);
+                            //sql = $"update `e_order` set `status`=100 , uid='{uid}',handletime =unix_timestamp(now()) where id= {bb.bbid};";
                             //三号台子
                             //sql = "update `e_order` set `status`=100 , uid='" + uid + "',handletime =unix_timestamp(date_add(now(), interval 12 hour)) where id= " + bb.bbid + ";";
+                            sql = string.Format(myConfig["sql_cz_upadte"].ToString(), uid, bb.bbid, 100);
+                            int eff1 = MySQLHelper.ExecuteSql(sql);
+                            continue;
+                        }
+
+
+                        //看数据库是否存在
+                        //sql = $"select * from record where   username='{bb.username}' and bbid='{bb.bbid}'  and type=1001;";
+                        sql = $"select * from record where  bbid='{bb.bbid}'  and type=1001;";
+                        if (appSittingSet.recorderDbCheck(sql))
+                        {
+                            //存在 改状态为通过 
+                            sql = string.Format(myConfig["sql_cz_upadte"].ToString(), uid, bb.bbid, 3);
                             MySQLHelper.ExecuteSql(sql);
                             continue;
                         }
-                        bool br = false;
-                        //看数据库是否存在
-                        if (!appSittingSet.recorderDbCheck(string.Format("select * from record where   username='{0}' and bbid='{1}'  and type=1001", bb.username, bb.bbid)))
-                        {
-                            //加钱 充值的部分 
-                            br = platGPK.MemberDepositSubmit(bb);                            
-                        }
-                        else
-                        {
-                            //回填通过 更改数据库 状态为3
-                            sql = "update `e_order` set `status`=3,uid='" + uid + "',handletime =unix_timestamp(now()) where id= " + bb.bbid + ";";
-                            //3号台子 需要+12小时
-                            //sql = "update `e_order` set `status`=3,uid='" + uid + "',handletime =unix_timestamp(date_add(now(), interval 12 hour)) where id= " + bb.bbid + ";";
-                            int eff1= MySQLHelper.ExecuteSql(sql);
-                            continue;
-                        }
-                        if (br)
-                        {
-                            //记录到数据库
-                            appSittingSet.execSql(string.Format("insert into record values({0},'{1}','{2}',datetime(CURRENT_TIMESTAMP,'localtime'),1001)  ", bb.bbid, bb.Memo, bb.username));
-                            //回填通过 更改数据库 状态为3
-                            sql = "update `e_order` set `status`=3,uid='" + uid + "',handletime =unix_timestamp(now()) where id= " + bb.bbid + ";";
-                            //3号台子 需要+12小时
-                            //sql = "update `e_order` set `status`=3,uid='" + uid + "',handletime =unix_timestamp(date_add(now(), interval 12 hour)) where id= " + bb.bbid + ";";
-                            int eff1= MySQLHelper.ExecuteSql(sql);
 
-                            string msg = bb.aname + "编号" + bb.bbid + "用户" + bb.username + (eff1 > 0 ? "处理成功" : "钱已经充值，状态更新状态失败");
-                            appSittingSet.Log(msg);
-                                          MyWrite(msg);
 
-                            //加钱 赠送部分目前在5‰
-                            bb.betMoney = bb.betMoney * rate;
-                            bb.Audit = bb.betMoney * rate;
-                            bb.AuditType = "Discount";
-                            bb.Type = 5;//优惠活动
-                            bb.Memo = "快速充值优惠";
-                            br = platGPK.MemberDepositSubmit(bb);
-                            if (br)
-                            {
-                                br = platGPK.MemberDepositSubmit(bb);
-                            }
-                        }
-                        else
-                        {
-                            continue;
-                        }
+                        //记录到数据库
+                        sql = $"insert into record values({bb.bbid},'{bb.Memo}','{bb.username}',datetime(CURRENT_TIMESTAMP,'localtime'),1001,1);";
+                        appSittingSet.execSql(sql);
+                        //回填通过 更改数据库 状态为3
+                        //sql = "update `e_order` set `status`=3,uid='" + uid + "',handletime =unix_timestamp(now()) where id= " + bb.bbid + ";";
+                        //3号台子 需要+12小时
+                        //sql = "update `e_order` set `status`=3,uid='" + uid + "',handletime =unix_timestamp(date_add(now(), interval 12 hour)) where id= " + bb.bbid + ";";
+                        sql = string.Format(myConfig["sql_cz_upadte"].ToString(), uid, bb.bbid, 3);
+                        int eff = MySQLHelper.ExecuteSql(sql);
+
+                        string msg = bb.aname + "编号" + bb.bbid + "用户" + bb.username + (eff > 0 ? "处理成功" : "钱已经充值，状态更新状态失败");
+                        appSittingSet.Log(msg);
+                        MyWrite(msg);
+
+                        //加钱 充值的部分 
+                       bool br = platGPK.MemberDepositSubmit(bb);
+
+                        //加钱 赠送部分目前在5‰
+                        bb.betMoney = bb.betMoney * rate;
+                        bb.Audit = bb.betMoney * rate;
+                        bb.AuditType = "Discount";
+                        bb.Type = 5;//优惠活动
+                        bb.Memo = "快速充值优惠";
+                        br = platGPK.MemberDepositSubmit(bb);
+                        //if (br)
+                        //{
+                        //    br = platGPK.MemberDepositSubmit(bb);
+                        //}
+
                     }
                 }
                 else
@@ -684,7 +718,7 @@ namespace AutoAppSign
                 //查询数据库 获取待处理的数据 只有 0/1
 
                 //string sql_cz_select = "SELECT id,username,money FROM hr_records  WHERE is_send ='0'   ORDER BY id  LIMIT 50;";
-                string sql_cz_upadte_ = sql_cz_upadte;
+                //string sql_cz_upadte_ = sql_hb_upadte;
 
                 //3组需要加上12小时
                 //string sql_update = "update `hr_records` set `is_send`='1',addtime =date_add(now(), interval 12 hour) where id in({0});";
@@ -693,7 +727,7 @@ namespace AutoAppSign
                 string ids = "";
                 string users = "";
                 int count = 0;
-                DataTable dt = MySQLHelper.Query(sql_cz_select).Tables[0];
+                DataTable dt = MySQLHelper.Query(myConfig["sql_hb_select"].ToString()).Tables[0];
                 if (dt.Rows.Count>0)
                 {
                     foreach (DataRow dr in dt.Rows)
@@ -748,8 +782,8 @@ namespace AutoAppSign
                         }
                     }
 
-                    sql_cz_upadte_ = string.Format(sql_cz_upadte_,  ids.TrimEnd(','));
-                    int eff = MySQLHelper.ExecuteSql(sql_cz_upadte_);
+                    //sql_cz_upadte_ = string.Format(myConfig["sql_hb_upadte"].ToString(),  ids.TrimEnd(','));
+                    int eff = MySQLHelper.ExecuteSql(string.Format(myConfig["sql_hb_upadte"].ToString(), ids.TrimEnd(',')));
                     if (eff==count)
                     {
                         appSittingSet.Log(bb.aname+users+ "处理成功" );
@@ -801,17 +835,26 @@ namespace AutoAppSign
         /// 红包，线程来做 只需要配置sql语句即可
         /// </summary>
         [DisallowConcurrentExecution]
-        public class MyJob6 : IJob
+        public class MyJob3 : IJob
         {
             public void Execute(IJobExecutionContext context)
             {
                 MySQLHelper.connectionString = connectionString[2];
                 List<betData> list = new List<betData>();
-                List<string> openw = new List<string>();
-                DataTable dt = MySQLHelper.Query(sql_cz_select).Tables[0];
-                if (dt.Rows.Count>0)
+                //List<string> openw = new List<string>();
+                DataTable dt = MySQLHelper.Query(myConfig["sql_hb_select"].ToString()).Tables[0];
+                if (dt.Rows.Count == 0)
                 {
-                    foreach (DataRow dr in dt.Rows)
+                    //没有记录
+                    MyWrite(aname[4] + "没有新的信息，等待下次执行 ");
+                    appSittingSet.execSql("delete  from record where type=1002");
+                    return;
+                }
+
+                foreach (DataRow dr in dt.Rows)
+                {
+                    //去重复 如果不存在 加到list
+                    if (!appSittingSet.recorderDbCheck($"select * from record where  bbid={dr[0].ToString()}  and type=1002;"))
                     {
                         betData bb = new betData()
                         {
@@ -822,15 +865,39 @@ namespace AutoAppSign
                             Audit = Convert.ToDecimal(dr[2]),
                             Type = 5,//优惠活动
                             isReal = false,
-                            Memo = "红包活动",
-                            aname= aname[4],
+                            Memo = "红包活动-" + dr[0].ToString(),
+                            aname = aname[4],
                         };
                         list.Add(bb);
                     }
-
-                    //线程循环
-                    Parallel.ForEach(list, (item) =>
+                    else
                     {
+                        MySQLHelper.ExecuteSql(string.Format(myConfig["sql_hb_upadte"].ToString(), dr[0].ToString()));
+                    }
+
+
+
+
+                    //betData bb = new betData()
+                    //{
+                    //    bbid = dr[0].ToString(),
+                    //    betMoney = Convert.ToDecimal(dr[2]),
+                    //    username = dr[1].ToString(),
+                    //    AuditType = "None",
+                    //    Audit = Convert.ToDecimal(dr[2]),
+                    //    Type = 5,//优惠活动
+                    //    isReal = false,
+                    //    Memo = "红包活动",
+                    //    aname= aname[4],
+                    //};
+
+                    //list.Add(bb);
+                }
+
+                //线程循环
+                Parallel.ForEach(list, (item) =>
+                {
+                        /*
                         bool br = false;
                         //看数据库是否存在
                         if (!appSittingSet.recorderDbCheck(string.Format("select * from record where   username='{0}' and bbid='{1}'  and type=1002", item.username, item.bbid)))
@@ -842,9 +909,9 @@ namespace AutoAppSign
                                 //插入字典
                                 //openw.Add(item.bbid);
                                 //插入本地数据库
-                                appSittingSet.execSql(string.Format("insert into record values({0},'{1}','{2}',datetime(CURRENT_TIMESTAMP,'localtime'),1002)  ", item.bbid, item.Memo, item.username));
+                                appSittingSet.execSql($"insert into record values({item.bbid},'{item.Memo}','{item.username}',datetime(CURRENT_TIMESTAMP,'localtime'),1002,1);");
                                 //回填通过 更改数据库 状态为3
-                                int eff1 = MySQLHelper.ExecuteSql(string.Format(sql_cz_upadte, item.bbid));
+                                int eff1 = MySQLHelper.ExecuteSql(string.Format(myConfig["sql_hb_upadte"].ToString(), item.bbid));
                                 item.msg =item.aname+ item.aname + "编号" + item.bbid + "用户" + item.username + (eff1 > 0 ? "处理成功" : "钱已经充值，状态更新状态失败");
                                 appSittingSet.Log(item.msg);
                                 MyWrite(item.msg);
@@ -858,36 +925,27 @@ namespace AutoAppSign
                         else
                         {
                             //回填通过 更改数据库 状态为3
-                            int eff1 = MySQLHelper.ExecuteSql(string.Format(sql_cz_upadte, item.bbid));
+                            int eff1 = MySQLHelper.ExecuteSql(string.Format(myConfig["sql_hb_upadte"].ToString(), item.bbid));
                             //item.msg = "编号" + item.bbid + "用户" + item.username + "已经充值过，跳过";
                             //appSittingSet.Log(item.msg);
                             //MyWrite(item.msg);
                             return;
                         }
 
-                        //提交充值 根据字典判断
-                        //string s= openw.Find(o => o == item.bbid);
-                        //if (s==null)
-                        //{
-                        //    br = platGPK.MemberDepositSubmit(item);
-                        //}
-                        //else
-                        //{
-                        //    //回填通过 更改数据库 状态为3
-                        //    int eff1 = MySQLHelper.ExecuteSql(string.Format(sql_cz_upadte, item.bbid));
-                        //    return;
-                        //}
+                    */
 
+                    //加钱 充值的部分 
+                    platGPK.MemberDepositSubmit(item);
+                    //插入本地数据库
+                    appSittingSet.execSql($"insert into record values({item.bbid},'{item.Memo}','{item.username}',datetime(CURRENT_TIMESTAMP,'localtime'),1002,1);");
+                    //回填通过 更改数据库 状态为3
+                    int eff1 = MySQLHelper.ExecuteSql(string.Format(myConfig["sql_hb_upadte"].ToString(), item.bbid));
+                    item.msg = item.aname + item.aname + "编号" + item.bbid + "用户" + item.username + (eff1 > 0 ? "处理成功" : "钱已经充值，状态更新状态失败");
+                    appSittingSet.Log(item.msg);
+                    MyWrite(item.msg);
 
-                    });
+                });
 
-                }
-                else
-                {
-                    //没有记录
-                    MyWrite(aname[4] +"没有新的信息，等待下次执行 ");
-                    appSittingSet.execSql("delete  from record where type=1002");
-                }
             }
         }
         #endregion
@@ -895,7 +953,7 @@ namespace AutoAppSign
         private void toolStripMenuItem1_Click(object sender, EventArgs e)
         {
             //登录一遍
-            MyJob1 myjob1 = new MyJob1();
+            MyJobLogin myjob1 = new MyJobLogin();
             myjob1.Execute(null);
             appSittingSet.Log("手动操作登录");
         }
@@ -908,21 +966,22 @@ namespace AutoAppSign
         private void toolStripMenuItem3_Click(object sender, EventArgs e)
         {
             string filePath = Application.ExecutablePath + ".config";
+            //System.Diagnostics.Process.Start("notepad.exe", filePath);
+            var xe = XElement.Load(filePath).Element("appconfig").Attribute("configSource").Value;
+            filePath = Application.StartupPath + "\\" + xe;
             System.Diagnostics.Process.Start("notepad.exe", filePath);
         }
 
         private void toolStripMenuItem4_Click(object sender, EventArgs e)
         {
-            if (MessageBox.Show("应用程序重启", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button1) == DialogResult.OK)
-            {
-                notify.Dispose();
-                Application.Restart();
-            }
+            Application.Exit();
+            System.Diagnostics.Process.Start(System.Reflection.Assembly.GetExecutingAssembly().Location);
         }
         private void toolStripMenuItem6_Click(object sender, EventArgs e)
         {
             ClsListItem();
         }
+        #region 不用代码
         private void APP签到_Click(object sender, EventArgs e)
         {
             if (connectionString[0]=="?" || connectionString[0]=="")
@@ -940,5 +999,6 @@ namespace AutoAppSign
             }
         }
 
+        #endregion
     }
 }

@@ -196,7 +196,7 @@ namespace TimoControl
                 list.Add(jo["ConnectionId"] == null ? "" : jo["ConnectionId"].ToString());
 
                 //string value = jo[item][index].ToString(); 
-                appSittingSet.Log(string.Format("获取到的connectionToken:{0} ; connectionId:{1};", list[0], list[1]));
+                //appSittingSet.Log(string.Format("获取到的connectionToken:{0} ; connectionId:{1};", list[0], list[1]));
                 return list;
 
             }
@@ -851,6 +851,12 @@ namespace TimoControl
             try
             {
                 request = WebRequest.Create(url_gpk_base + postUrl) as HttpWebRequest;
+
+                //request.ServicePoint.Expect100Continue = false;
+                request.ProtocolVersion = HttpVersion.Version11;
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | SecurityProtocolType.Tls11;
+                ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
+
                 request.Method = "POST";
                 request.UserAgent = "Mozilla/4.0";
                 request.KeepAlive = true;
@@ -927,9 +933,13 @@ namespace TimoControl
             {
                 //如果 操作超时 重新登录一下GPK
                 string msg = "失败-" + postUrl + "-" +ex.HResult +"-" +ex.Status +"-"+ ex.Message;
-                //if (ex.HResult == -2146233079 || ex.Message == "操作超时")
-                if ((ex.Status == WebExceptionStatus.ProtocolError || ex.Status == WebExceptionStatus.Timeout) && !postUrl.Contains("UpdateMemberLevel"))
+                //if (ex.HResult == -2146233079 || ex.Message == "操作超时") || ex.Status==WebExceptionStatus.ConnectFailure
+                if ((ex.Status == WebExceptionStatus.ProtocolError || ex.Status == WebExceptionStatus.Timeout ) && !postUrl.Contains("UpdateMemberLevel"))
                 {
+                    if (request != null)
+                    {
+                        request.Abort();
+                    }
                     //需要重新登录 更新级别导致错误几率很大 不需要重新登陆
                     loginGPK();
                     //WebSocketConnect();
@@ -1094,7 +1104,7 @@ namespace TimoControl
                 string postRefere = "MemberDeposit";
                 JObject jo = GetResponse<JObject>(postUrl, postData, "POST", postRefere);
 
-                if (jo["Member"] != null)
+                if (jo != null && jo["Member"] != null)
                 {
                     dd = new Gpk_UserDetail() { };
                     dd.Account = jo["Member"]["Account"].ToString();
@@ -1108,6 +1118,10 @@ namespace TimoControl
                     dd.Name = jo["Member"]["Name"].ToString();
                     dd.QQ = jo["Member"]["QQ"].ToString();
                     dd.JoinTime =DateTime.Parse( jo["Member"]["JoinTime"].ToString());//注册时间
+                    //17点00分 2019年7月6日 增加 timo
+                    dd.Balance = decimal.Parse(jo["Member"]["Balance"].ToString());
+                    dd.YuebaoPrincipal = decimal.Parse(jo["Member"]["YuebaoPrincipal"].ToString());
+
                     if (jo["Member"]["LatestLogin"]!=null && jo["Member"]["LatestLogin"].ToString().Length>0)
                     {
                         dd.LatestLogin_IP = jo["Member"]["LatestLogin"]["IP"].ToString();
@@ -1368,8 +1382,20 @@ namespace TimoControl
                     if (jo["M"][0]["M"].ToString() == "BetRecordQueryCtrl_searchComplete")
                     {
                         //保存到数据库
-                        string sql = string.Format("INSERT INTO record (username,gamename,subminttime,betno,chargeMoney,pass,msg,aid) VALUES ( '__socket', '{3}', datetime(CURRENT_TIMESTAMP,'localtime'), '{0}', {1}, 0, '{2}', 1002 );", jo["M"][0]["A"][0]["Count"], jo["M"][0]["A"][0]["TotalCommissionable"], jo["M"][0]["A"][0]["TotalPayoff"], socket_id);
-                        bool b = appSittingSet.execSql(sql);
+                        betData b = new betData() {
+                            username = "__socket",
+                            gamename = socket_id,
+                            betno = jo["M"][0]["A"][0]["Count"].ToString(),
+                            betMoney = (decimal)jo["M"][0]["A"][0]["TotalCommissionable"],
+                            passed = false,
+                            msg = jo["M"][0]["A"][0]["TotalPayoff"].ToString(),
+                            aid = "1002",
+                            bbid = "-"+DateTime.Now.Millisecond.ToString() + new Random().Next(100, 999)//随机值
+                        };
+                        appSittingSet.recorderDb(b);
+                        //string sql = string.Format("INSERT INTO record (username,gamename,subtime,betno,chargeMoney,pass,msg,aid) VALUES ( '__socket', '{3}', datetime(CURRENT_TIMESTAMP,'localtime'), '{0}', {1}, 0, '{2}', 1002 );", jo["M"][0]["A"][0]["Count"], jo["M"][0]["A"][0]["TotalCommissionable"], jo["M"][0]["A"][0]["TotalPayoff"], socket_id);
+                        //sql = $"INSERT INTO record (username,gamename,subtime,betno,chargeMoney,pass,msg,aid) VALUES ( '__socket', '{socket_id}', datetime(CURRENT_TIMESTAMP,'localtime'), '{ jo["M"][0]["A"][0]["Count"]}', { jo["M"][0]["A"][0]["TotalCommissionable"]}, 0, '{ jo["M"][0]["A"][0]["TotalPayoff"]}', 1002 );";
+                        //bool b = appSittingSet.execSql(sql);
                     }
                 }
             };
@@ -1453,8 +1479,20 @@ namespace TimoControl
                             if (jo["M"][0]["M"].ToString() == "BetRecordQueryCtrl_searchComplete")
                             {
                                 //保存到数据库
-                                string sql = string.Format("INSERT INTO record (username,gamename,subminttime,betno,chargeMoney,pass,msg,aid) VALUES ( '__socket', '{3}', datetime(CURRENT_TIMESTAMP,'localtime'), '{0}', {1}, 0, '{2}', 1002 );", jo["M"][0]["A"][0]["Count"], jo["M"][0]["A"][0]["TotalCommissionable"], jo["M"][0]["A"][0]["TotalPayoff"], socket_id);
-                                bool b = appSittingSet.execSql(sql);
+                                betData b = new betData()
+                                {
+                                    username = "__socket",
+                                    gamename = socket_id,
+                                    betno = jo["M"][0]["A"][0]["Count"].ToString(),
+                                    betMoney = (decimal)jo["M"][0]["A"][0]["TotalCommissionable"],
+                                    passed = false,
+                                    msg = jo["M"][0]["A"][0]["TotalPayoff"].ToString(),
+                                    aid = "1002",
+                                    bbid = DateTime.Now.Millisecond.ToString() + new Random().Next(100, 999)//随机值
+                                };
+                                appSittingSet.recorderDb(b);
+                                //string sql = string.Format("INSERT INTO record (username,gamename,subtime,betno,chargeMoney,pass,msg,aid) VALUES ( '__socket', '{3}', datetime(CURRENT_TIMESTAMP,'localtime'), '{0}', {1}, 0, '{2}', 1002 );", jo["M"][0]["A"][0]["Count"], jo["M"][0]["A"][0]["TotalCommissionable"], jo["M"][0]["A"][0]["TotalPayoff"], socket_id);
+                                //bool b = appSittingSet.execSql(sql);
                             }
                         }
                     }

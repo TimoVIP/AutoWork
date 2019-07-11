@@ -1,0 +1,44 @@
+PRAGMA foreign_keys = 0;
+
+CREATE TABLE sqlitestudio_temp_table AS SELECT *
+                                          FROM record;
+
+DROP TABLE record;
+
+CREATE TABLE record (
+    username    VARCHAR (20),
+    gamename    VARCHAR (20),
+    subtime     DATETIME,
+    betno       VARCHAR (20),
+    chargeMoney DECIMAL (10, 2) DEFAULT (0),
+    pass        INT,
+    msg         VARCHAR (200),
+    aid         INT,
+    bbid        INTEGER         PRIMARY KEY
+);
+
+INSERT INTO record (
+                       username,
+                       gamename,
+                       subtime,
+                       betno,
+                       chargeMoney,
+                       pass,
+                       msg,
+                       aid,
+                       bbid
+                   )
+                   SELECT username,
+                          gamename,
+                          subminttime,
+                          betno,
+                          chargeMoney,
+                          pass,
+                          msg,
+                          aid,
+                          bbid
+                     FROM sqlitestudio_temp_table;
+
+DROP TABLE sqlitestudio_temp_table;
+
+PRAGMA foreign_keys = 1;

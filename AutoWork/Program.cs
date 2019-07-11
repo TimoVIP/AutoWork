@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-
+using TimoControl;
 namespace AutoWork_Plat1
 {
     static class Program
@@ -22,11 +22,11 @@ namespace AutoWork_Plat1
             {
                 if (process.Id != current.Id)
                 {
-                    if (process.MainModule.FileName
-                    == current.MainModule.FileName)
+                    if (process.MainModule.FileName == current.MainModule.FileName)
                     {
-                        MessageBox.Show("程序已经运行！", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                        return;
+                        process.Kill();
+                        //MessageBox.Show("程序已经运行！", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                        //return;
                     }
                 }
             }
@@ -34,7 +34,20 @@ namespace AutoWork_Plat1
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new frmMain());
+            Application.ThreadException += Application_ThreadException;
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+        }
 
+        private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            appSittingSet.Log(e.ExceptionObject.ToString());
+            //throw new NotImplementedException();
+        }
+
+        private static void Application_ThreadException(object sender, System.Threading.ThreadExceptionEventArgs e)
+        {
+            appSittingSet.Log(e.Exception.Message);
+            //throw new NotImplementedException();
         }
     }
 }

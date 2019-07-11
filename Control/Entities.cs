@@ -116,6 +116,9 @@ namespace TimoControl
         public string Name { get; set; }
         public string QQ { get; set; }
         public DateTime JoinTime { get; set; }
+
+        public decimal YuebaoPrincipal { get; set; }
+        public decimal Balance { get; set; }
     }
 
     /// <summary>

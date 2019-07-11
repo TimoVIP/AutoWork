@@ -80,22 +80,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ActDataFromWeb.cs" />
     <Compile Include="ActFromDB.cs" />
-    <Compile Include="AMESTime.cs" />
     <Compile Include="appSittingSet.cs" />
-    <Compile Include="AsynFileHelp.cs" />
     <Compile Include="Entities.cs" />
-    <Compile Include="KeyBoard_Mouse.cs" />
+    <Compile Include="IPlat.cs" />
     <Compile Include="MySQLHelper.cs" />
     <Compile Include="NPOIExcel.cs" />
-    <Compile Include="plat5hao.cs" />
     <Compile Include="platACT.cs" />
     <Compile Include="platACT2.cs" />
-    <Compile Include="platAlipay.cs" />
     <Compile Include="platBB.cs" />
     <Compile Include="platGPK.cs" />
-    <Compile Include="platRedEnvelope.cs" />
-    <Compile Include="platWSB.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="sqlHelper.cs" />
   </ItemGroup>

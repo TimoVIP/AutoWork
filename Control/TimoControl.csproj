@@ -39,38 +39,18 @@
       <HintPath>..\packages\HtmlAgilityPack.1.8.10\lib\Net45\HtmlAgilityPack.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="MySql.Data">
-      <HintPath>..\..\..\..\Downloads\mysql-connector-net-8.0.13-noinstall\v4.5.2\MySql.Data.dll</HintPath>
-    </Reference>
+    <Reference Include="MySql.Data, Version=8.0.13.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d" />
     <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.10.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
-    </Reference>
-    <Reference Include="NPOI">
-      <HintPath>..\..\..\..\Source\Repos\NFine\project\packages\NPOI.2.1.3.1\lib\net40\NPOI.dll</HintPath>
-    </Reference>
-    <Reference Include="NPOI.OOXML">
-      <HintPath>..\..\..\..\Source\Repos\NFine\project\packages\NPOI.2.1.3.1\lib\net40\NPOI.OOXML.dll</HintPath>
-    </Reference>
-    <Reference Include="NPOI.OpenXml4Net">
-      <HintPath>..\..\..\..\Source\Repos\NFine\project\packages\NPOI.2.1.3.1\lib\net40\NPOI.OpenXml4Net.dll</HintPath>
-    </Reference>
-    <Reference Include="NPOI.OpenXmlFormats">
-      <HintPath>..\..\..\..\Source\Repos\NFine\project\packages\NPOI.2.1.3.1\lib\net40\NPOI.OpenXmlFormats.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Data.SQLite, Version=1.0.109.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Data.SQLite.Core.1.0.109.2\lib\net451\System.Data.SQLite.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System.Drawing" />
     <Reference Include="System.Management" />
     <Reference Include="System.Web" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
@@ -82,30 +62,33 @@
   <ItemGroup>
     <Compile Include="ActDataFromWeb.cs" />
     <Compile Include="ActFromDB.cs" />
-    <Compile Include="appSittingSet.cs" />
     <Compile Include="Entities.cs" />
-    <Compile Include="IPlat.cs" />
-    <Compile Include="MySQLHelper.cs" />
-    <Compile Include="NPOIExcel.cs" />
     <Compile Include="platACT.cs" />
     <Compile Include="platACT2.cs" />
     <Compile Include="platBB.cs" />
     <Compile Include="platGPK.cs" />
+    <Compile Include="platQPGV2.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="sqlHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BaseFun\BaseFun.csproj">
+      <Project>{1955a126-44d7-4381-b0dc-00f58ad93d6e}</Project>
+      <Name>BaseFun</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MySQLHelper\MySQLHelper.csproj">
+      <Project>{6B6FF48F-5095-413E-8C9D-20E8FC36E9DC}</Project>
+      <Name>MySQLHelper</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SQLiteHelper\SQLiteHelper.csproj">
+      <Project>{73ce189d-2285-4c40-9b2c-5f0e2675c5aa}</Project>
+      <Name>SQLiteHelper</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="..\packages\System.Data.SQLite.Core.1.0.109.2\build\net451\System.Data.SQLite.Core.targets" Condition="Exists('..\packages\System.Data.SQLite.Core.1.0.109.2\build\net451\System.Data.SQLite.Core.targets')" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>这台计算机上缺少此项目引用的 NuGet 程序包。使用“NuGet 程序包还原”可下载这些程序包。有关更多信息，请参见 http://go.microsoft.com/fwlink/?LinkID=322105。缺少的文件是 {0}。</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\System.Data.SQLite.Core.1.0.109.2\build\net451\System.Data.SQLite.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\System.Data.SQLite.Core.1.0.109.2\build\net451\System.Data.SQLite.Core.targets'))" />
-  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

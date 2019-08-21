@@ -1,4 +1,5 @@
-﻿using HtmlAgilityPack;
+﻿using BaseFun;
+using HtmlAgilityPack;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;

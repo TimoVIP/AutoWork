@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Collections;
 using System.Xml.Linq;
+using BaseFun;
 
 namespace AutoWork_Plat1
 {
@@ -231,7 +232,8 @@ namespace AutoWork_Plat1
             {
                 int diff = int.Parse(AutoCls[0]);
                 string sql = "delete from record where subtime < '" + DateTime.Now.AddDays(-diff).Date.ToString("yyyy-MM-dd") + "'";
-                appSittingSet.execSql(sql);
+                //appSittingSet.execSql(sql);
+                SQLiteHelper.SQLiteHelper.execSql(sql);
                 appSittingSet.Log("清除一周前的数据");
                 appSittingSet.clsLogFiles(diff);
                 appSittingSet.Log("清除一周前的日志");
@@ -379,7 +381,7 @@ namespace AutoWork_Plat1
                     //判断是否提交过 同一用户 同类游戏 一天只能一次
                     string dt_ = item.betTime == "" ? DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd") : DateTime.Parse(item.betTime).Date.ToString("yyyy-MM-dd");
                     string sql = "select * from record where (betno='" + bb.betno + "' and pass=1 and aid=" + bb.aid + " ) or (pass=1  and aid=" +bb.aid + " and  username='" + bb.username + "' and gamename='" + bb.gamename + "'  and subtime > '" + dt_ + " 00:00:01' and  subtime < '" + dt_ + " 23:59:59') ";
-                    if (appSittingSet.recorderDbCheck(sql))
+                    if (SQLiteHelper.SQLiteHelper.recorderDbCheck(sql))
                     {
                         bb.passed = false;
                         bb.msg = "您好，同一游戏一天内只能申请一次，申请不通过！R";
@@ -482,7 +484,7 @@ namespace AutoWork_Plat1
                         if (fr)
                         {
                             //记录到数据库
-                            appSittingSet.recorderDb(bb);
+                            recorderDb(bb);
                             bb.msg = "恭喜您，您申请的<" + bb.aname + ">已通过活动专员的检验 R";
                             bool b8 = platACT.confirmAct(bb);
                             MyWrite(bb.msg);
@@ -601,7 +603,7 @@ namespace AutoWork_Plat1
                         //判断是否提交过 同一用户 所有游戏 一天只能一次
                         string dt_ = item.betTime == "" ? DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd") : DateTime.Parse(item.betTime).Date.ToString("yyyy-MM-dd");
                         string sql = "select * from record where (betno='" + bb.betno + "' and pass=1 and aid =" + bb.aid + ") or ( pass=1 and aid =" + bb.aid + " and username='" + bb.username + "'   and subtime > '" + dt_ + " 00:00:01' and  subtime < '" + dt_+ " 23:59:59') ";
-                        if (appSittingSet.recorderDbCheck(sql))
+                        if (SQLiteHelper.SQLiteHelper.recorderDbCheck(sql))
                         {
                             bb.passed = false;
                             bb.msg = "您好，同一游戏一天内只能申请一次，申请不通过！R";
@@ -744,7 +746,7 @@ namespace AutoWork_Plat1
                     string dt_ = DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd");
                     string sql = "select * from record where pass=1 and aid =" +item.aid + " and LOWER(username)='" + item.username.ToLower() + "'   and subtime > '" + dt_+ " 00:00:01' and  subtime < '" + dt_ + " 23:59:59' ";
                     //appSittingSet.Log(sql);
-                    if (appSittingSet.recorderDbCheck(sql))
+                    if (SQLiteHelper.SQLiteHelper.recorderDbCheck(sql))
                     {
                         item.passed = false;
                         item.msg = "您好，同一账号一天内只能申请一次，申请不通过！R";
@@ -967,7 +969,7 @@ namespace AutoWork_Plat1
 
                     //判断是否提交过 同一用户 所有游戏 一天只能一次
                     string sql = "select * from record where pass=1 and aid =" + actInfo[9] + " and LOWER(username)='" + item.username.ToLower() + "'   and subtime > '" + DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd") + " 00:00:01' and  subtime < '" + DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd") + " 23:59:59' ";
-                    if (appSittingSet.recorderDbCheck(sql))
+                    if (SQLiteHelper.SQLiteHelper.recorderDbCheck(sql))
                     {
                         item.passed = false;
                         item.msg = "您好，同一账号一天内只能申请一次，申请不通过！R";
@@ -1150,7 +1152,7 @@ namespace AutoWork_Plat1
 
                     //判断是否提交过 同一用户  只能一次
                     string sql = "select * from record where pass=1 and aid =" + actInfo[12] + " and LOWER(username)='" + item.username.ToLower() + "'  ";
-                    if (appSittingSet.recorderDbCheck(sql))
+                    if (SQLiteHelper.SQLiteHelper.recorderDbCheck(sql))
                     {
                         item.passed = false;
                         item.msg = "您好，同一账号只能申请一次，申请不通过！R";
@@ -1295,7 +1297,7 @@ namespace AutoWork_Plat1
                         appSittingSet.Log(msg);
 
                         //记录到sqlite数据库
-                        appSittingSet.recorderDb(item);
+                        recorderDb(item);
                     }
                     else
                     {
@@ -1345,7 +1347,7 @@ namespace AutoWork_Plat1
             {
 
                 List<betData> list = platACT.getActData(actInfo[15]);
-                //list.Add(new betData() { username = "wlf5577558", betTime = "2018-12-29 21:50:59", bbid = "738215", passed = true, aid = "40" });//默认等于合格
+                //list.Add(new betData() { username = "yy0268", betTime = "2018-12-29 21:50:59", bbid = "738215", passed = true, aid = "40" });//默认等于合格
                 if (list == null)
                 {
                     MyWrite(actInfo[16] + " 没有获取到新的注单，等待下次执行 ");
@@ -1397,7 +1399,7 @@ namespace AutoWork_Plat1
                 foreach (var item in list)
                 {
                     //先删除 表里面的socket 记录
-                    appSittingSet.execSql("delete from record where aid=1002");
+                    SQLiteHelper.SQLiteHelper.execSql("delete from record where aid=1002");
 
                     //记录一个list 去除重复后 的第9，10 条 直接拒绝掉
 
@@ -1429,10 +1431,65 @@ namespace AutoWork_Plat1
                     //        continue;
                     //    }
                     //}
+                    item.aname = actInfo[16];
+                    //betData bb = item;
 
 
+
+
+
+                    //获取详细信息
+                    Gpk_UserDetail userinfo = platGPK.GetUserDetail(item.username);
+                    if (userinfo==null)
+                    {
+                        //账号不存在？
+                        item.passed = false;
+                        item.msg = "经查询，您的账号有误！ R";
+                        platACT.confirmAct(item);
+                        string msg = $"活动{item.aname}用户{item.username}处理完毕，处理为 {(item.passed ? "通过" : "不通过")}，回复消息 {item.msg}";
+                        MyWrite(msg);
+                        continue;
+                    }
+
+
+                    //钱包<10元
+                    //if (userinfo.Wallet > 11)
+                    if (userinfo.Balance + userinfo.YuebaoPrincipal > 11)
+                    {
+                        item.passed = false;
+                        item.msg = "请账户低于10元的时候立刻申请！R";
+                        platACT.confirmAct(item);
+                        string msg = $"活动{item.aname}用户{item.username}处理完毕，处理为 {(item.passed ? "通过" : "不通过")}，回复消息 {item.msg}";
+                        MyWrite(msg);
+                        continue;
+                    }
+
+                    //判断 层级是否在 列表之中
+                    foreach (var s in FiliterGroups)
+                    {
+                        if (userinfo.MemberLevelSettingId == s)
+                        {
+                            item.passed = false;
+                            item.msg = "经查询，您的账号目前不享有此优惠！ R";
+                            break;
+                        }
+                    }
+                    if (!item.passed)
+                    {
+                        //回填失败
+                        platACT.confirmAct(item);
+                        MyWrite(item.msg);
+                        continue;
+                    }
 
                     //固定存款>=50 
+                    //betData bb = item;
+                    //DateTime d = DateTime.Now.AddMinutes(-30);
+                    //DateTime.TryParse(bb.betTime, out d);
+                    //bb.lastOprTime = d.AddMinutes(-10).ToString();
+                    //bb.betTime = "";
+                    item.betTime = "";
+                    item.Types= new string[] { "Account", "Manual", "ThirdPartyPayment", "OnlineWithdraw" };
                     betData bb = platGPK.MemberTransactionSearch(item);
                     if (bb == null)
                     {
@@ -1441,7 +1498,7 @@ namespace AutoWork_Plat1
                     if (!bb.passed)
                     {
                         //账号不存在？
-                        bb.msg = "经查询，您的账号有误！或者此时间段无交易记录 R";
+                        bb.msg = "经查询，此时间段无交易记录 或者交易记录不符合要求R";
                         platACT.confirmAct(bb);
                         MyWrite(bb.msg);
                         continue;
@@ -1461,8 +1518,8 @@ namespace AutoWork_Plat1
                     }
 
                     //一天可以多次 不同的时间 用gamename记录
-                    string sql = "select * from record where pass=1 and aid =" + actInfo[15] + " and LOWER(username)='" + bb.username.ToLower() + "'   and gamename = '" + bb.lastCashTime + "' ";
-                    if (appSittingSet.recorderDbCheck(sql))
+                    string sql = "select * from record where pass=1 and aid =" +bb.aid + " and LOWER(username)='" + bb.username.ToLower() + "'   and gamename = '" + bb.lastCashTime + "' ";
+                    if (SQLiteHelper.SQLiteHelper.recorderDbCheck(sql))
                     {
                         item.passed = false;
                         item.msg = "单笔存款仅限领取一次，此存款您已领取救援彩金了呢！R";
@@ -1483,18 +1540,26 @@ namespace AutoWork_Plat1
                         continue;
                     }
 
-                    //获取详细信息
-                    Gpk_UserDetail userinfo = platGPK.GetUserDetail(bb.username);
-                    //钱包<10元
-                    //if (userinfo.Wallet > 11)
-                    if (userinfo.Balance + userinfo.YuebaoPrincipal > 11)
-                    {
-                        bb.passed = false;
-                        bb.msg = "请账户低于10元的时候立刻申请！R";
-                        platACT.confirmAct(bb);
-                        MyWrite(bb.msg);
-                        continue;
-                    }
+
+                    //有取取款就不符合 即金额< 0  2019年7月15日 13点13分
+                    //item.lastOprTime = item.lastCashTime;
+                    //item.betTime = "";
+                    //item.Types = new string[] { "OnlineWithdraw" };
+                    //bb = platGPK.MemberTransactionSearch(item);
+                    //if (bb == null)
+                    //{
+                    //    continue;
+                    //}
+                    //if (bb.passed) //有取款记录
+                    //{
+                    //    bb.passed = false;
+                    //    bb.msg = "存款至申请期间不能取款，申请未通过~R";
+                    //    platACT.confirmAct(bb);
+                    //    MyWrite(bb.msg);
+                    //    continue;
+                    //}
+
+
 
                     #region 接口关闭了
                     /*
@@ -1589,7 +1654,8 @@ namespace AutoWork_Plat1
                             bb.passed = false;
                             bb.msg = "派彩尚未完成，请等待派彩完毕后再申请！R";
                             platACT.confirmAct(bb);
-                            MyWrite(bb.msg);
+                            string msg = $"活动{bb.aname}用户{bb.username}处理完毕，处理为 {(bb.passed ? "通过" : "不通过")}，回复消息 {bb.msg}";
+                            MyWrite(msg);
                             continue;
                         }
                     }
@@ -1604,7 +1670,8 @@ namespace AutoWork_Plat1
                             bb.passed = false;
                             bb.msg = "此活动仅计算电子游戏所产生的亏损以及投注数据！R";
                             platACT.confirmAct(bb);
-                            MyWrite(bb.msg);
+                            string msg = $"活动{bb.aname}用户{bb.username}处理完毕，处理为 {(bb.passed ? "通过" : "不通过")}，回复消息 {bb.msg}";
+                            MyWrite(msg);
                             continue;
                         }
                     }
@@ -1744,7 +1811,7 @@ namespace AutoWork_Plat1
                     item.aname = actInfo[19];
                     //判断是否提交过 同一用户  只能一次
                     string sql = "select * from record where pass=1 and aid =" + item.aid+ " and LOWER(username)='" + item.username.ToLower() + "'  ";
-                    if (appSittingSet.recorderDbCheck(sql))
+                    if (SQLiteHelper.SQLiteHelper.recorderDbCheck(sql))
                     {
                         item.passed = false;
                         item.msg = "您好，同一账号只能申请一次，申请不通过！R";
@@ -1928,7 +1995,7 @@ namespace AutoWork_Plat1
                         appSittingSet.Log(msg);
 
                         //记录到sqlite数据库
-                        appSittingSet.recorderDb(item);
+                        recorderDb(item);
                     }
                     else
                     {
@@ -1999,7 +2066,7 @@ namespace AutoWork_Plat1
                     item.aname = actInfo[22];
                     //判断是否提交过 同一用户  只能一次
                     string sql = "select * from record where pass=1 and aid =" + item.aid+ " and LOWER(username)='" + item.username.ToLower() + "'  ";
-                    if (appSittingSet.recorderDbCheck(sql))
+                    if (SQLiteHelper.SQLiteHelper.recorderDbCheck(sql))
                     {
                         item.passed = false;
                         item.msg = "您好，同一账号只能申请一次，申请不通过！R";
@@ -2309,7 +2376,7 @@ namespace AutoWork_Plat1
                         appSittingSet.Log(msg);
 
                         //记录到sqlite数据库
-                        appSittingSet.recorderDb(item);
+                        recorderDb(item);
                     }
                     else
                     {
@@ -2377,14 +2444,14 @@ namespace AutoWork_Plat1
                     return;
                 }
 
-                MySQLHelper.connectionString = myConfig["MySqlConnect"].ToString().Split('|')[0];
+                MySQLHelper.MySQLHelper.connectionString = myConfig["MySqlConnect"].ToString().Split('|')[0];
                 foreach (var item in list)
                 {
                     //item.aid = actInfo[18];
                     item.aname = actInfo[19];
                     //判断是否之前提交过 5.1活动
                     string sql = $"select count(id) from e_submissions where aid= {item.aid}  and LOWER(username)='{item.username.ToLower()}' and status=1;";
-                    object o = MySQLHelper.GetScalar(sql);
+                    object o = MySQLHelper.MySQLHelper.GetScalar(sql);
                     if (int.Parse(o.ToString()) > 1)
                     {
                         item.passed = false;
@@ -2401,7 +2468,7 @@ namespace AutoWork_Plat1
 
                     //判断是否提交过 同一用户  只能一次
                     sql = $"select * from record where pass=1 and aid ={item.aid } and LOWER(username)='{ item.username.ToLower() }'  ";
-                    if (appSittingSet.recorderDbCheck(sql))
+                    if (SQLiteHelper.SQLiteHelper.recorderDbCheck(sql))
                     {
                         item.passed = false;
                         item.msg = "您好，同一账号只能申请一次，申请不通过！R";
@@ -2585,7 +2652,7 @@ namespace AutoWork_Plat1
                         appSittingSet.Log(msg);
 
                         //记录到sqlite数据库
-                        appSittingSet.recorderDb(item);
+                        recorderDb(item);
                     }
                     else
                     {
@@ -2660,7 +2727,7 @@ namespace AutoWork_Plat1
 
                     //判断5.1 是否有提交
                     string sql = $"select count(id) from e_submissions where aid= {item.aid}  and LOWER(username)='{item.username}' and status=1;";
-                    object o = MySQLHelper.GetScalar(sql);
+                    object o = MySQLHelper.MySQLHelper.GetScalar(sql);
                     if (int.Parse(o.ToString())> 1)
                     {
                         item.passed = false;
@@ -2677,7 +2744,7 @@ namespace AutoWork_Plat1
 
                     //判断是否提交过 同一用户  只能一次
                     sql = $"select * from record where pass=1 and aid ={item.aid } and LOWER(username)='{ item.username.ToLower() }'  ";
-                    if (appSittingSet.recorderDbCheck(sql))
+                    if (SQLiteHelper.SQLiteHelper.recorderDbCheck(sql))
                     {
                         item.passed = false;
                         item.msg = "您好，同一账号只能申请一次，申请不通过！R";
@@ -2906,7 +2973,7 @@ namespace AutoWork_Plat1
                         appSittingSet.Log(msg);
 
                         //记录到sqlite数据库
-                        appSittingSet.recorderDb(item);
+                        recorderDb(item);
                     }
                     else
                     {
@@ -2995,6 +3062,13 @@ namespace AutoWork_Plat1
         //        }
         //    }
         //}
+
+
+        public static void recorderDb(betData bb)
+        {
+            string sql = $"insert  or ignore into record (username, gamename,betno,chargeMoney,pass,msg,subtime,aid,bbid) values ('{ bb.username}', '{ bb.gamename}','{bb.betno }',{ bb.betMoney },{(bb.passed == true ? 1 : 0) },'{ bb.msg }','{DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd HH:mm:ss") }' , {bb.aid},{bb.bbid})";
+            SQLiteHelper.SQLiteHelper.execSql(sql);
+        }
 
         #endregion
 

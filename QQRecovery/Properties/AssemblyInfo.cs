@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // 有关程序集的一般信息由以下
 // 控制。更改这些特性值可修改
 // 与程序集关联的信息。
-[assembly: AssemblyTitle("QappleLoad")]
+[assembly: AssemblyTitle("QQRecovery")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("QappleLoad")]
+[assembly: AssemblyProduct("QQRecovery")]
 [assembly: AssemblyCopyright("Copyright ©  2019")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // 如果此项目向 COM 公开，则下列 GUID 用于类型库的 ID
-[assembly: Guid("833b86b5-4d78-463d-85cb-6fb60c3f0b04")]
+[assembly: Guid("37822d01-5c74-4010-baa0-12b97af3c2e5")]
 
 // 程序集的版本信息由下列四个值组成: 
 //

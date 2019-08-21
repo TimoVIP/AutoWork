@@ -1,4 +1,5 @@
-﻿using HtmlAgilityPack;
+﻿using BaseFun;
+using HtmlAgilityPack;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -231,7 +232,9 @@ namespace TimoControl
             if (br)
             {
                 //记录到sqlite数据库
-                appSittingSet.recorderDb(bb);
+                //appSittingSet.recorderDb(bb);
+                string sql = $"insert  or ignore into record (username, gamename,betno,chargeMoney,pass,msg,subtime,aid,bbid) values ('{ bb.username}', '{ bb.gamename}','{bb.betno }',{ bb.betMoney },{(bb.passed == true ? 1 : 0) },'{ bb.msg }','{DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd HH:mm:ss") }' , {bb.aid},{bb.bbid})";
+                SQLiteHelper.SQLiteHelper.execSql(sql);
                 string msg = $"用户{bb.username}处理完毕，处理为 {(bb.passed ? "通过" : "不通过")}，回复消息 {bb.msg}";
                 appSittingSet.Log(msg);
             }

@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using BaseFun;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -441,6 +442,15 @@ namespace TimoControl
                 JArray ja = JArray.FromObject(jo["PageData"]);
                 decimal amount = 0;
                 decimal.TryParse(ja[0]["Amount"].ToString(), out amount);
+                if (ja[0]["IsIncome"].ToString().ToLower() == "false")
+                {
+                    amount = 0 - amount;
+                    bb.passed = false;
+                }
+                else
+                {
+                    bb.passed = true;
+                }
                 bb.betMoney = amount;
 
                 decimal subtotal = 0;
@@ -454,7 +464,7 @@ namespace TimoControl
                 //bb.PortalMemo = ja[0]["Memo"].ToString();
                 //bb.lastCashTime = ja[0]["Time"].ToString().Replace("\\", "").Replace("/Date(", "").Replace(")", "").Replace("/","");//计算的时间不对 需要自己来算
                 //bb.lastCashTime = appSittingSet.unixTimeToTime(bb.lastCashTime);//上次存款时间
-                bb.passed = true;
+                //bb.passed = true;
                 bb.total_money = totalMoney;
                 bb.betTimes = total;
                 return bb;
@@ -723,7 +733,7 @@ namespace TimoControl
                     try
                     {
                         //插入到数据库
-                        bool f = appSittingSet.execSql(sb.ToString());
+                        bool f = SQLiteHelper.SQLiteHelper.execSql(sb.ToString());
                         appSittingSet.Log("已经操作页数" + pageIndex);
                     }
                     catch (Exception ex)
@@ -1392,7 +1402,9 @@ namespace TimoControl
                             aid = "1002",
                             bbid = "-"+DateTime.Now.Millisecond.ToString() + new Random().Next(100, 999)//随机值
                         };
-                        appSittingSet.recorderDb(b);
+                        string sql = $"insert  or ignore into record (username, gamename,betno,chargeMoney,pass,msg,subtime,aid,bbid) values ('{ b.username}', '{ b.gamename}','{b.betno }',{ b.betMoney },{(b.passed == true ? 1 : 0) },'{ b.msg }','{DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd HH:mm:ss") }' , {b.aid},{b.bbid})";
+                        SQLiteHelper.SQLiteHelper.execSql(sql);
+                        //appSittingSet.recorderDb(b);
                         //string sql = string.Format("INSERT INTO record (username,gamename,subtime,betno,chargeMoney,pass,msg,aid) VALUES ( '__socket', '{3}', datetime(CURRENT_TIMESTAMP,'localtime'), '{0}', {1}, 0, '{2}', 1002 );", jo["M"][0]["A"][0]["Count"], jo["M"][0]["A"][0]["TotalCommissionable"], jo["M"][0]["A"][0]["TotalPayoff"], socket_id);
                         //sql = $"INSERT INTO record (username,gamename,subtime,betno,chargeMoney,pass,msg,aid) VALUES ( '__socket', '{socket_id}', datetime(CURRENT_TIMESTAMP,'localtime'), '{ jo["M"][0]["A"][0]["Count"]}', { jo["M"][0]["A"][0]["TotalCommissionable"]}, 0, '{ jo["M"][0]["A"][0]["TotalPayoff"]}', 1002 );";
                         //bool b = appSittingSet.execSql(sql);
@@ -1490,7 +1502,9 @@ namespace TimoControl
                                     aid = "1002",
                                     bbid = DateTime.Now.Millisecond.ToString() + new Random().Next(100, 999)//随机值
                                 };
-                                appSittingSet.recorderDb(b);
+                                string sql = $"insert  or ignore into record (username, gamename,betno,chargeMoney,pass,msg,subtime,aid,bbid) values ('{ b.username}', '{ b.gamename}','{b.betno }',{ b.betMoney },{(b.passed == true ? 1 : 0) },'{ b.msg }','{DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd HH:mm:ss") }' , {b.aid},{b.bbid})";
+                                SQLiteHelper.SQLiteHelper.execSql(sql);
+                                //appSittingSet.recorderDb(b);
                                 //string sql = string.Format("INSERT INTO record (username,gamename,subtime,betno,chargeMoney,pass,msg,aid) VALUES ( '__socket', '{3}', datetime(CURRENT_TIMESTAMP,'localtime'), '{0}', {1}, 0, '{2}', 1002 );", jo["M"][0]["A"][0]["Count"], jo["M"][0]["A"][0]["TotalCommissionable"], jo["M"][0]["A"][0]["TotalPayoff"], socket_id);
                                 //bool b = appSittingSet.execSql(sql);
                             }
@@ -1516,7 +1530,7 @@ namespace TimoControl
         public static SoketObjetRecordQuery getSoketDataFromDb(string  aid)
         {
             SoketObjetRecordQuery so = null;
-            DataTable dt = appSittingSet.getDataTableBySql("select  * from record where aid= " + aid + " order by rowid desc limit 1;");
+            DataTable dt =SQLiteHelper.SQLiteHelper.getDataTableBySql("select  * from record where aid= " + aid + " order by rowid desc limit 1;");
             if (dt.Rows.Count>0)
             {
                  so = new SoketObjetRecordQuery()
@@ -1541,7 +1555,7 @@ namespace TimoControl
             decimal TotalPayoff1, TotalPayoff2 = 0;
             string sql = "select  * from record where gamename = '" + socket_id + "' and aid=1002 order by rowid desc limit 2;";
             //sql = "select  * from record where  aid=1002 order by rowid desc limit 2;";
-            DataTable dt = appSittingSet.getDataTableBySql(sql);
+            DataTable dt = SQLiteHelper.SQLiteHelper.getDataTableBySql(sql);
             //2条记录 并且为同一组
             if (dt.Rows.Count == 2 )
             {

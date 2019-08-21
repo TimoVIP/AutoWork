@@ -104,9 +104,17 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\BaseFun\BaseFun.csproj">
+      <Project>{1955a126-44d7-4381-b0dc-00f58ad93d6e}</Project>
+      <Name>BaseFun</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Control\TimoControl.csproj">
       <Project>{c47bdecb-d9e8-4723-80fb-d1b8d4f77423}</Project>
       <Name>TimoControl</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\sqlHelper\SQLHelper.csproj">
+      <Project>{05347f57-8996-46b5-a4d7-5e92ccd0c15a}</Project>
+      <Name>SQLHelper</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

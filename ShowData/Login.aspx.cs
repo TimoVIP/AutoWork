@@ -1,4 +1,6 @@
-﻿using System;
+﻿using BaseFun;
+using SQLHelper;
+using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
@@ -36,7 +38,7 @@ namespace ShowData
             {
                 string sql = "select count(id) from t_user where username=@username and password=@password";
                 password= System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(password, "MD5").ToLower();
-                int i = sqlHelper.ExecuteScalar(sql, new SqlParameter[] { new SqlParameter("@username", username), new SqlParameter("@password", password) });
+                int i =SQLHelper.SQLHelper.ExecuteScalar(sql, new SqlParameter[] { new SqlParameter("@username", username), new SqlParameter("@password", password) });
                 if (i==1)
                 {
                     Session["user"] = Guid.NewGuid();

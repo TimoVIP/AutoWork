@@ -57,9 +57,17 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\BaseFun\BaseFun.csproj">
+      <Project>{1955a126-44d7-4381-b0dc-00f58ad93d6e}</Project>
+      <Name>BaseFun</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Control\TimoControl.csproj">
       <Project>{c47bdecb-d9e8-4723-80fb-d1b8d4f77423}</Project>
       <Name>TimoControl</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\NPOIHelper\NPOIHelper.csproj">
+      <Project>{7a711d02-9ff2-4f8f-b583-44a9ee3e40ab}</Project>
+      <Name>NPOIHelper</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

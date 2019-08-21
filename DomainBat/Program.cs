@@ -1,10 +1,13 @@
 ﻿using MySql.Data.MySqlClient;
+using NPOIHelper;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Text;
-using TimoControl;
+using MySQLHelper;
+using BaseFun;
+//using TimoControl;
 
 namespace DomainBat
 {
@@ -15,7 +18,7 @@ namespace DomainBat
             try
             {
                 string s = appSittingSet.readAppsettings("MySqlConnect").Split('|')[0];
-                MySQLHelper.connectionString = s;
+                MySQLHelper.MySQLHelper.connectionString = s;
                 if (s=="" )
                 {
                     Console.WriteLine("数据库配置有误");
@@ -23,7 +26,7 @@ namespace DomainBat
                 }
                 else
                 {
-                    if (MySQLHelper.conn().State!= ConnectionState.Open)
+                    if (MySQLHelper.MySQLHelper.conn().State!= ConnectionState.Open)
                     {
                         Console.WriteLine("数据库配置有误");
                         return;
@@ -145,7 +148,7 @@ namespace DomainBat
                     old_SSLKeyContent_path= dr[3].ToString();
                     index_++;
 
-                    i+= MySQLHelper.ExecuteSql(sb.ToString(), para);
+                    i+= MySQLHelper.MySQLHelper.ExecuteSql(sb.ToString(), para);
                     //if (index_ % 200==0)
                     //{
                     //    i+= MySQLHelper.ExecuteSql(sb.ToString(), para);

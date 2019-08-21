@@ -1,10 +1,11 @@
-﻿using System;
+﻿using SQLHelper;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Web.UI;
 using System.Web.UI.WebControls;
-using TimoControl;
+//using TimoControl;
 using Wuqi.Webdiyer;
 
 namespace ShowData
@@ -75,11 +76,11 @@ namespace ShowData
 
             AspNetPager1.AlwaysShow = true;
             AspNetPager1.PageSize = 100;
-            AspNetPager1.RecordCount = sqlHelper.ExecuteScalar("select count (id) from t_data where 1=1 " + SelectStr,list.ToArray());
+            AspNetPager1.RecordCount = SQLHelper.SQLHelper.ExecuteScalar("select count (id) from t_data where 1=1 " + SelectStr,list.ToArray());
 
             string sql = " SELECT TOP "+ AspNetPager1.PageSize + " * FROM ( SELECT TOP("+ AspNetPager1.CurrentPageIndex + " * "+ AspNetPager1.PageSize + ") ROW_NUMBER() OVER(ORDER BY id desc) AS RowNum, * FROM t_data WHERE 1=1 "+SelectStr+") AS tempTable WHERE RowNum BETWEEN("+ AspNetPager1.CurrentPageIndex + " - 1) * "+ AspNetPager1.PageSize+ " + 1 AND "+ AspNetPager1.CurrentPageIndex + " * "+ AspNetPager1.PageSize+ " ORDER BY RowNum";
 
-            DataTable dt = sqlHelper.ExecuteSelectDataTable(sql, list.ToArray());
+            DataTable dt = SQLHelper.SQLHelper.ExecuteSelectDataTable(sql, list.ToArray());
 
             if (true)
             {
@@ -94,7 +95,7 @@ namespace ShowData
         {
             string sid = GridView1.DataKeys[e.RowIndex].Value.ToString();//获取绑定的id
             string sql = "update t_data set  state=4  where id=@id";
-            int i = sqlHelper.ExecuteNonQuery(sql, new SqlParameter[] {  new SqlParameter("@id", sid) });
+            int i = SQLHelper.SQLHelper.ExecuteNonQuery(sql, new SqlParameter[] {  new SqlParameter("@id", sid) });
             if (i>0)
             {
                 RepeaterDataBind();
@@ -140,7 +141,7 @@ namespace ShowData
             string username = ((TextBox)(GridView1.Rows[e.RowIndex].Cells[2].Controls[0])).Text;
             string sid = GridView1.DataKeys[e.RowIndex].Value.ToString();//获取绑定的id
             string sql = "update t_data set username =@username,state=1 where id=@id";
-            int i = sqlHelper.ExecuteNonQuery(sql, new SqlParameter[] { new SqlParameter("@username", username), new SqlParameter("@id", sid) });
+            int i = SQLHelper.SQLHelper.ExecuteNonQuery(sql, new SqlParameter[] { new SqlParameter("@username", username), new SqlParameter("@id", sid) });
             GridView1.EditIndex = -1;
             RepeaterDataBind();
 

@@ -1,20 +1,19 @@
-﻿using HtmlAgilityPack;
+﻿using BaseFun;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Web;
-using TimoControl;
-namespace GAC_load
-{
-    public static class platACT2
-    {
+using System.Threading.Tasks;
 
+namespace TimoControl
+{
+    public static  class platQPGV2
+    {
         private static string urlbase { get; set; }
         private static string acc { get; set; }
         private static string pwd { get; set; }
@@ -22,22 +21,23 @@ namespace GAC_load
         private static CookieContainer cookie { get; set; }
 
         private static string subAccount { get; set; }
+        private static string mainAccount { get; set; }
         private static string token { get; set; }
         private static string transNo { get; set; }
 
         /// <summary>
-        /// 登录优惠大厅
+        /// 登录
         /// </summary>
         /// <returns></returns>
         public static bool login()
         {
             try
             {
-                string s1 = appSittingSet.readAppsettings("ACT");
+                string s1 = appSittingSet.readAppsettings("QPG");
                 acc = s1.Split('|')[0];
                 pwd = s1.Split('|')[1];
                 urlbase = s1.Split('|')[2];
-                //uid = s1.Split('|')[3];
+                mainAccount = acc.Split('@')[1];
             }
             catch (Exception ex)
             {
@@ -50,9 +50,10 @@ namespace GAC_load
             {
                 pwd = MD5Encrypt(pwd);//加密
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-                string url = urlbase + $"subAccount/loginOfSubAccount?subAccount={acc}&password={pwd}";
+                string url = urlbase + $"v3/api/merchant/merchantcenter/subAccount/loginOfSubAccount?subAccount={acc}&password={pwd}";
                 HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
                 request.Method = "POST";
+                request.ContentLength = 0;
                 HttpWebResponse response = (HttpWebResponse)request.GetResponse();
                 StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
                 string ret_html = reader.ReadToEnd();
@@ -68,62 +69,13 @@ namespace GAC_load
                 if (jo["message"].ToString() == "操作成功")
                 {
                     subAccount = jo["data"]["subAccount"].ToString();
+                    mainAccount = subAccount.Split('@')[1];
                     token = jo["data"]["token"].ToString();
                     transNo = jo["transNo"].ToString();
                     return true;
                 }
                 else
                     return false;
-
-                /*
-                //request.ProtocolVersion = HttpVersion.Version10;
-                //ServicePointManager.Expect100Continue = true;
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-                //ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | SecurityProtocolType.Tls11;
-                //ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
-
-                //request.Method = "POST";
-                //request.UserAgent = "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0; QQWubi 133; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; Media Center PC 6.0; CIBA; InfoPath.2)";
-                
-
-                request.ContentType = "application/json;charset=utf-8";
-                request.Accept = "application/json";
-
-                //string postdata = string.Format("user={0}&password={1}", acc, pwd);
-                //byte[] bytes = Encoding.UTF8.GetBytes(postdata);
-                //request.ContentLength = bytes.Length;
-                //Stream newStream = request.GetRequestStream();
-                //newStream.Write(bytes, 0, bytes.Length);
-                //newStream.Close();
-
-                cookie = new CookieContainer();
-                cookie.Add(new Cookie("sidebarStatus", "0", "/", "api.qapple.io"));
-                request.CookieContainer = cookie;
-
-
-                //X509Certificate certificate = new X509Certificate(Properties.Resources.cert);
-                //request.ClientCertificates.Add(certificate);
-
-                //X509Certificate2 certificate2 = new X509Certificate2(Properties.Resources.cert);
-                //request.ClientCertificates.Add(certificate);
-
-
-                //X509Store certStore = new X509Store(StoreName.My, StoreLocation.LocalMachine);
-                //certStore.Open(OpenFlags.ReadOnly);
-                //X509Certificate2Collection certCollection = certStore.Certificates.Find(X509FindType.FindBySubjectName, "api.qapple.io", false);
-                //request.ClientCertificates.Add(certCollection[0]);
-
-                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
-
-                string ret_html = reader.ReadToEnd();
-
-                cookie.Add(response.Cookies);
-                reader.Close();
-                reader.Dispose();
-                response.Dispose();
-                request.Abort();
-                */
             }
             catch (WebException ex)
             {
@@ -132,10 +84,6 @@ namespace GAC_load
             }
         }
 
-        /// <summary>
-        /// 获取数据列表
-        /// </summary>
-        /// <returns></returns>
         public static List<betData> getActData()
         {
 
@@ -145,20 +93,27 @@ namespace GAC_load
             {
 
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-                string url = urlbase + $"oc/qryMerchantOrderByCondition?tradeId=&timeStart={DateTime.Now.AddDays(-10).Date.ToString("yyyy-MM-dd")}+00:00:00&timeEnd={DateTime.Now.Date.ToString("yyyy-MM-dd")}+23:59:59&payStatus=PAYED&synStatus=NOT_DEAL&fastSubName=&currentPage=1&pageSize=10";
-               //测试 状态为 已处理 的数据
-                 //url= urlbase + $"oc/qryMerchantOrderByCondition?tradeId=&timeStart={DateTime.Now.AddDays(-10).Date.ToString("yyyy-MM-dd")}+00:00:00&timeEnd={DateTime.Now.Date.ToString("yyyy-MM-dd")}+23:59:59&payStatus=PAYED&synStatus=NORMAL_DEAL&fastSubName=&currentPage=1&pageSize=10";
+                string url = urlbase + $"v1/api/q/funding/backend/merchantPayOrderQueryReq";
 
                 HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
-                request.Method = "GET";
+                request.Method = "POST";
                 request.Headers.Add("logntoken", token);
                 request.Headers.Add("username", subAccount);
                 request.Headers.Add("userrole", "merchant");
                 request.Headers.Add("busitype", "merchant");
                 request.Headers.Add("clitype", "PC");
                 request.Headers.Add("cliv", "1.0.0");
+                request.Headers.Add("X-Tk", token);
 
                 request.CookieContainer = cookie;
+
+                //string postdata = JsonConvert.SerializeObject(new { from = mainAccount, merchant = mainAccount, start_time_min = DateTime.Now.Date.ToString("yyyy-MM-dd") + "00:00:00", start_time_max = DateTime.Now.Date.ToString("yyyy-MM-dd") + "23:59:59", order_status = 2, deposit_status = 0, sub_member_no = "", order_no = "", start_page = 1, page_num = 50 });
+                string postdata = JsonConvert.SerializeObject(new { from = mainAccount, merchant = mainAccount, start_time_min = DateTime.Now.AddHours(-1).ToString("yyyy-MM-dd HH:mm:ss") , start_time_max = DateTime.Now.Date.ToString("yyyy-MM-dd") + "23:59:59", order_status = 2, deposit_status = 0, sub_member_no = "", order_no = "", start_page = 1, page_num = 50 });
+                byte[] bytes = Encoding.UTF8.GetBytes(postdata);
+                request.ContentLength = bytes.Length;
+                Stream newStream = request.GetRequestStream();
+                newStream.Write(bytes, 0, bytes.Length);
+                newStream.Close();
 
                 HttpWebResponse response = (HttpWebResponse)request.GetResponse();
                 StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
@@ -171,33 +126,26 @@ namespace GAC_load
                 request.Abort();
 
                 JObject jo = (JObject)JsonConvert.DeserializeObject(ret_html.ToString());
-                if (jo["message"].ToString() == "操作成功")
+                if (jo["message"].ToString() == "OK")
                 {
-                    //subAccount = jo["data"]["subAccount"].ToString();
-                    //token = jo["data"]["token"].ToString();
-                    //transNo = jo["transNo"].ToString();
-
-                    //会员命不存在的 这个里面可能有 "synDesc":"会员名 w83801326"
-                    JArray ja = JArray.FromObject(jo["data"]);
-
-                    foreach (var item in ja)
+                    if (jo["data"]["orders_array"].ToString().Length > 1)
                     {
-                        betData b = new betData();
-                        b.bbid = item["tradeNo"].ToString();
-                        b.username = item["fastSubName"].ToString();
-                        b.betMoney = decimal.Parse(item["orderAmountRmb"].ToString()) / 10000;
+                        JArray ja = JArray.FromObject(jo["data"]["orders_array"]);
 
-                        if (item["originTradeUq"].ToString().Length>0)
-                            b.Memo = "补单" + item["tradeNo"].ToString();
-                        else
-                            b.Memo = item["tradeNo"].ToString();
+                        foreach (var item in ja)
+                        {
+                            betData b = new betData();
+                            b.bbid = item["orderNo"].ToString().Trim();
+                            b.username = item["subNo"].ToString().Trim();
+                            b.betMoney = decimal.Parse(item["quan"].ToString().Trim()) / 10000;
+                            b.Memo = item["Remark"].ToString().Trim();
 
-                        if (item["synDesc"].ToString().Length == 0)
-                            list.Add(b);
-
+                            //没有备注的加上
+                            if (item["Remark"].ToString().Trim().Length == 0 && item["DepositStatus"].ToString() == "3")
+                                list.Add(b);
+                        }
                     }
                 }
-
                 return list;
             }
             catch (WebException ex)
@@ -225,31 +173,33 @@ namespace GAC_load
         /// <returns></returns>
         public static bool confirmAct(betData b)
         {
-            bool r= false;
+            bool r = false;
             if (!b.passed)
             {
-                r =addRemark(b);
+                r = addRemark(b);
             }
-            r =changeStatus(b);
-
+            r = changeStatus(b);
             if (r)
             {
                 //插入本地数据库
-                appSittingSet.execSql($"insert  or ignore  into record values({0},'{b.bbid}','{b.username}',datetime(CURRENT_TIMESTAMP,'localtime'),0,{(b.passed ? 1 : 0)});");
-                string msg = $"用户{b.username}处理完毕，处理为 {(b.passed ? "通过" : "不通过")}，回复消息 {b.msg} {DateTime.Now.ToString()}";
+                SQLiteHelper.SQLiteHelper.execSql($"insert  or ignore  into record values({0},'{b.bbid}','{b.username}',datetime(CURRENT_TIMESTAMP,'localtime'),0,{(b.passed ? 1 : 0)});");
+                string msg = $"订单{b.bbid}用户{b.username}处理完毕，处理为 {(b.passed ? "通过" : "不通过")}，回复消息 {b.msg} {DateTime.Now.ToString()}";
                 Console.WriteLine(msg);
                 appSittingSet.Log(msg);
             }
             return r;
         }
 
+
         public static bool addRemark(betData b)
         {
             try
             {
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-                string url = urlbase + $"oc/remarkMerchantOrder?tradeNo={b.bbid}&desc={HttpUtility.UrlEncode(b.msg,Encoding.UTF8).ToUpper()}";
+                //string url = urlbase + $"oc/remarkMerchantOrder?tradeNo={b.bbid}&desc={HttpUtility.UrlEncode(b.msg, Encoding.UTF8).ToUpper()}";
                 //string url = urlbase + $"oc/remarkMerchantOrder?tradeNo={b.bbid}&desc={b.msg}";
+                //"https://b.gac.top/v1/api/q/funding/webMerchant/setOrderRemark";
+                string url = urlbase + $"v1/api/q/funding/webMerchant/setOrderRemark";
                 HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
                 request.Method = "POST";
                 request.Headers.Add("logntoken", token);
@@ -258,21 +208,34 @@ namespace GAC_load
                 request.Headers.Add("busitype", "merchant");
                 request.Headers.Add("clitype", "PC");
                 request.Headers.Add("cliv", "1.0.0");
+                request.Headers.Add("X-Tk", token);
 
                 request.CookieContainer = cookie;
                 request.ContentLength = 0;
 
+                string postdata = JsonConvert.SerializeObject(new { from = mainAccount, OrderID = b.bbid, OrderRemark = b.msg });
+                byte[] bytes = Encoding.UTF8.GetBytes(postdata);
+                request.ContentLength = bytes.Length;
+                Stream newStream = request.GetRequestStream();
+                newStream.Write(bytes, 0, bytes.Length);
+                newStream.Close();
+
                 HttpWebResponse response = (HttpWebResponse)request.GetResponse();
                 StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
                 string ret_html = reader.ReadToEnd();
+                JObject jo = (JObject)JsonConvert.DeserializeObject(ret_html);
 
                 cookie.Add(response.Cookies);
                 reader.Close();
                 reader.Dispose();
                 response.Dispose();
                 request.Abort();
-
-                return ret_html.Contains("操作成功");
+                if (jo["message"].ToString() == "OK" && jo["msgDebug"].ToString() == "OK")
+                {
+                    return true;
+                }
+                else
+                    return false;
             }
             catch (WebException ex)
             {
@@ -284,12 +247,12 @@ namespace GAC_load
 
         }
 
-        private static bool changeStatus(betData b)
+        public static bool changeStatus(betData b)
         {
             try
             {
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-                string url = urlbase + $"oc/manualchantOrder?tradeNo={b.bbid}&synStatus=6";
+                string url = urlbase + $"v3/api/merchant/merchantcenter/oc/manualchantOrder?tradeNo={b.bbid}&synStatus=6";
 
                 HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
                 request.Method = "POST";
@@ -302,6 +265,13 @@ namespace GAC_load
 
                 request.CookieContainer = cookie;
                 request.ContentLength = 0;
+
+                //string postdata = JsonConvert.SerializeObject(new { from = mainAccount, OrderID = b.bbid, OrderRemark = b.msg });
+                //byte[] bytes = Encoding.UTF8.GetBytes(postdata);
+                //request.ContentLength = bytes.Length;
+                //Stream newStream = request.GetRequestStream();
+                //newStream.Write(bytes, 0, bytes.Length);
+                //newStream.Close();
 
                 HttpWebResponse response = (HttpWebResponse)request.GetResponse();
                 StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
@@ -340,5 +310,7 @@ namespace GAC_load
             // 返回加密的字符串
             return sb.ToString();
         }
+
+
     }
 }

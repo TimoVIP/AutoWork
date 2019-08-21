@@ -10,6 +10,7 @@ using Newtonsoft.Json.Linq;
 using TimoControl;
 using System.Drawing;
 using System.Drawing.Imaging;
+using BaseFun;
 
 namespace AutoRegTest
 {

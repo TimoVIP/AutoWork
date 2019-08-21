@@ -73,9 +73,9 @@ namespace TestDomo_console
 
             betData tanxi1 = new betData()
             {
-                username = "tanxi",
-                lastCashTime = "2019/02/13 03:16:02",//开始时间
-                lastOprTime = "2019/02/22 12:59:59",//结束时间
+                username = "bwybwy888",
+                //lastCashTime = "2019/02/13 03:16:02",//开始时间
+                //lastOprTime = "2019/02/22 12:59:59",//结束时间
             };
 
             betData tanxi2 = new betData()
@@ -98,8 +98,10 @@ namespace TestDomo_console
 
 
 
-            //b = platGPK.loginGPK();
-
+            b = platGPK.loginGPK();
+            tanxi1.betTime = "";
+            tanxi1.Types = new string[] { "Account", "Manual", "ThirdPartyPayment", "OnlineWithdraw" };
+            tanxi1 = platGPK.MemberTransactionSearch(tanxi1);
 
             //SoketObjetRecordQuery o = platGPK.BetRecordGetInfo(bb);
 
@@ -483,8 +485,10 @@ namespace TestDomo_console
             //var ip1 = Regex.Match(ret_html, @"(?i)(?<=\[)(.*)(?=\])");
 
             //b = platBB.loginBB();
-
-            List<betData> list = platACT.getActData("53");
+            //Console.WriteLine(b);
+            //b = platBB.loginBB_old();
+            //Console.WriteLine(b);
+            //List<betData> list = platACT.getActData("53");
 
             Console.ReadLine();
         }

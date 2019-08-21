@@ -76,6 +76,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\BaseFun\BaseFun.csproj">
+      <Project>{1955A126-44D7-4381-B0DC-00F58AD93D6E}</Project>
+      <Name>BaseFun</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Control\TimoControl.csproj">
       <Project>{c47bdecb-d9e8-4723-80fb-d1b8d4f77423}</Project>
       <Name>TimoControl</Name>

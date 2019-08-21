@@ -1,6 +1,8 @@
-﻿using Newtonsoft.Json;
+﻿using BaseFun;
+using MySQLHelper;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Collections.Concurrent;
+using System;
 using System.Collections.Generic;
 using System.Data;
 
@@ -14,7 +16,7 @@ namespace TimoControl
         //public static List<betData> list { get; set; }
         public static bool loginActivity()
         {
-            return MySQLHelper.conn().State == ConnectionState.Open;
+            return MySQLHelper.MySQLHelper.conn().State == ConnectionState.Open;
         }
         /// <summary>
         /// 获取优惠提交列表
@@ -24,7 +26,7 @@ namespace TimoControl
         public static List<betData> getActData(string aid)
         {
             string sql = $"select id,account,addtime,applyfrom from Give where ActivityId={aid} and `Status`= 0 order by id limit 10;";
-            DataTable dt = MySQLHelper.Query(sql).Tables[0];
+            DataTable dt = MySQLHelper.MySQLHelper.Query(sql).Tables[0];
 
             List<betData> list = new List<betData>();
 
@@ -66,7 +68,7 @@ namespace TimoControl
         public static betData getActData2_time(betData bb)
         {
             string sql = $"select AddTime from Give where Account='{bb.username}' AND ActivityId={bb.aid} AND  `Status`=1 ORDER BY id desc LIMIT 1 ;";
-            object o= MySQLHelper.GetScalar(sql);
+            object o= MySQLHelper.MySQLHelper.GetScalar(sql);
 
             bb.lastOprTime = o != null ? o.ToString() : "";
             return bb;
@@ -80,13 +82,23 @@ namespace TimoControl
         public static bool confirmAct(betData bb)
         {
             //更改数据库状态
-            string sql = $"update Give set Content='{bb.msg}',`Status`={(bb.passed ? 1 : -1)} where id={bb.bbid};";
-            int i = MySQLHelper.ExecuteSql(sql);
+            //string sql = $"update Give set Content='{bb.msg}',`Status`={(bb.passed ? 1 : -1)},passtime=now(),HandleMan='robot' where id={bb.bbid};";
+            //int i = MySQLHelper.ExecuteSql(sql);
+
+            List<string> list = new List<string>();
+            list.Add($"update Give set Content='{bb.msg}',`Status`={(bb.passed ? 1 : -1)},passtime=now(),HandleMan='robot' where id={bb.bbid};");
+            list.Add($"update activity set NoApplyNum = NoApplyNum-1, AlreadyApplyNum= AlreadyApplyNum+1 where Id={bb.aid};");
+            bool b =  MySQLHelper.MySQLHelper.ExecuteNoQueryTran(list);
+
             //记录到sqlite数据库
-            appSittingSet.recorderDb(bb);
-            string msg = $"用户{bb.username}处理完毕，处理为 {(bb.passed ? "通过" : "不通过")}，回复消息 {bb.msg}";
+            //appSittingSet.recorderDb(bb);
+            string sql = $"insert  or ignore into record (username, gamename,betno,chargeMoney,pass,msg,subtime,aid,bbid) values ('{ bb.username}', '{ bb.gamename}','{bb.betno }',{ bb.betMoney },{(bb.passed == true ? 1 : 0) },'{ bb.msg }','{DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd HH:mm:ss") }' , {bb.aid},{bb.bbid})";
+            SQLiteHelper.SQLiteHelper.execSql(sql);
+
+            string msg = $"活动{bb.aname}用户{bb.username}处理完毕，处理为 {(bb.passed ? "通过" : "不通过")}，回复消息 {bb.msg}";
             appSittingSet.Log(msg);
-            return i > 0;
+            //return i > 0;
+            return b;
         }
 
 
@@ -95,7 +107,7 @@ namespace TimoControl
         public static List<betData> getActData_old(string aid)
         {
             string sql = $"select id,username,FROM_UNIXTIME(addtime) addtime,value from e_submissions where aid={aid} and `Status`= 0 order by id limit 10;";
-            DataTable dt = MySQLHelper.Query(sql).Tables[0];
+            DataTable dt = MySQLHelper.MySQLHelper.Query(sql).Tables[0];
 
             List<betData> list = new List<betData>();
 
@@ -146,7 +158,7 @@ namespace TimoControl
         public static betData getActData2_time_old(betData bb)
         {
             string sql = $"select FROM_UNIXTIME(addtime) addtime from e_submissions where username='{bb.username}' AND aid={bb.aid} AND  `Status`=1 ORDER BY id desc LIMIT 1 ;";
-            object o= MySQLHelper.GetScalar(sql);
+            object o= MySQLHelper.MySQLHelper.GetScalar(sql);
 
             bb.lastOprTime = o != null ? o.ToString() : "";
             return bb;
@@ -156,10 +168,12 @@ namespace TimoControl
         {
             //更改数据库状态
             string sql = $"update e_submissions set message= '{bb.msg}',`Status`={(bb.passed ? 1 : 2)} , handletime=unix_timestamp(now()) where id={bb.bbid};";
-            int i = MySQLHelper.ExecuteSql(sql);
+            int i = MySQLHelper.MySQLHelper.ExecuteSql(sql);
             //记录到sqlite数据库
-            appSittingSet.recorderDb(bb);
-            string msg = $"用户{bb.username}处理完毕，处理为 {(bb.passed ? "通过" : "不通过")}，回复消息 {bb.msg}";
+            //appSittingSet.recorderDb(bb);
+            sql = $"insert  or ignore into record (username, gamename,betno,chargeMoney,pass,msg,subtime,aid,bbid) values ('{ bb.username}', '{ bb.gamename}','{bb.betno }',{ bb.betMoney },{(bb.passed == true ? 1 : 0) },'{ bb.msg }','{DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd HH:mm:ss") }' , {bb.aid},{bb.bbid})";
+            SQLiteHelper.SQLiteHelper.execSql(sql);
+            string msg = $"<{bb.aname}>用户{bb.username}处理完毕，处理为 {(bb.passed ? "通过" : "不通过")}，回复消息 {bb.msg}";
             appSittingSet.Log(msg);
             return i > 0;
         }

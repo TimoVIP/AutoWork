@@ -8,6 +8,8 @@ namespace TimoControl
     /// </summary>
     public class betData
     {
+        public string GameTypeName;
+
         public string username { get; set; }
         public string betno { get; set; }
         public string gamename { get; set; }
@@ -75,7 +77,14 @@ namespace TimoControl
         /// 存款类型
         /// </summary>
         public string[] Types { get; set; } = { "Account", "Manual", "ThirdPartyPayment" };
-
+        /// <summary>
+        /// 投注笔数
+        /// </summary>
+        public int hisBetTimes { get; set; }
+        /// <summary>
+        /// 投注金额
+        /// </summary>
+        public int hisBetMoney { get; set; }
     }
 
     /// <summary>

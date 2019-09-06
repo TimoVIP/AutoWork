@@ -55,6 +55,10 @@
       <Project>{c47bdecb-d9e8-4723-80fb-d1b8d4f77423}</Project>
       <Name>TimoControl</Name>
     </ProjectReference>
+    <ProjectReference Include="..\NPOIHelper\NPOIHelper.csproj">
+      <Project>{7A711D02-9FF2-4F8F-B583-44A9EE3E40AB}</Project>
+      <Name>NPOIHelper</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="favicon.ico" />

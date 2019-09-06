@@ -17,7 +17,7 @@ namespace TimoControl
     {
 
         private static string acc { get; set; }
-        private static string pwd { get; set; }
+        public static string pwd { get; set; }
         public static string url_gpk_base { get; set; }
         private static string td_cookie { get; set; }
         public static string connectionId { get; set; }
@@ -142,7 +142,7 @@ namespace TimoControl
                             //连接socket
                             if (needsocket)
                             {
-                                WebSocketConnect();
+                                WebSocketConnect(null);
                             }
                             return true;
                         }
@@ -570,6 +570,10 @@ namespace TimoControl
                 {
                     postData = postData + "\"GameCategories\":" + bb.GameCategories + ",";
                 }
+                if (bb.GameTypeName != null)
+                {
+                    postData = postData + "\"GameTypeName\":\"" + bb.GameTypeName + "\",\"GameTypeNameIsLike\":false,";
+                }                
                 postData = postData + "\"connectionId\":\"" + connectionId + "\"}";
 
                 string postRefere = "MemberDeposit";
@@ -845,7 +849,7 @@ namespace TimoControl
         }
 
         /// <summary>
-        /// 公共方法
+        /// 公共方法 没有改
         /// JARRY 必须顶层 是数组才行
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -1361,7 +1365,7 @@ namespace TimoControl
         /// 连接websocket
         /// </summary>
         /// <returns></returns>
-        public static WebSocketSharp.WebSocket WebSocketConnect()
+        public static WebSocketSharp.WebSocket WebSocketConnect( betData bb)
         {
             //先断开已经有得
             //if (wsk!=null)
@@ -1369,6 +1373,10 @@ namespace TimoControl
             //    wsk.Close(CloseStatusCode.Normal, "主动关闭");
             //    wsk = null;
             //}
+            if (bb == null)
+                bb = new betData() { aid = "0" };
+            //else
+            //    b.aid.Replace("1002", "");
 
             string url = "ws://" + url_gpk_base.Replace("http://", "").Replace("/", "") + "/signalr/connect?transport=webSockets&clientProtocol=1.5&connectionToken=" + System.Web.HttpUtility.UrlEncode(connectionToken) + "&connectionData=%5B%7B%22name%22%3A%22mainhub%22%7D%5D&tid=8";
             WebSocketSharp.WebSocket ws = new WebSocketSharp.WebSocket(url);
@@ -1399,15 +1407,11 @@ namespace TimoControl
                             betMoney = (decimal)jo["M"][0]["A"][0]["TotalCommissionable"],
                             passed = false,
                             msg = jo["M"][0]["A"][0]["TotalPayoff"].ToString(),
-                            aid = "1002",
+                            aid = "1002"+bb.aid,
                             bbid = "-"+DateTime.Now.Millisecond.ToString() + new Random().Next(100, 999)//随机值
                         };
                         string sql = $"insert  or ignore into record (username, gamename,betno,chargeMoney,pass,msg,subtime,aid,bbid) values ('{ b.username}', '{ b.gamename}','{b.betno }',{ b.betMoney },{(b.passed == true ? 1 : 0) },'{ b.msg }','{DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd HH:mm:ss") }' , {b.aid},{b.bbid})";
                         SQLiteHelper.SQLiteHelper.execSql(sql);
-                        //appSittingSet.recorderDb(b);
-                        //string sql = string.Format("INSERT INTO record (username,gamename,subtime,betno,chargeMoney,pass,msg,aid) VALUES ( '__socket', '{3}', datetime(CURRENT_TIMESTAMP,'localtime'), '{0}', {1}, 0, '{2}', 1002 );", jo["M"][0]["A"][0]["Count"], jo["M"][0]["A"][0]["TotalCommissionable"], jo["M"][0]["A"][0]["TotalPayoff"], socket_id);
-                        //sql = $"INSERT INTO record (username,gamename,subtime,betno,chargeMoney,pass,msg,aid) VALUES ( '__socket', '{socket_id}', datetime(CURRENT_TIMESTAMP,'localtime'), '{ jo["M"][0]["A"][0]["Count"]}', { jo["M"][0]["A"][0]["TotalCommissionable"]}, 0, '{ jo["M"][0]["A"][0]["TotalPayoff"]}', 1002 );";
-                        //bool b = appSittingSet.execSql(sql);
                     }
                 }
             };
@@ -1444,7 +1448,7 @@ namespace TimoControl
             wsk = ws;
             return ws;
         }
-
+        /*不用代码
         /// <summary>
         /// websocketclient server 2008 不支持 
         /// </summary>
@@ -1522,7 +1526,7 @@ namespace TimoControl
             }
 
         }
-
+        */
         /// <summary>
         /// 从数据库获取websoket数据 2019年2月27日
         /// </summary>
@@ -1530,14 +1534,16 @@ namespace TimoControl
         public static SoketObjetRecordQuery getSoketDataFromDb(string  aid)
         {
             SoketObjetRecordQuery so = null;
-            DataTable dt =SQLiteHelper.SQLiteHelper.getDataTableBySql("select  * from record where aid= " + aid + " order by rowid desc limit 1;");
+            string sql = $"select  * from record where gamename = '{socket_id}' and aid={"1002" + aid} order by rowid desc limit 1;";
+            //string sql= $"select  * from record where username='__socket'  and aid={"1002" + aid} order by rowid desc limit 1;";
+            DataTable dt =SQLiteHelper.SQLiteHelper.getDataTableBySql(sql);
             if (dt.Rows.Count>0)
             {
                  so = new SoketObjetRecordQuery()
                 {
-                    Count = (int)dt.Rows[0]["betno"],
-                     TotalCommissionable = (decimal)dt.Rows[0]["TotalBetAmount"],
-                      TotalPayoff = (decimal)dt.Rows[0]["TotalPayoff"],
+                    Count =int.Parse(dt.Rows[0]["betno"].ToString()),
+                     TotalCommissionable =decimal.Parse(  dt.Rows[0]["chargeMoney"].ToString()),
+                      TotalPayoff = decimal.Parse(dt.Rows[0]["msg"].ToString()),
                 };
             }
             return so;
@@ -1548,13 +1554,12 @@ namespace TimoControl
         /// 是否需要增加一个范围
         /// </summary>
         /// <returns></returns>
-        public static object getSoketDataFromDbCompare( out decimal chargeMoney)
+        public static object getSoketDataFromDbCompare( out decimal chargeMoney,string aid)
         {
             int count1,count2 = 0;
             decimal TotalBetAmount1, TotalBetAmount2 = 0;
             decimal TotalPayoff1, TotalPayoff2 = 0;
-            string sql = "select  * from record where gamename = '" + socket_id + "' and aid=1002 order by rowid desc limit 2;";
-            //sql = "select  * from record where  aid=1002 order by rowid desc limit 2;";
+            string sql = $"select  * from record where gamename = '{socket_id}' and aid={"1002"+aid} order by rowid desc limit 2;";
             DataTable dt = SQLiteHelper.SQLiteHelper.getDataTableBySql(sql);
             //2条记录 并且为同一组
             if (dt.Rows.Count == 2 )
@@ -1682,6 +1687,306 @@ namespace TimoControl
         }
 
 
+        public static bool RedEnvelopeManagement_GetExcelSum(string filename)
+        {
+            /*
+             http://sts.tjuim.com/RedEnvelopeManagement/GetExcelSum
+             Accept: application/json, text/plain, * /
+            *
+Accept - Encoding: gzip, deflate
+Accept - Language: zh - CN,zh; q = 0.9,en; q = 0.8
+Connection: keep - alive
+Content - Length: 36857
+Content - Type: multipart / form - data; boundary = ----WebKitFormBoundaryyAEoA89yo9jimDkf
+Cookie: language = zh - CN; master = 16fea91d95894b91888ff8f7b41f923a; .ASPXAUTHFORMASTER = 7D143BCC3ED7B137F51E0987A39C4948D6C1EC60587F6C3A9B9C1914ECE073B8DC2AB350D07A8AAFA0F0AFC71E0D94DFA143D00E33AB7592F7DE4F53872C17C3053B04120CE7280B613BDB2571DA0503C64CA75380944A1DD864EE7C272D0DCA44289FC9DA4FAE26F6125A5C7B0557ADC07DA6D5F3B0ACF98936E5D16ABC8A6BA49371BCE9F04B5FFE220F7046020047933022A3AF007D01A05E28004A925EB1708A443A3D8258DB7052D2F3B052A613CBC03FE836691B935059602B7329508BFB0A31FE88F3FF4EEC920728EA18F12051586C79CB40CBB3B32658A3B31A2B7895DCA0ADDC750BEC3FD426E20D0FAC5E25AF59D4; td_cookie = 328096336
+Host: sts.tjuim.com
+Origin: http://sts.tjuim.com
+            Referer: http://sts.tjuim.com/RedEnvelopeManagement/Create
+            User - Agent: Mozilla / 5.0(Windows NT 10.0; Win64; x64) AppleWebKit / 537.36(KHTML, like Gecko) Chrome / 76.0.3809.100 Safari / 537.36
+X - Requested - With: XMLHttpRequest
 
+
+                FileBase: (binary)
+                 */
+            bool flag = false;
+            HttpWebRequest request = null;
+            HttpWebResponse response = null;
+            StreamReader reader = null;
+            try
+            {
+                //提交数据
+                request = WebRequest.Create(url_gpk_base + "RedEnvelopeManagement/GetExcelSum") as HttpWebRequest;
+                request.Method = "POST";
+                request.UserAgent = "Mozilla/4.0";
+                request.KeepAlive = true;
+                request.Accept = "application/json, text/plain, */*";
+                //request.ContentType = "multipart/form-data; boundary=----WebKitFormBoundaryX4DPbIHLA2CmUH0w";//发送的是json数据 注意
+                request.Host = url_gpk_base.Replace("http://", "").Replace("/", "");
+                request.Referer = url_gpk_base + "/RedEnvelopeManagement/Create";
+                request.Headers.Add("Origin", url_gpk_base);
+                request.Headers.Add("X-Requested-With", "XMLHttpRequest");
+                //string postdata = "";
+                //var obj1 = new { AccountsString = bb.username, Amount = bb.betMoney, AmountString = bb.betMoney, Audit = bb.Audit, AuditType = bb.AuditType, DepositToken = ret_html, IsReal = bb.isReal, Memo = bb.Memo, Password = pwd, PortalMemo = bb.PortalMemo, TimeStamp = (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000, Type = bb.Type };
+
+
+                //var obj1 = new { AccountsString = bb.username, Amount = bb.betMoney, AuditType = "None", DepositToken = ret_html, Memo = bb.aname, Password = pwd, PortalMemo = bb.aname, TimeStamp = (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000, Type = 5 };
+                //postdata = "{\"AccountsString\":\"" + bb.username + "\",\"Type\":5,\"DepositToken\":\"" + ret_html + "\",\"AuditType\":\"None\",\"Amount\":" + bb.betMoney + ",\"IsReal\":false,\"PortalMemo\":\"" + aname + "-" + bb.gamename + "-" + bb.betno + "\",\"Memo\":\"" + aname + "-" + bb.gamename + "-" + bb.betno + "\",\"Password\":\"" + pwd + "\",\"TimeStamp\":" + (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000 + "}";
+                //postdata = JsonConvert.SerializeObject(obj1);
+                //需要稽核
+                //if (aname.Contains("消除") || aname.Contains("幸运")  || aname.Contains("APP")|| aname.Contains("救援") || bb.needAudit)
+                //if(bb.needAudit)
+                //{
+                //    if (bb.betAudit==0)
+                //    {
+                //        bb.betAudit = 1;
+                //    }
+                //    var obj2 = new { AccountsString = bb.username, Amount = bb.betMoney, Audit = bb.betMoney * bb.betAudit , AuditType = "Discount", DepositToken = ret_html, Memo = bb.aname, Password = pwd, PortalMemo = bb.aname, TimeStamp = (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000, Type = 5 };
+                //    postdata = JsonConvert.SerializeObject(obj2);
+                //}
+
+                //设置请求头、cookie
+                request.CookieContainer = cookie;
+
+                //发送文件
+                //string formDataBoundary = String.Format("----------{0:N}", Guid.NewGuid());
+                //string contentType = "multipart/form-data; boundary=" + formDataBoundary;
+                ////byte[] formData =
+                //    Stream formDataStream = new System.IO.MemoryStream();
+
+                //string postData = string.Format("--{0}\r\nContent-Disposition: form-data; name=\"{1}\"\r\n\r\n{2}",boundary,param.Key,param.Value);
+                //formDataStream.Write(encoding.GetBytes(postData), 0, encoding.GetByteCount(postData));
+
+                /*
+                //1
+                string boundary = "---------------------------" + DateTime.Now.Ticks.ToString("x");
+                byte[] boundarybytes = Encoding.ASCII.GetBytes("\r\n--" + boundary + "\r\n");
+                request.ContentType= "multipart/form-data; boundary=" + boundary;
+                Stream stream = request.GetRequestStream();
+                string formdataTemplate = "Content-Disposition: form-data; name=\"{0}\"\r\n\r\n{1}";
+
+                stream.Write(boundarybytes, 0, boundarybytes.Length);
+                byte[] formitembytes = Encoding.UTF8.GetBytes(filename);
+                stream.Write(formitembytes, 0, formitembytes.Length);
+                stream.Write(boundarybytes, 0, boundarybytes.Length);
+                string headerTemplate = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\nContent-Type: {2}\r\n\r\n";
+                string header = string.Format(headerTemplate, "file", Path.GetFileName(filename), Path.GetExtension(filename));
+                byte[] headerbytes = Encoding.UTF8.GetBytes(header);
+                stream.Write(headerbytes, 0, headerbytes.Length);
+
+                FileStream fileStream = new FileStream(filename, FileMode.Open, FileAccess.Read);
+                byte[] buffer = new byte[4096];
+                int bytesRead = 0;
+                while ((bytesRead = fileStream.Read(buffer, 0, buffer.Length)) != 0)
+                    stream.Write(buffer, 0, bytesRead);
+                fileStream.Close();
+
+                byte[] trailer = Encoding.ASCII.GetBytes("\r\n--" + boundary + "--\r\n");
+                stream.Write(trailer, 0, trailer.Length);
+                stream.Close();
+                //1
+                */
+
+                //2
+                //"multipart/form-data; boundary=----WebKitFormBoundarybDKJa9ZpJWmQg1xV"
+                string boundary = DateTime.Now.Ticks.ToString("X"); // 随机分隔线
+                boundary = "----WebKitFormBoundarybDKJa9ZpJWmQg1xV";
+                request.ContentType = "multipart/form-data; boundary=" + boundary;
+                byte[] itemBoundaryBytes = Encoding.UTF8.GetBytes("\r\n--" + boundary + "\r\n");
+                byte[] endBoundaryBytes = Encoding.UTF8.GetBytes("\r\n--" + boundary + "--\r\n");
+                Stream postStream = request.GetRequestStream();
+                postStream.Write(itemBoundaryBytes, 0, itemBoundaryBytes.Length);
+
+
+               string sbHeader =$"Content-Disposition:form-data;name=\"FileBase\";filename=\"{filename.Substring(filename.LastIndexOf("\\") + 1)}\"\r\nContent-Type:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet\r\n\r\n\r\n";
+                byte[] postHeaderBytes = Encoding.UTF8.GetBytes(sbHeader);
+
+                FileStream fs = new FileStream(filename, FileMode.Open, FileAccess.Read);
+                byte[] bArr = new byte[fs.Length];
+                fs.Read(bArr, 0, bArr.Length);
+                fs.Close();
+                postStream.Write(postHeaderBytes, 0, postHeaderBytes.Length);
+                postStream.Write(bArr, 0, bArr.Length);
+
+                postStream.Write(itemBoundaryBytes, 0, itemBoundaryBytes.Length);
+                postStream.Write(endBoundaryBytes, 0, endBoundaryBytes.Length); //结束标志
+                postStream.Close();
+
+
+                //2
+
+                response = (HttpWebResponse)request.GetResponse();
+                reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
+                string ret_html = reader.ReadToEnd();
+                // {"ReturnObject":null,"IsSuccess":false,"ErrorMessage":"DEPOSITIMPORT_FileErrorPattern"}
+
+                //{"TotalMemberCount":5,"TotalAmount":103.44,"TotalAudit":103.44,"FailCount":0}
+
+
+
+
+
+                /*
+                //发送数据
+                //byte[] bytes = Encoding.UTF8.GetBytes(postdata);
+                FileStream fileStream = new FileStream(filename, FileMode.Open, FileAccess.Read);
+                byte[] bytes = new byte[fileStream.Length];
+                fileStream.Read(bytes, 0, (int)fileStream.Length);
+
+                request.ContentLength = fileStream.Length;
+
+                Stream newStream = request.GetRequestStream();
+                newStream.Write(bytes, 0, bytes.Length);
+                newStream.Flush();
+                newStream.Close();
+
+                response = (HttpWebResponse)request.GetResponse();
+                reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
+                object ret_html = reader.ReadToEnd();
+
+                if (response.StatusCode == HttpStatusCode.OK)
+                {
+                    flag = true;
+                }
+
+
+                */
+                if (ret_html.Contains("TotalMemberCount") && ret_html.Contains("TotalAmount"))
+                {
+                    flag = true;
+                }
+
+                response.Close();
+                response.Dispose();
+                return flag;
+            }
+            catch (WebException ex)
+            {
+                appSittingSet.Log($"导入数据失败：文件名 {filename}");
+                flag = false;
+            }
+
+            return flag;
+        }
+        public static bool RedEnvelopeManagement_GetExcelSum(string filename,Dictionary<string,string> postData)
+        {
+            /*
+             http://sts.tjuim.com/RedEnvelopeManagement/GetExcelSum
+             Accept: application/json, text/plain, * /
+            *
+Accept - Encoding: gzip, deflate
+Accept - Language: zh - CN,zh; q = 0.9,en; q = 0.8
+Connection: keep - alive
+Content - Length: 36857
+Content - Type: multipart / form - data; boundary = ----WebKitFormBoundaryyAEoA89yo9jimDkf
+Cookie: language = zh - CN; master = 16fea91d95894b91888ff8f7b41f923a; .ASPXAUTHFORMASTER = 7D143BCC3ED7B137F51E0987A39C4948D6C1EC60587F6C3A9B9C1914ECE073B8DC2AB350D07A8AAFA0F0AFC71E0D94DFA143D00E33AB7592F7DE4F53872C17C3053B04120CE7280B613BDB2571DA0503C64CA75380944A1DD864EE7C272D0DCA44289FC9DA4FAE26F6125A5C7B0557ADC07DA6D5F3B0ACF98936E5D16ABC8A6BA49371BCE9F04B5FFE220F7046020047933022A3AF007D01A05E28004A925EB1708A443A3D8258DB7052D2F3B052A613CBC03FE836691B935059602B7329508BFB0A31FE88F3FF4EEC920728EA18F12051586C79CB40CBB3B32658A3B31A2B7895DCA0ADDC750BEC3FD426E20D0FAC5E25AF59D4; td_cookie = 328096336
+Host: sts.tjuim.com
+Origin: http://sts.tjuim.com
+            Referer: http://sts.tjuim.com/RedEnvelopeManagement/Create
+            User - Agent: Mozilla / 5.0(Windows NT 10.0; Win64; x64) AppleWebKit / 537.36(KHTML, like Gecko) Chrome / 76.0.3809.100 Safari / 537.36
+X - Requested - With: XMLHttpRequest
+
+
+                FileBase: (binary)
+                 */
+            bool flag = false;
+            HttpWebRequest request = null;
+            HttpWebResponse response = null;
+            StreamReader reader = null;
+            try
+            {
+                //提交数据
+                request = WebRequest.Create(url_gpk_base + "RedEnvelopeManagement/AddRedEnvelope") as HttpWebRequest;
+                request.Method = "POST";
+                request.UserAgent = "Mozilla/4.0";
+                request.KeepAlive = true;
+                request.Accept = "application/json, text/plain, */*";
+                //request.ContentType = "multipart/form-data; boundary=----WebKitFormBoundaryX4DPbIHLA2CmUH0w";//发送的是json数据 注意
+                request.Host = url_gpk_base.Replace("http://", "").Replace("/", "");
+                request.Referer = url_gpk_base + "/RedEnvelopeManagement/Create";
+                request.Headers.Add("Origin", url_gpk_base);
+                request.Headers.Add("X-Requested-With", "XMLHttpRequest");
+
+                //设置请求头、cookie
+                request.CookieContainer = cookie;
+
+
+                //2
+
+                string boundary = DateTime.Now.Ticks.ToString("X"); // 随机分隔线
+                boundary = "----WebKitFormBoundarybDKJa9ZpJWmQg1xV";
+                request.ContentType = "multipart/form-data; boundary=" + boundary;
+                byte[] itemBoundaryBytes = Encoding.UTF8.GetBytes("\r\n--" + boundary + "\r\n");
+                byte[] endBoundaryBytes = Encoding.UTF8.GetBytes("\r\n--" + boundary + "--\r\n");
+                Stream postStream = request.GetRequestStream();
+                postStream.Write(itemBoundaryBytes, 0, itemBoundaryBytes.Length);
+
+                //写入文本
+                if (postData != null && postData.Count > 0)
+                {
+
+                    var keys = postData.Keys;
+                    foreach (var key in keys)
+                    {
+                        string strHeader = $"Content-Disposition: form-data; name=\"{key}\"\r\n\r\n";
+                        byte[] strByte = Encoding.UTF8.GetBytes(strHeader);
+                        postStream.Write(strByte, 0, strByte.Length);
+
+                        byte[] value = Encoding.UTF8.GetBytes(string.Format("{0}", postData[key]));
+                        postStream.Write(value, 0, value.Length);
+
+                        postStream.Write(itemBoundaryBytes, 0, itemBoundaryBytes.Length);
+
+                    }
+                }
+                postStream.Write(itemBoundaryBytes, 0, itemBoundaryBytes.Length);
+
+                string sbHeader = $"Content-Disposition:form-data;name=\"FileBase\";filename=\"{filename.Substring(filename.LastIndexOf("\\") + 1)}\"\r\nContent-Type:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet\r\n\r\n\r\n";
+                byte[] postHeaderBytes = Encoding.UTF8.GetBytes(sbHeader);
+
+                FileStream fs = new FileStream(filename, FileMode.Open, FileAccess.Read);
+                byte[] bArr = new byte[fs.Length];
+                fs.Read(bArr, 0, bArr.Length);
+                fs.Close();
+                postStream.Write(postHeaderBytes, 0, postHeaderBytes.Length);
+                postStream.Write(bArr, 0, bArr.Length);
+
+                postStream.Write(itemBoundaryBytes, 0, itemBoundaryBytes.Length);
+                postStream.Write(endBoundaryBytes, 0, endBoundaryBytes.Length); //结束标志
+                postStream.Close();
+
+
+                //2
+
+                response = (HttpWebResponse)request.GetResponse();
+                reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
+                string ret_html = reader.ReadToEnd();
+                // {"ReturnObject":null,"IsSuccess":false,"ErrorMessage":"DEPOSITIMPORT_FileErrorPattern"}
+                //{"TotalMemberCount":5,"TotalAmount":103.44,"TotalAudit":103.44,"FailCount":0}
+
+                //{"ReturnObject":3,"IsSuccess":true,"ErrorMessage":null}
+                JObject jo = (JObject)JsonConvert.DeserializeObject(ret_html.ToString());
+                if (jo["IsSuccess"]!=null && jo["IsSuccess"].ToString().ToLower()=="true")
+                {
+                    flag = true;
+                }
+
+                //if (ret_html.Contains("TotalMemberCount") && ret_html.Contains("TotalAmount"))
+                //{
+                //    flag = true;
+                //}
+
+          
+                response.Close();
+                response.Dispose();
+                return true;
+            }
+            catch (WebException ex)
+            {
+                appSittingSet.Log($"导入数据失败：文件名 {filename}");
+                flag = false;
+            }
+
+            return flag;
+        }
     }
 }

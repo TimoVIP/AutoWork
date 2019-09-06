@@ -65,6 +65,10 @@
       <Project>{c47bdecb-d9e8-4723-80fb-d1b8d4f77423}</Project>
       <Name>TimoControl</Name>
     </ProjectReference>
+    <ProjectReference Include="..\MySQLHelper\MySQLHelper.csproj">
+      <Project>{6b6ff48f-5095-413e-8c9d-20e8fc36e9dc}</Project>
+      <Name>MySQLHelper</Name>
+    </ProjectReference>
     <ProjectReference Include="..\NPOIHelper\NPOIHelper.csproj">
       <Project>{7a711d02-9ff2-4f8f-b583-44a9ee3e40ab}</Project>
       <Name>NPOIHelper</Name>

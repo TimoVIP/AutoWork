@@ -305,29 +305,36 @@ namespace GAC_load
                 opt.AddArgument("--headless");
                 opt.AddArgument("--disable-gpu");
                 //禁用扩展之类
-                opt.AddArgument("--audio-output-channels=0");
+                //opt.AddArgument("--audio-output-channels=0");
                 opt.AddArgument("--disable-default-apps");
                 opt.AddArgument("--disable-extensions");
                 opt.AddArgument("--disable-translate");
                 opt.AddArgument("--disable-sync");
                 opt.AddArgument("--hide-scrollbars");
                 opt.AddArgument("--mute-audio");
+                opt.AddArgument("--disable-logging");
+
 
                 if (selenium==null)
                 {
                     selenium = new ChromeDriver(opt);
-
+                    //加上会报错
+                    //selenium.Manage().Timeouts().PageLoad = TimeSpan.FromMilliseconds(200);
+                    //selenium.Manage().Timeouts().AsynchronousJavaScript = TimeSpan.FromMilliseconds(200);
                 }
-                selenium.Manage().Timeouts().PageLoad = TimeSpan.FromMilliseconds(100);
-                //selenium = new PhantomJSDriver();
-                selenium.Url = urlbase;
+                if (selenium.Url.Contains("index/admin"))
+                {
+                    return true;
+                }
+
+                selenium.Navigate().GoToUrl(urlbase);
+                Thread.Sleep(200);
                 selenium.FindElement(By.Id("username")).SendKeys(acc);
                 selenium.FindElement(By.Id("txtPasword")).SendKeys(pwd);
                 selenium.FindElement(By.Name("submit")).Click();
-                selenium.Manage().Timeouts().PageLoad = TimeSpan.FromMilliseconds(100);
-                //Thread.Sleep(200);
+                Thread.Sleep(200);
                 //判断是否登陆 
-                if (selenium.Title.Contains("管理员") || selenium.Title.Contains("后台"))
+                if (selenium.Title.Contains("管理员") || selenium.Title.Contains("后台") || selenium.Url.Contains("index/admin"))
                 {
                     return true;
                 }
@@ -363,14 +370,13 @@ namespace GAC_load
                 }
 
                 //导航到充值页面 模拟充值
-                //IWebDriver selenium = new ChromeDriver();
-                selenium.Manage().Timeouts().PageLoad = TimeSpan.FromMilliseconds(200);
                 selenium.Navigate().GoToUrl($"{urlbase}money/amount-recharge?");
+                Thread.Sleep(200);
                 selenium.FindElement(By.Name("username")).SendKeys(b.username);
                 selenium.FindElement(By.Name("amount")).SendKeys(b.betMoney.ToString());
                 selenium.FindElement(By.Name("remark")).SendKeys(b.bbid);
                 selenium.FindElement(By.Name("sub_btn")).Click();
-                selenium.Manage().Timeouts().PageLoad = TimeSpan.FromMilliseconds(200);
+                Thread.Sleep(200);
                 //查看返回信息
                 if (selenium.PageSource.Contains("没有找到匹配输入的记录"))
                 {

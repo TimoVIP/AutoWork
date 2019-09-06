@@ -1,11 +1,8 @@
-﻿using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
-using Quartz;
+﻿using Quartz;
 using Quartz.Impl;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Threading;
 using System.Threading.Tasks;
 using TimoControl;
 using BaseFun;
@@ -21,9 +18,15 @@ namespace GAC_load
             Console.Title = appSittingSet.readAppsettings("platname") ;
             Console.TreatControlCAsInput = true;
 
+
             //先登录一遍
             job_log myjob1 = new job_log();
             myjob1.Execute(null);
+
+            //测试
+            //bool b = platQPGV2.changeStatus(new betData() { bbid = "jgnszkhilz4", msg = "机器人测试", passed = false });
+
+
             //执行
             TestAsyncJob();
 
@@ -71,12 +74,6 @@ namespace GAC_load
                     //item.passed = true;
                     //platQPGV2.confirmAct(item);
                     //continue;
-
-
-                    //查询是否在数据库 里面有判断重复
-                    //bool e = appSittingSet.recorderDbCheck($"select * from record where order_no='{item.bbid}';");
-                    //if (e)
-                    //    continue;
 
                     //金额是否超出 
                     if (item.betMoney > max)

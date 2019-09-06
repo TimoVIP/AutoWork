@@ -973,7 +973,7 @@ namespace AutoAppSign
                 if (dt.Rows.Count == 0)
                 {
                     //没有记录
-                    MyWrite(aname[4] + "没有新的信息，等待下次执行 ");
+                    MyWrite(aname[6] + "没有新的信息，等待下次执行 ");
                     SQLiteHelper.SQLiteHelper.execSql("delete  from record where type=1004");
                     return;
                 }

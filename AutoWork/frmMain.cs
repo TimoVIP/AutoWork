@@ -37,6 +37,7 @@ namespace AutoWork_Plat1
         static string[] Prob;
         static string[] mailbody;
         static string[] KindCategories;
+        static int[] LuckNum_tg;
         static List<betData> list_temp = new List<betData>();
         static Hashtable myConfig;
         NotifyIcon notify;
@@ -82,6 +83,9 @@ namespace AutoWork_Plat1
                 //{
                 //    Act4Set[i] = int.Parse(a41[i]);
                 //}
+
+                //糖果的奖励级别
+                LuckNum_tg = Array.ConvertAll(myConfig["LuckNum_tg"].ToString().Split(new char[] { '|', '@' }, StringSplitOptions.RemoveEmptyEntries), int.Parse);
 
                 actInfo = myConfig["actInfo"].ToString().Split(new char[] { '|', '@' }, StringSplitOptions.RemoveEmptyEntries);
                 maxValue = int.Parse(myConfig["MaxValue"].ToString());
@@ -151,6 +155,12 @@ namespace AutoWork_Plat1
                 //0 6 12 18 小时1:10s 执行 登陆
                 sched.ScheduleJob(JobBuilder.Create<MyJob_login>().Build(), TriggerBuilder.Create().WithCronSchedule("10 1 0,6,12,18 * * ? ").Build());
             }
+
+            //for (int i = 0; i < myConfig["actInfo"].ToString().Split('|').Length; i++)
+            //{
+
+            //}
+
             //5秒一次 消除奖
             if (actInfo[2] == "1")
             {
@@ -171,7 +181,7 @@ namespace AutoWork_Plat1
             {
                 sched.ScheduleJob(JobBuilder.Create<MyJob5>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval[3]).RepeatForever()).Build());
             }
-            //8秒一次 体验金活动 送28 
+            //体验金活动 送28 
             if (actInfo[14] == "1")
             {
                 sched.ScheduleJob(JobBuilder.Create<MyJob6>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval[4]).RepeatForever()).Build());
@@ -195,14 +205,21 @@ namespace AutoWork_Plat1
 
 
             //登陆有礼
+            //if (actInfo[20] == "1")
+            //{
+            //    sched.ScheduleJob(JobBuilder.Create<MyJob10>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval[6]).RepeatForever()).Build());
+            //}
+            ////存款即送
+            //if (actInfo[23] == "1")
+            //{
+            //    sched.ScheduleJob(JobBuilder.Create<MyJob11>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval[7]).RepeatForever()).Build());
+            //}
+
+            //BBIN糖果派对1/2
             if (actInfo[20] == "1")
             {
-                sched.ScheduleJob(JobBuilder.Create<MyJob10>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval[6]).RepeatForever()).Build());
-            }
-            //存款即送
-            if (actInfo[23] == "1")
-            {
-                sched.ScheduleJob(JobBuilder.Create<MyJob11>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval[7]).RepeatForever()).Build());
+                platGPK.needsocket = true;
+                sched.ScheduleJob(JobBuilder.Create<MyJob12>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval[6]).RepeatForever()).Build());
             }
 
             //开始运行
@@ -485,7 +502,7 @@ namespace AutoWork_Plat1
                         {
                             //记录到数据库
                             recorderDb(bb);
-                            bb.msg = "恭喜您，您申请的<" + bb.aname + ">已通过活动专员的检验 R";
+                            bb.msg = $"恭喜您，您申请的<{bb.aname}>已通过活动专员的检验 R";
                             bool b8 = platACT.confirmAct(bb);
                             MyWrite(bb.msg);
                         }
@@ -1360,19 +1377,18 @@ namespace AutoWork_Plat1
                 }
 
                 //如果最后一条的时间大于10分钟就重新连接
-                //DateTime dt = DateTime.Parse(list[list.Count - 1].betTime);
                 DateTime dt = DateTime.Parse(list.First().betTime);
                 if (platGPK.wsk == null)
                 {
                     appSittingSet.Log("连接websocekt1");
-                    platGPK.WebSocketConnect();
+                    platGPK.WebSocketConnect(list[0]);
                 }
                 else
                 {
                     if (DateTime.Now.AddMinutes(-10) > dt || list.Count > 5 || platGPK.wsk.ReadyState != WebSocketSharp.WebSocketState.Open)
                     {
                         appSittingSet.Log("连接websocekt2");
-                        platGPK.WebSocketConnect();
+                        platGPK.WebSocketConnect(list[0]);
                     }
                 }
 
@@ -1399,7 +1415,7 @@ namespace AutoWork_Plat1
                 foreach (var item in list)
                 {
                     //先删除 表里面的socket 记录
-                    SQLiteHelper.SQLiteHelper.execSql("delete from record where aid=1002");
+                    SQLiteHelper.SQLiteHelper.execSql($"delete from record where aid=1002{item.aid}");
 
                     //记录一个list 去除重复后 的第9，10 条 直接拒绝掉
 
@@ -1662,7 +1678,7 @@ namespace AutoWork_Plat1
                     Thread.Sleep(500);
                     //查询一次数据库 看是否符合
                     decimal chargeMoney = 0;
-                    object o = platGPK.getSoketDataFromDbCompare(out chargeMoney);
+                    object o = platGPK.getSoketDataFromDbCompare(out chargeMoney,item.aid);
                     if (o != null)
                     {
                         if (!(bool)o)
@@ -3012,6 +3028,186 @@ namespace AutoWork_Plat1
 
             }
         }
+
+        /// <summary>
+        /// 糖果派对活动
+        /// </summary>
+        [DisallowConcurrentExecution]
+        public class MyJob12 : IJob
+        {
+            public void Execute(IJobExecutionContext context)
+            {
+                //获取注单号码  yh
+                List<betData> list = platACT.getActData(actInfo[18]);
+                if (list == null)
+                {
+                    MyWrite(actInfo[19] + " 没有获取到记录，等待下次执行 ");
+                    return;
+                }
+                if (list.Count == 0)
+                {
+                    MyWrite(actInfo[19] + "没有新的记录，等待下次执行 ");
+                    return;
+                }
+
+
+                //获取注单详情
+                foreach (var item in list)
+                {
+
+                    //如果最后一条的时间大于10分钟就重新连接
+                    DateTime dt = DateTime.Parse(list.First().betTime);
+                    if (platGPK.wsk == null)
+                    {
+                        appSittingSet.Log("连接websocekt3");
+                        platGPK.WebSocketConnect(list[0]);
+                    }
+                    //else
+                    //{
+                    //    if (DateTime.Now.AddMinutes(-10) > dt || list.Count > 5 || platGPK.wsk.ReadyState != WebSocketSharp.WebSocketState.Open)
+                    //    {
+                    //        appSittingSet.Log("连接websocekt4");
+                    //        platGPK.WebSocketConnect(list[0]);
+                    //    }
+                    //}
+
+                    item.aname = actInfo[19];
+                    //先删除 表里面的socket 记录
+                    SQLiteHelper.SQLiteHelper.execSql($"delete from record where aid=1002{item.aid}");
+
+                    //判断 游戏 名称
+                    bool flag2 = false;
+                    foreach (var g in gameNames[2].Split('@'))
+                    {
+                        if (g == item.gamename)
+                        {
+                            flag2 = true;
+                            break;
+                        }
+                    }
+                    if (!flag2)
+                    {
+                        item.passed = false;
+                        //bb.msg = string.Format("此活动仅限{0}游戏 R", gameNames[1].Replace("@", ","));
+                        item.msg = "此活动仅限活动公布的游戏类型R";
+                        platACT.confirmAct(item);
+                        MyWrite(item.msg);
+                        continue;
+                    }
+
+                    //判断是否提交过 同一用户 所有游戏 一天只能一次
+                    string dt_ = DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd");
+                    string sql = "select * from record where pass=1 and aid =" + item.aid + " and LOWER(username)='" + item.username.ToLower() + "'   and subtime > '" + dt_ + " 00:00:01' and  subtime < '" + dt_ + " 23:59:59' ";
+                    if (SQLiteHelper.SQLiteHelper.recorderDbCheck(sql))
+                    {
+                        item.passed = false;
+                        item.msg = "您好，同一账号一天内只能申请一次，申请不通过！R";
+                        platACT.confirmAct(item);
+                        MyWrite(item.msg);
+                        continue;
+                    }
+
+                    //获取详细信息
+                    Gpk_UserDetail userinfo = platGPK.GetUserDetail(item.username);
+                    if (userinfo == null)
+                    {
+                        //账号不存在？
+                        item.passed = false;
+                        item.msg = "经查询，您的账号有误！ R";
+                        platACT.confirmAct(item);
+                        string msg = $"活动{item.aname}用户{item.username}处理完毕，处理为 {(item.passed ? "通过" : "不通过")}，回复消息 {item.msg}";
+                        MyWrite(msg);
+                        continue;
+                    }
+
+                    //判断 层级是否在 列表之中
+                    foreach (var s in FiliterGroups)
+                    {
+                        if (userinfo.MemberLevelSettingId == s)
+                        {
+                            item.passed = false;
+                            item.msg = "经查询，您的账号目前不享有此优惠！ R";
+                            break;
+                        }
+                    }
+                    if (!item.passed)
+                    {
+                        //回填失败
+                        platACT.confirmAct(item);
+                        MyWrite(item.msg);
+                        continue;
+                    }
+
+                    //获取投注的金额
+                    //发送一次 查询 糖果派对
+                    item.GameCategories = null;
+                    item.GameTypeName = item.gamename;
+                    item.lastCashTime = DateTime.Now.AddDays(-0.5).Date.ToString();
+                    item.lastOprTime = null;
+
+                    platGPK.socket_id = item.bbid;
+
+                    object o2 = platGPK.BetRecordSearch(item);
+                    if ((bool)o2)
+                    {
+                        //回填
+                        item.passed = false;
+                        item.msg = "您申请的<" + item.aname + ">有效投注没有达到要求";
+                        platACT.confirmAct(item);
+                        MyWrite(item.msg);
+                        continue;
+                    }
+
+
+                    Thread.Sleep(1000);//等待1秒
+                    //查询数据库 投注总额
+                    SoketObjetRecordQuery so = platGPK.getSoketDataFromDb(item.aid);
+                    if (so == null)
+                        continue;
+
+                    //计算 需要加钱 的数字 
+                    item.betMoney = 0;
+                    item.passed = false;
+
+                    for (int i = 0 ; i < LuckNum_tg.Length-1; i += 2)
+                    {
+                        if (so.TotalCommissionable> LuckNum_tg[i])
+                        {
+                            item.betMoney = LuckNum_tg[i + 1];
+                            item.passed = true;
+                            break;
+                        }
+                    }
+
+                        
+                    if (item.passed)
+                    {
+                        //加钱  提交数据
+                        item.AuditType = "Discount";
+                        item.Audit = item.betMoney;
+                        item.Memo = item.aname;
+                        item.Type = 5;
+
+                        bool fr = platGPK.MemberDepositSubmit(item);
+                        //回填
+                        item.msg = "恭喜您，您申请的<" + item.aname + ">已通过活动专员的检验";
+                        platACT.confirmAct(item);
+                        MyWrite(item.msg);
+                        continue;
+                    }
+                    else
+                    {
+                        //回填
+                        item.msg = "您申请的<" + item.aname + ">有效投注没有达到要求";
+                        platACT.confirmAct(item);
+                        MyWrite(item.msg);
+                        continue;
+                    }
+                }
+            }
+        }
+
+
 
         #endregion
 

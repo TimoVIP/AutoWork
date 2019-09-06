@@ -540,8 +540,8 @@ namespace TimoControl
         {
             try
             {
-                string url_betorderList = url_betBase + "game/betrecord_search/kind5?SearchData=BetQuery&BarID=2&GameKind=5&Wagersid={0}&Limit=100&Sort=DESC";
-                HttpWebRequest request = WebRequest.Create(string.Format(url_betorderList, bb.betno)) as HttpWebRequest;
+                string url_betorderList = $"{url_betBase}game/betrecord_search/kind5?SearchData=BetQuery&BarID=2&GameKind=5&Wagersid={bb.betno}&Limit=100&Sort=DESC";
+                HttpWebRequest request = WebRequest.Create(url_betorderList) as HttpWebRequest;
 
                 request.Method = "GET";
                 request.UserAgent = "Mozilla/4.0";
@@ -795,8 +795,12 @@ namespace TimoControl
                 request.Accept = "application/json, text/plain, */*";
                 request.ContentType = "application/json;charset=UTF-8";
                 request.Referer = url_betBase + "vi/login";
-                request.Host = url_betBase.Replace("https://", "").Replace("/", "");
+                request.Host = url_betBase.Replace("https://", "").Replace("/", "").Split(':')[0];
                 request.Headers.Add("Origin", url_betBase);
+                request.Headers.Add("Sec-Fetch-Mode", "cors");
+                request.Headers.Add("Sec-Fetch-Site", "same-origin");
+
+
                 var obj = new { username = acc, password = pwd };
                 string postdata = JsonConvert.SerializeObject(obj);
                 //string  postdata = "{\"username\":\"" + acc + "\",\"password\":\"" + pwd + "\"}";
@@ -804,9 +808,10 @@ namespace TimoControl
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | SecurityProtocolType.Tls11;
                 //证书错误
                 ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
-                cookie.Add(new Cookie("T0_IPL_AVRbbbbbbbbbbbbbbbb", "DJHIACLIACKJMGICMAMNAFMEHAOCLFEHHGDEENPIHCMPBCBMOOLKJHPLFPEKEOKDJLFFIBDIHNLDEKBLAMKJPHOGEMOACNKACBBJOEDFBKICMJKOLMJAKGDHKFNODHDA", "/", "." + request.Host));
-                cookie.Add(new Cookie("langx","zh-cn", "/", "." + request.Host));
-                cookie.Add(new Cookie("langcode","zh-cn", "/", "." + request.Host));
+                //cookie.Add(new Cookie("T0_IPL_AVRbbbbbbbbbbbbbbbb", "PJNHJGLKJNDCGOKEMFFKJGFDNCBGGIJELNGOEBBPILMPGIHDGNGMOAAAJHDMMNJBCCOOJJGCDJJDHPBCGPBIOHMMJNPAGLFNGOONJFPMNMBDEILBJGMNNNPABMCOKLAO"));
+                //cookie.Add(new Cookie("langx","zh-cn", "/", "N/A" ));
+                //cookie.Add(new Cookie("langcode","zh-cn"));
+
                 request.CookieContainer = cookie;
 
                 byte[] bytes = Encoding.UTF8.GetBytes(postdata);

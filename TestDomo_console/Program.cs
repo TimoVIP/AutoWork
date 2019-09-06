@@ -98,10 +98,10 @@ namespace TestDomo_console
 
 
 
-            b = platGPK.loginGPK();
-            tanxi1.betTime = "";
-            tanxi1.Types = new string[] { "Account", "Manual", "ThirdPartyPayment", "OnlineWithdraw" };
-            tanxi1 = platGPK.MemberTransactionSearch(tanxi1);
+            //b = platGPK.loginGPK();
+            //tanxi1.betTime = "";
+            //tanxi1.Types = new string[] { "Account", "Manual", "ThirdPartyPayment", "OnlineWithdraw" };
+            //tanxi1 = platGPK.MemberTransactionSearch(tanxi1);
 
             //SoketObjetRecordQuery o = platGPK.BetRecordGetInfo(bb);
 
@@ -191,7 +191,7 @@ namespace TestDomo_console
             //bb = platGPK.GetDetailInfo(bb);
             //bb = platGPK.GetDetailInfo_withoutELE(bb);
             //b = platGPK.submitToGPK(bb);
-
+            //b = platBB.loginBB_old();
             //b = platBB.loginBB();
             //bb = platBB.getBet_Details(bb);
             //bb = platBB.getBetDetail_Bet_Times(bb);
@@ -490,6 +490,14 @@ namespace TestDomo_console
             //Console.WriteLine(b);
             //List<betData> list = platACT.getActData("53");
 
+            bool e = platGPK.loginGPK();
+            Dictionary<string, string> postData = new Dictionary<string, string>();
+            postData.Add("Name", "当日红包");
+            postData.Add("Description", "心想事成、多多盈利");
+            postData.Add("StartTime", "2019/09/05 06:40:00");
+            postData.Add("EndTime", "2019/09/05 23:59:59");
+            postData.Add("Password", "123456");
+            e = platGPK.RedEnvelopeManagement_GetExcelSum($"{Environment.CurrentDirectory}\\data.xlsx",postData);
             Console.ReadLine();
         }
     }

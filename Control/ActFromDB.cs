@@ -44,6 +44,10 @@ namespace TimoControl
                         b.betno = item["Value"].ToString().Trim();
                         b.PortalMemo = item["Value"].ToString().Trim();
                     }
+                    if (item["Label"].ToString().Contains("游戏名称"))
+                    {
+                        b.gamename = item["Value"].ToString().Trim();
+                    }
                 }
 
                 b.bbid = dr["id"].ToString();
@@ -86,16 +90,25 @@ namespace TimoControl
             //int i = MySQLHelper.ExecuteSql(sql);
 
             List<string> list = new List<string>();
-            list.Add($"update Give set Content='{bb.msg}',`Status`={(bb.passed ? 1 : -1)},passtime=now(),HandleMan='robot' where id={bb.bbid};");
-            list.Add($"update activity set NoApplyNum = NoApplyNum-1, AlreadyApplyNum= AlreadyApplyNum+1 where Id={bb.aid};");
-            bool b =  MySQLHelper.MySQLHelper.ExecuteNoQueryTran(list);
+            //3号台子
+            //list.Add($"update Give set Content='{bb.msg}',`Status`={(bb.passed ? 1 : -1)} where id={bb.bbid};");
 
+            string sql= string.Format(appSittingSet.readConfig()["sql_give_upadte"].ToString(), bb.msg, (bb.passed ? 1 : -1), bb.bbid);
+
+
+            //其他平台
+            //list.Add($"update Give set Content='{bb.msg}',`Status`={(bb.passed ? 1 : -1)},passtime=now(),HandleMan='robot' where id={bb.bbid};");
+            //不需要减少
+            //list.Add($"update activity set NoApplyNum = NoApplyNum-1, AlreadyApplyNum= AlreadyApplyNum+1 where Id={bb.aid};");
+            //bool b =  MySQLHelper.MySQLHelper.ExecuteNoQueryTran(list);
+             int e = MySQLHelper.MySQLHelper.ExecuteSql(sql);
+            bool b = e > 0;
             //记录到sqlite数据库
             //appSittingSet.recorderDb(bb);
-            string sql = $"insert  or ignore into record (username, gamename,betno,chargeMoney,pass,msg,subtime,aid,bbid) values ('{ bb.username}', '{ bb.gamename}','{bb.betno }',{ bb.betMoney },{(bb.passed == true ? 1 : 0) },'{ bb.msg }','{DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd HH:mm:ss") }' , {bb.aid},{bb.bbid})";
+            sql = $"insert  or ignore into record (username, gamename,betno,chargeMoney,pass,msg,subtime,aid,bbid) values ('{ bb.username}', '{ bb.gamename}','{bb.betno }',{ bb.betMoney },{(bb.passed == true ? 1 : 0) },'{ bb.msg }','{DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd HH:mm:ss") }' , {bb.aid},{bb.bbid})";
             SQLiteHelper.SQLiteHelper.execSql(sql);
 
-            string msg = $"活动{bb.aname}用户{bb.username}处理完毕，处理为 {(bb.passed ? "通过" : "不通过")}，回复消息 {bb.msg}";
+            string msg = $"活动{bb.aname}用户{bb.username}订单{bb.betno}处理完毕，处理为 {(bb.passed ? "通过" : "不通过")}，回复消息 {bb.msg}";
             appSittingSet.Log(msg);
             //return i > 0;
             return b;

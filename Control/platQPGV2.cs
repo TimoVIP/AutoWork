@@ -24,7 +24,8 @@ namespace TimoControl
         private static string mainAccount { get; set; }
         private static string token { get; set; }
         private static string transNo { get; set; }
-
+        private static int Hours { get; set; }
+        private static int deposit_status { get; set; }
         /// <summary>
         /// 登录
         /// </summary>
@@ -38,6 +39,10 @@ namespace TimoControl
                 pwd = s1.Split('|')[1];
                 urlbase = s1.Split('|')[2];
                 mainAccount = acc.Split('@')[1];
+                string h = appSittingSet.readAppsettings("Hours");
+                Hours = h==""? 1: int.Parse(h);
+                string dep = appSittingSet.readAppsettings("deposit_status");
+                deposit_status = dep == "" ? 0 : int.Parse(dep);
             }
             catch (Exception ex)
             {
@@ -50,7 +55,7 @@ namespace TimoControl
             {
                 pwd = MD5Encrypt(pwd);//加密
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-                string url = urlbase + $"v3/api/merchant/merchantcenter/subAccount/loginOfSubAccount?subAccount={acc}&password={pwd}";
+                string url = $"{urlbase}v3/api/merchant/merchantcenter/subAccount/loginOfSubAccount?subAccount={acc}&password={pwd}";
                 HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
                 request.Method = "POST";
                 request.ContentLength = 0;
@@ -93,7 +98,7 @@ namespace TimoControl
             {
 
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-                string url = urlbase + $"v1/api/q/funding/backend/merchantPayOrderQueryReq";
+                string url = $"{urlbase}v1/api/q/funding/backend/merchantPayOrderQueryReq";
 
                 HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
                 request.Method = "POST";
@@ -108,7 +113,7 @@ namespace TimoControl
                 request.CookieContainer = cookie;
 
                 //string postdata = JsonConvert.SerializeObject(new { from = mainAccount, merchant = mainAccount, start_time_min = DateTime.Now.Date.ToString("yyyy-MM-dd") + "00:00:00", start_time_max = DateTime.Now.Date.ToString("yyyy-MM-dd") + "23:59:59", order_status = 2, deposit_status = 0, sub_member_no = "", order_no = "", start_page = 1, page_num = 50 });
-                string postdata = JsonConvert.SerializeObject(new { from = mainAccount, merchant = mainAccount, start_time_min = DateTime.Now.AddHours(-1).ToString("yyyy-MM-dd HH:mm:ss") , start_time_max = DateTime.Now.Date.ToString("yyyy-MM-dd") + "23:59:59", order_status = 2, deposit_status = 0, sub_member_no = "", order_no = "", start_page = 1, page_num = 50 });
+                string postdata = JsonConvert.SerializeObject(new { from = mainAccount, merchant = mainAccount, start_time_min = DateTime.Now.AddHours(-Hours).ToString("yyyy-MM-dd HH:mm:ss") , start_time_max = DateTime.Now.Date.AddDays(1).AddSeconds(-1).ToString("yyyy-MM-dd HH:mm:ss"), order_status = 2, deposit_status = deposit_status, sub_member_no = "", order_no = "", start_page = 1, page_num = 20 });
                 byte[] bytes = Encoding.UTF8.GetBytes(postdata);
                 request.ContentLength = bytes.Length;
                 Stream newStream = request.GetRequestStream();
@@ -196,10 +201,8 @@ namespace TimoControl
             try
             {
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-                //string url = urlbase + $"oc/remarkMerchantOrder?tradeNo={b.bbid}&desc={HttpUtility.UrlEncode(b.msg, Encoding.UTF8).ToUpper()}";
-                //string url = urlbase + $"oc/remarkMerchantOrder?tradeNo={b.bbid}&desc={b.msg}";
                 //"https://b.gac.top/v1/api/q/funding/webMerchant/setOrderRemark";
-                string url = urlbase + $"v1/api/q/funding/webMerchant/setOrderRemark";
+                string url = $"{urlbase}v1/api/q/funding/webMerchant/setOrderRemark";
                 HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
                 request.Method = "POST";
                 request.Headers.Add("logntoken", token);
@@ -252,20 +255,28 @@ namespace TimoControl
             try
             {
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-                string url = urlbase + $"v3/api/merchant/merchantcenter/oc/manualchantOrder?tradeNo={b.bbid}&synStatus=6";
+                 string url = $"{urlbase}v3/api/merchant/merchantcenter/oc/manualchantOrder?tradeNo={b.bbid}&synStatus=4";
 
                 HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
                 request.Method = "POST";
-                request.Headers.Add("logntoken", token);
-                request.Headers.Add("username", subAccount);
-                request.Headers.Add("userrole", "merchant");
-                request.Headers.Add("busitype", "merchant");
-                request.Headers.Add("clitype", "PC");
-                request.Headers.Add("cliv", "1.0.0");
+                request.Headers.Add("busiType", "merchant");
+                request.Headers.Add("cliType", "PC");
+                request.Headers.Add("cliV", "1.0.0");
+                request.Headers.Add("lognToken", token);
+                request.Headers.Add("userName", subAccount);
+                request.Headers.Add("userRole", "merchant");
 
+                request.Headers.Add("Sec-Fetch-Mode", "cors");
+                request.Headers.Add("Sec-Fetch-Site", "same-origin");
+                request.UserAgent = "ozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36";
+                request.KeepAlive = true;
+                request.Headers.Add("X-Tk", token);
                 request.CookieContainer = cookie;
                 request.ContentLength = 0;
+                //request.Host = urlbase.Replace("https://", "");
 
+
+                //request.CookieContainer.Add(new Cookie("sidebarStatus", "0", "", ""));
                 //string postdata = JsonConvert.SerializeObject(new { from = mainAccount, OrderID = b.bbid, OrderRemark = b.msg });
                 //byte[] bytes = Encoding.UTF8.GetBytes(postdata);
                 //request.ContentLength = bytes.Length;
@@ -282,6 +293,10 @@ namespace TimoControl
                 reader.Dispose();
                 response.Dispose();
                 request.Abort();
+                if (ret_html.Contains("被强制下线"))
+                {
+                    bool f = login();
+                }
 
                 return ret_html.Contains("操作成功");
             }

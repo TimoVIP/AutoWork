@@ -15,6 +15,7 @@ namespace DomainBat
     {
         static void Main(string[] args)
         {
+            string msg = "";
             try
             {
                 string s = appSittingSet.readAppsettings("MySqlConnect").Split('|')[0];
@@ -43,7 +44,7 @@ namespace DomainBat
             DataTable dt = new DataTable();
             //遍历文件
             DirectoryInfo di = new DirectoryInfo(Environment.CurrentDirectory);
-            FileInfo[] fs = di.GetFiles("*.xls", SearchOption.TopDirectoryOnly);
+            FileInfo[] fs = di.GetFiles("*.xlsx", SearchOption.TopDirectoryOnly);
 
             Console.Title = "自动添加域名CDN程序";
             if (fs.Length > 0)
@@ -127,6 +128,7 @@ namespace DomainBat
                         para.Add(new MySqlParameter("@upstream_" + index_, dr[1]));
                         para.Add(new MySqlParameter("@buy_id_" + index_, dr[4]));
                         para.Add(new MySqlParameter("@group_id_" + index_, dr[5]));
+                        msg = string.Format("第{0}条数据{1}新增理完毕", index_, dr[0]);
                     }
                     //修改
                     if (dt.Columns.Count == 7)
@@ -137,9 +139,10 @@ namespace DomainBat
                         para.Add(new MySqlParameter("@buy_id_" + index_, dr[4]));
                         para.Add(new MySqlParameter("@group_id_" + index_, dr[5]));
                         para.Add(new MySqlParameter("@id_" + index_, dr[6]));
+                        msg = string.Format("第{0}条数据{1}修改处理完毕", index_, dr[0]);
                     }
 
-                    string msg = string.Format("第{0}条数据{1}读处理完毕", index_, dr[0]);
+
 
 
                     Console.WriteLine(msg);

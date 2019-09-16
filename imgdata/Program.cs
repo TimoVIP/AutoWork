@@ -14,6 +14,7 @@ namespace imgdata
 {
     class Program
     {
+        static string[] colnames = new string[] { "APPLICNO", "NAME", "DOB", "NATIONALITY", "PETITIONER", "NODEP", "VISATYPE", "VALIDITY", "HEARINGOFFICER", "FOLDERNO", "FILENAME", "SHEETNAME" };
         static void Main(string[] args)
         {
             try
@@ -68,18 +69,43 @@ namespace imgdata
                 {
                     Console.WriteLine($"开始处理文件 {file.Name}\t{DateTime.Now.ToString()}");
                     //读取EXCEL文件
-                    dt = npoi.ExcelToDataTable2(file.FullName);
+                    dt = npoi.ExcelToDataTable2(file,colnames);
 
                     //int index_ = 1;
 
                     //调用接口处理数据
                     if (dt == null)
                     {
+                        appSittingSet.Log($"{file.Name}文件没有数据，请检查");
                         continue;
                     }
+                    //appSittingSet.Log($"{file.Name}文件数据正常");
+                    //continue;
+
+                    //测试
+                    //bool b_t = false;
+                    //string msg = "";
+                    //foreach (string s in colnames)
+                    //{
+                    //    if (dt.Columns.Contains(s))
+                    //        b_t = true;
+                    //    else
+                    //        b_t = false;
+                    //    msg += s + ";";
+                    //}
+
+                    //if (!b_t)
+                    //{
+                    //    appSittingSet.Log($"{file.Name}文件数据列不一致，请检查列{msg}");
+                    //    continue;
+                    //}
+                    //appSittingSet.Log($"{file.Name}文件数据正常");
+                    //continue;
+
 
                     DataTable dt1 = null;
                     MySqlDataAdapter da = null;
+
 
 
                     //if (dt.Columns.Contains("HEARING_OFFICER"))
@@ -97,9 +123,9 @@ namespace imgdata
                     try
                     {
                         //处理datatable
-                        dt1 = dt.DefaultView.ToTable(false, new string[] { "APPLICNO", "NAME", "DOB", "NATIONALITY", "PETITIONER", "NODEP", "VISATYPE", "VALIDITY", "HEARINGOFFICER", "FOLDERNO", "FILENAME", "SHEETNAME" });
+                        dt1 = dt.DefaultView.ToTable(false, colnames);
                         //string filter = $"APPLIC_NO <>'' and NAME <>'' ";
-                        DataRow[] drr = dt1.Select("APPLICNO <>'' and NAME <>'' ");
+                        DataRow[] drr = dt1.Select("APPLICNO <>'' and NAME <>'' and (DOB <>'DOB' and NAME <>'NAME') ");
                         int count = drr.Length;
                         //处理dt 删除多余的列
                         Console.WriteLine($"文件 {file.Name}有{count}行数据\t{DateTime.Now.ToString()}");
@@ -107,13 +133,13 @@ namespace imgdata
                         //方法1插入
                         da = new MySqlDataAdapter("SELECT APPLICNO,NAME,	DOB,NATIONALITY,PETITIONER,NODEP,VISATYPE,VALIDITY,HEARINGOFFICER,FOLDERNO,FILENAME,SHEETNAME FROM 9gdata", MySQLHelper.MySQLHelper.conn());
                         MySqlCommandBuilder cb = new MySqlCommandBuilder(da);
-                        da.Fill(dt);
+                        da.Fill(dt1);
                         da.Update(drr);
                     }
                     catch (Exception ex)
                     {
                         appSittingSet.Log($"{file.Name} {ex.Message}");
-                        file.MoveTo(file.DirectoryName + "\\Err\\" + file.Name);
+                        //file.MoveTo(file.DirectoryName + "\\data\\Err\\" + file.Name);
                     }
 
 

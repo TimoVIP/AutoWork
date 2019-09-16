@@ -5,7 +5,7 @@ using NPOI.XSSF.UserModel;
 using System;
 using System.Data;
 using System.IO;
-
+using BaseFun;
 namespace NPOIHelper
 {
     public class NPOIExcel
@@ -21,10 +21,10 @@ namespace NPOIHelper
         /// <returns></returns>
         public bool ToExcel(DataTable table)
         {
-            //if (File.Exists(_filePath))
-            //{
-            //    File.Delete(_filePath);
-            //}
+            if (File.Exists(_filePath))
+            {
+                File.Delete(_filePath);
+            }
             //FileStream fs = new FileStream(this._filePath, FileMode.Open, FileAccess.Read);
             //fs.Position = 0;
             FileStream fs = File.OpenWrite(_filePath);
@@ -180,7 +180,7 @@ namespace NPOIHelper
                         //}
                         for (int e = 0; e < row.PhysicalNumberOfCells; e++)
                         {
-                            dataRow[e] = row.Cells[e + 1].ToString().Replace("\t", "").Replace("\n", "");//从第2列开始 下标1
+                            dataRow[e] = row.Cells[e].ToString().Replace("\t", "").Replace("\n", "");//从第2列开始 下标1
                         }
                         data.Rows.Add(dataRow);
                     }
@@ -282,48 +282,49 @@ namespace NPOIHelper
             }
         }
 
-        public DataTable ExcelToDataTable2(string fileName)
+        /// <summary>
+        /// 导入移民局数据
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        public DataTable ExcelToDataTable2(FileInfo file,string[] colnames)
         {
 
 
             ISheet sheet = null;
             DataTable data = new DataTable();
-            //data.Columns.Add("APPLIC_NO");
-            //data.Columns.Add("NAME");
-            //data.Columns.Add("DOB");
-            //data.Columns.Add("NATIONALITY");
-            //data.Columns.Add("PETITIONER");
-            //data.Columns.Add("NO_DEP");
-            //data.Columns.Add("VISA_TYPE");
-            //data.Columns.Add("VALIDITY");
-            //data.Columns.Add("HEARING_OFFICER");
-            //data.Columns.Add("FOLDER_NO");
-            //data.Columns.Add("FILENAME");
-            //data.Columns.Add("SHEETNAME");
 
-            //this._filePath = fileName;
             IWorkbook workbook = null;
-            string docname = fileName.Substring(fileName.LastIndexOf("\\")+1);
+            //string docname = fileName.Substring(fileName.LastIndexOf("\\")+1);
             try
             {
-                FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.Read);
-                if (fileName.IndexOf(".xlsx") > 0) // 2007版本
-                    workbook = new XSSFWorkbook(fs);
-                else if (fileName.IndexOf(".xls") > 0) // 2003版本
-                    workbook = new HSSFWorkbook(fs);
+                //FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.Read);
+                //if (fileName.IndexOf(".xlsx") > 0) // 2007版本
+                //    workbook = new XSSFWorkbook(file);
+                //else if (fileName.IndexOf(".xls") > 0) // 2003版本
+                //    workbook = new HSSFWorkbook(file);
 
+                workbook = new XSSFWorkbook(file);
                 sheet = workbook.GetSheetAt(0);
                 //从第一张表里面获取所有的列头
                 int tr_start = 0;
                 for (int t_ = 0; t_ < 5; t_++)
                 {
                     IRow row = sheet.GetRow(t_);
+                    //for (int i = 0; i < row.Cells length; i++)
+                    //{
 
-                    if (row.Cells.Exists(x => x.StringCellValue.Contains("APPLIC_NO")) && row.Cells.Exists(x => x.StringCellValue.Contains("NAME")))
+                    //}
+                    foreach (ICell cell in row.Cells)
+                    {
+                        cell.SetCellType(CellType.String);
+                    }
+
+                    if (row.Cells.Exists(x => x.StringCellValue.ToUpper().Contains("APPLIC_NO")) && row.Cells.Exists(x => x.StringCellValue.ToUpper().Contains("NAME")))
                     {
                         for (int t_c = 0; t_c < row.PhysicalNumberOfCells; t_c++)
                         {
-                            DataColumn col = new DataColumn(row.Cells[t_c].ToString().Replace("\r", "").Replace("\t", "").Replace("\n", "").Replace(" ", "").Replace(".", "").Replace("_", "").Trim());
+                            DataColumn col = new DataColumn(row.Cells[t_c].ToString().Replace("\r", "").Replace("\t", "").Replace("\n", "").Replace(" ", "").Replace(".", "").Replace("_", "").Trim().ToUpper());
                             data.Columns.Add(col);
                             //row.Cells.ToArray()
                             //data.Columns.AddRange()
@@ -337,15 +338,16 @@ namespace NPOIHelper
                     }
                 }
 
-                //加2列 记录信息
-                data.Columns.Add("FILENAME");
-                data.Columns.Add("SHEETNAME");
-                //没有列
-                if (!data.Columns.Contains("NODEP"))
+                //如果没有列，加上
+                foreach (string s in colnames)
                 {
-                    data.Columns.Add("NODEP");
+                    if (!data.Columns.Contains(s))
+                    {
+                        data.Columns.Add(s);
+                    }
                 }
 
+                //获取数据
                 for (int c = 0; c < workbook.NumberOfSheets; c++)
                 {
                     sheet = workbook.GetSheetAt(c);
@@ -353,7 +355,7 @@ namespace NPOIHelper
                     int startrow = 0;
                     if (c == 0)
                         startrow = tr_start+1;
-                    bool bf = false;
+                    //bool bf = false;
                     for (int d = startrow; d < sheet.PhysicalNumberOfRows; d++)
                     {
                         IRow row = sheet.GetRow(d);
@@ -364,40 +366,35 @@ namespace NPOIHelper
                         //}
                         for (int e = 0; e < row.PhysicalNumberOfCells; e++)
                         {
-                            if (row.Cells[e].IsMergedCell)
-                            {
-                                bf = true;
-                                //continue;
-                            }
+                            //if (row.Cells[e].IsMergedCell)
+                            //{
+                            //    bf = true;
+                            //}
                             dataRow[e] = row.Cells[e].ToString().Replace("\t", "").Replace("\n", "");
-
                         }
-                        if (bf)
-                        {
-                            dataRow[row.PhysicalNumberOfCells-1] = docname;
-                            dataRow[row.PhysicalNumberOfCells] = sheet.SheetName;
-                        }
-                        else
-                        {
-                            dataRow[row.PhysicalNumberOfCells] = docname;
-                            dataRow[row.PhysicalNumberOfCells+1] = sheet.SheetName;
-                        }
-
+                        
+                        //加上后面两列得值
+                        dataRow["FILENAME"] = file.Name;
+                        dataRow["SHEETNAME"] = sheet.SheetName;
                         data.Rows.Add(dataRow);
                     }
                 }
 
-                fs.Close();
-                fs.Dispose();
+                //fs.Close();
+                //fs.Dispose();
+                workbook.Close();
+                //workbook.Dispose();
+
                 return data;
             }
             catch (Exception ex)
             {
-                string newfilepath = fileName.Replace("data", "data\\Err");
-                File.Move(fileName,newfilepath);
-                
-                Console.WriteLine($"Exception:{ex.Message} {docname}-{sheet.SheetName}");
+                //string newfilepath = fileName.Replace("data", "data\\Err");
+                //File.Move(fileName,newfilepath);
 
+                Console.WriteLine($"Exception:{ex.Message} {file.Name}-{sheet.SheetName}");
+                appSittingSet.Log($"Exception:{ex.Message} {file.Name}-{sheet.SheetName}");
+                file.MoveTo(file.DirectoryName + "\\data\\Err\\" + file.Name);
                 return null;
             }
         }

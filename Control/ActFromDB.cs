@@ -16,7 +16,16 @@ namespace TimoControl
         //public static List<betData> list { get; set; }
         public static bool loginActivity()
         {
-            return MySQLHelper.MySQLHelper.conn().State == ConnectionState.Open;
+            try
+            {
+                return MySQLHelper.MySQLHelper.conn().State == ConnectionState.Open;
+            }
+            catch (Exception ex)
+            {
+                appSittingSet.Log(ex.Message);
+                return false;
+            }
+
         }
         /// <summary>
         /// 获取优惠提交列表
@@ -25,44 +34,58 @@ namespace TimoControl
         /// <returns></returns>
         public static List<betData> getActData(string aid)
         {
-            string sql = $"select id,account,addtime,applyfrom from Give where ActivityId={aid} and `Status`= 0 order by id limit 10;";
-            DataTable dt = MySQLHelper.MySQLHelper.Query(sql).Tables[0];
-
-            List<betData> list = new List<betData>();
-
-            foreach (DataRow dr in dt.Rows)
+            try
             {
-                //解析 applyfrom 内容
-                object jo = JsonConvert.DeserializeObject(dr["applyfrom"].ToString());
 
-                JArray ja = JArray.FromObject(jo);
-                betData b = new betData();
-                foreach (var item in ja)
+                string sql = $"select id,account,addtime,applyfrom from Give where ActivityId={aid} and `Status`= 0 order by id limit 10;";
+                DataTable dt = MySQLHelper.MySQLHelper.Query(sql).Tables[0];
+
+                List<betData> list = new List<betData>();
+
+                foreach (DataRow dr in dt.Rows)
                 {
-                    if (item["Label"].ToString().Contains("注单") || item["Label"].ToString().Contains("手机"))
+                    //解析 applyfrom 内容
+                    //if (dr["applyfrom"].ToString() == "" || dr["applyfrom"].ToString() == "[]")
+                    //{
+
+                    //}
+                    object jo = JsonConvert.DeserializeObject(dr["applyfrom"].ToString());
+
+                    JArray ja = JArray.FromObject(jo);
+                    betData b = new betData();
+                    b.betno = "";
+                    foreach (var item in ja)
                     {
-                        b.betno = item["Value"].ToString().Trim();
-                        b.PortalMemo = item["Value"].ToString().Trim();
+                        if (item["Label"].ToString().Contains("注单") || item["Label"].ToString().Contains("手机"))
+                        {
+                            b.betno = item["Value"].ToString().Trim();
+                            b.PortalMemo = item["Value"].ToString().Trim();
+                        }
+                        if (item["Label"].ToString().Contains("游戏名称"))
+                        {
+                            b.gamename = item["Value"].ToString().Trim();
+                        }
                     }
-                    if (item["Label"].ToString().Contains("游戏名称"))
+
+                    b.bbid = dr["id"].ToString();
+                    b.username = dr["account"].ToString().Trim();
+                    b.betTime = dr["addtime"].ToString();
+                    b.aid = aid;
+                    b.passed = true;
+
+                    if (!list.Exists(x => x.bbid == b.bbid))
                     {
-                        b.gamename = item["Value"].ToString().Trim();
+                        list.Add(b);
                     }
                 }
 
-                b.bbid = dr["id"].ToString();
-                b.username = dr["account"].ToString().Trim();
-                b.betTime = dr["addtime"].ToString();
-                b.aid = aid;
-                b.passed = true;
-
-                if (!list.Exists(x => x.bbid == b.bbid))
-                {
-                    list.Add(b);
-                }
+                return list;
             }
-
-            return list;
+            catch (Exception ex)
+            {
+                appSittingSet.Log(ex.Message);
+                return null;
+            }
         }
         /// <summary>
         /// 最后一次-上次成功的记录

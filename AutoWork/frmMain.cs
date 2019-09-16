@@ -502,7 +502,7 @@ namespace AutoWork_Plat1
                         {
                             //记录到数据库
                             recorderDb(bb);
-                            bb.msg = $"恭喜您，您申请的<{bb.aname}>已通过活动专员的检验 R";
+                            bb.msg = "恭喜您，您申请的<" + bb.aname + ">已通过活动专员的检验";
                             bool b8 = platACT.confirmAct(bb);
                             MyWrite(bb.msg);
                         }

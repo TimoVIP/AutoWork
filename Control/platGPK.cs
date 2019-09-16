@@ -1134,7 +1134,7 @@ namespace TimoControl
                     dd.JoinTime =DateTime.Parse( jo["Member"]["JoinTime"].ToString());//注册时间
                     //17点00分 2019年7月6日 增加 timo
                     dd.Balance = decimal.Parse(jo["Member"]["Balance"].ToString());
-                    dd.YuebaoPrincipal = decimal.Parse(jo["Member"]["YuebaoPrincipal"].ToString());
+                    //dd.YuebaoPrincipal = decimal.Parse(jo["Member"]["YuebaoPrincipal"].ToString());//15点49分取消功能
 
                     if (jo["Member"]["LatestLogin"]!=null && jo["Member"]["LatestLogin"].ToString().Length>0)
                     {
@@ -1869,25 +1869,6 @@ X - Requested - With: XMLHttpRequest
         }
         public static bool RedEnvelopeManagement_GetExcelSum(string filename,Dictionary<string,string> postData)
         {
-            /*
-             http://sts.tjuim.com/RedEnvelopeManagement/GetExcelSum
-             Accept: application/json, text/plain, * /
-            *
-Accept - Encoding: gzip, deflate
-Accept - Language: zh - CN,zh; q = 0.9,en; q = 0.8
-Connection: keep - alive
-Content - Length: 36857
-Content - Type: multipart / form - data; boundary = ----WebKitFormBoundaryyAEoA89yo9jimDkf
-Cookie: language = zh - CN; master = 16fea91d95894b91888ff8f7b41f923a; .ASPXAUTHFORMASTER = 7D143BCC3ED7B137F51E0987A39C4948D6C1EC60587F6C3A9B9C1914ECE073B8DC2AB350D07A8AAFA0F0AFC71E0D94DFA143D00E33AB7592F7DE4F53872C17C3053B04120CE7280B613BDB2571DA0503C64CA75380944A1DD864EE7C272D0DCA44289FC9DA4FAE26F6125A5C7B0557ADC07DA6D5F3B0ACF98936E5D16ABC8A6BA49371BCE9F04B5FFE220F7046020047933022A3AF007D01A05E28004A925EB1708A443A3D8258DB7052D2F3B052A613CBC03FE836691B935059602B7329508BFB0A31FE88F3FF4EEC920728EA18F12051586C79CB40CBB3B32658A3B31A2B7895DCA0ADDC750BEC3FD426E20D0FAC5E25AF59D4; td_cookie = 328096336
-Host: sts.tjuim.com
-Origin: http://sts.tjuim.com
-            Referer: http://sts.tjuim.com/RedEnvelopeManagement/Create
-            User - Agent: Mozilla / 5.0(Windows NT 10.0; Win64; x64) AppleWebKit / 537.36(KHTML, like Gecko) Chrome / 76.0.3809.100 Safari / 537.36
-X - Requested - With: XMLHttpRequest
-
-
-                FileBase: (binary)
-                 */
             bool flag = false;
             HttpWebRequest request = null;
             HttpWebResponse response = null;
@@ -1975,9 +1956,16 @@ X - Requested - With: XMLHttpRequest
                 //    flag = true;
                 //}
 
+                reader.Close();
+                reader.Dispose();
           
                 response.Close();
                 response.Dispose();
+
+                if (request != null)
+                {
+                    request.Abort();
+                }
                 return true;
             }
             catch (WebException ex)

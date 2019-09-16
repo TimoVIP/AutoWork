@@ -20,6 +20,7 @@ using System.Configuration;
 using System.Xml.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
+using Newtonsoft.Json;
 
 namespace TestDomo_console
 {
@@ -490,15 +491,26 @@ namespace TestDomo_console
             //Console.WriteLine(b);
             //List<betData> list = platACT.getActData("53");
 
-            bool e = platGPK.loginGPK();
-            Dictionary<string, string> postData = new Dictionary<string, string>();
-            postData.Add("Name", "当日红包");
-            postData.Add("Description", "心想事成、多多盈利");
-            postData.Add("StartTime", "2019/09/05 06:40:00");
-            postData.Add("EndTime", "2019/09/05 23:59:59");
-            postData.Add("Password", "123456");
-            e = platGPK.RedEnvelopeManagement_GetExcelSum($"{Environment.CurrentDirectory}\\data.xlsx",postData);
-            Console.ReadLine();
+            //bool e = platGPK.loginGPK();
+            //Dictionary<string, string> postData = new Dictionary<string, string>();
+            //postData.Add("Name", "当日红包");
+            //postData.Add("Description", "心想事成、多多盈利");
+            //postData.Add("StartTime", "2019/09/05 06:40:00");
+            //postData.Add("EndTime", "2019/09/05 23:59:59");
+            //postData.Add("Password", "123456");
+            //e = platGPK.RedEnvelopeManagement_GetExcelSum($"{Environment.CurrentDirectory}\\data.xlsx",postData);
+
+
+
+
+            object jo = JsonConvert.DeserializeObject("[]");
+            JArray ja = JArray.FromObject(jo);
+            foreach (var item in ja)
+            {
+                Console.WriteLine(item["Label"].ToString());
+            }
+                Console.ReadLine();
+
         }
     }
 }

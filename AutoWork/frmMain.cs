@@ -3138,6 +3138,31 @@ namespace AutoWork_Plat1
                         continue;
                     }
 
+                    //判断存款>1
+                    //判断在xx之前 是否有存款记录 >=1
+                    item.lastOprTime = DateTime.Now.Date.ToString("yyyy/MM/dd") + " 00:00:00";
+                    item.betTime = DateTime.Now.Date.ToString("yyyy/MM/dd") + " 23:59:59";
+
+                    betData bb = platGPK.MemberTransactionSearch(item);
+                    if (bb == null)
+                    {
+                        continue;//异常
+                    }
+                    if (!bb.passed || bb.total_money < 1)
+                    {
+                        //没有交易记录 存款小于1 不过
+                        item.passed = false;
+                        item.msg = "存款不足，不符合条件";
+                        bool r1 = platACT.confirmAct(item);
+                        if (r1)
+                        {
+                            string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                            MyWrite(msg);
+                            appSittingSet.Log(msg);
+                        }.
+                        continue;
+                    }
+
                     //获取投注的金额
                     //发送一次 查询 糖果派对
                     item.GameCategories = null;

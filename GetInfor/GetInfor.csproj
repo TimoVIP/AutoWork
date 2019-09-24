@@ -50,9 +50,21 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\BaseFun\BaseFun.csproj">
+      <Project>{1955A126-44D7-4381-B0DC-00F58AD93D6E}</Project>
+      <Name>BaseFun</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Control\TimoControl.csproj">
       <Project>{c47bdecb-d9e8-4723-80fb-d1b8d4f77423}</Project>
       <Name>TimoControl</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MySQLHelper\MySQLHelper.csproj">
+      <Project>{6B6FF48F-5095-413E-8C9D-20E8FC36E9DC}</Project>
+      <Name>MySQLHelper</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SQLiteHelper\SQLiteHelper.csproj">
+      <Project>{73CE189D-2285-4C40-9B2C-5F0E2675C5AA}</Project>
+      <Name>SQLiteHelper</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

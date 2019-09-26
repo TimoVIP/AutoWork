@@ -130,48 +130,51 @@ namespace imgdata
                         //处理dt 删除多余的列
                         Console.WriteLine($"文件 {file.Name}有{count}行数据\t{DateTime.Now.ToString()}");
 
-                        //方法1插入
-                        da = new MySqlDataAdapter("SELECT APPLICNO,NAME,	DOB,NATIONALITY,PETITIONER,NODEP,VISATYPE,VALIDITY,HEARINGOFFICER,FOLDERNO,FILENAME,SHEETNAME FROM 9gdata", MySQLHelper.MySQLHelper.conn());
-                        MySqlCommandBuilder cb = new MySqlCommandBuilder(da);
-                        da.Fill(dt1);
-                        da.Update(drr);
+
+                        if (MySQLHelper.MySQLHelper.connectionString.Contains("localhost"))
+                        {
+                            //方法1批量插入 适用于本地数据库
+                            da = new MySqlDataAdapter("SELECT APPLICNO,NAME,	DOB,NATIONALITY,PETITIONER,NODEP,VISATYPE,VALIDITY,HEARINGOFFICER,FOLDERNO,FILENAME,SHEETNAME FROM 9gdata", MySQLHelper.MySQLHelper.conn());
+                            MySqlCommandBuilder cb = new MySqlCommandBuilder(da);
+                            da.Fill(dt1);
+                            da.Update(drr);
+                        }
+                        else
+                        {
+                            //方法2 适用于远程服务器
+                            int index_ = 1;
+                            string msg;
+                            List<string> sqlList = new List<string>();
+                            bool b = false;
+                            foreach (DataRow dr in drr)
+                            {
+
+                                Console.WriteLine($"开始处理{file.Name}文件中的第{index_ }/{count}条数据");
+                                sqlList.Add($"insert into 9gdata (APPLICNO,NAME,DOB,NATIONALITY,PETITIONER,NODEP,VISATYPE,VALIDITY,HEARINGOFFICER,FOLDERNO,FILENAME,SHEETNAME) VALUES('{dr[0]}','{dr[1]}','{dr[2]}','{dr[3]}','{dr[4]}',0,'{dr[6]}','{dr[7]}','{dr[8]}','{dr[9]}','{dr[10]}','{dr[11]}');");
+                                if ((index_ % 50 == 0 || index_ == count ))
+                                {
+                                    b = MySQLHelper.MySQLHelper.ExecuteNoQueryTran(sqlList);
+                                    sqlList.Clear();
+                                    msg = $"处理{file.Name}文件中的第{index_ }/{count}条数据成功";
+                                    Console.WriteLine(msg);
+                                    appSittingSet.Log(msg);
+                                }
+                                index_++;
+                            }
+                        }
+
+
                     }
                     catch (Exception ex)
                     {
                         appSittingSet.Log($"{file.Name} {ex.Message}");
-                        //file.MoveTo(file.DirectoryName + "\\data\\Err\\" + file.Name);
                     }
 
-
-
-
-
-                    //方法2
-                    /*
-                    List<string> sqlList = new List<string>();
-                    bool b = false;
-                    foreach (DataRow dr in drr)
+                    string filepath= file.DirectoryName + "\\bak\\" + file.Name;
+                    if (File.Exists(filepath))
                     {
-                        msg = $"开始处理{file.Name}文件中的第{index_ }/{count}条数据";
-                        Console.WriteLine(msg);
-                        sqlList.Add($"insert into 9gdata (APPLIC_NO,NAME,DOB,NATIONALITY,PETITIONER,NO_DEP,VISA_TYPE,VALIDITY,HEARING_OFFICER,FOLDER_NO,FILENAME,SHEETNAME) VALUES('{dr[0]}','{dr[1]}','{dr[2]}','{dr[3]}','{dr[4]}',0,'{dr[6]}','{dr[7]}','{dr[8]}','{dr[9]}','{dr[10]}','{dr[11]}');");
-                        //if (index_==dt.Rows.Count-1)
-                        //{
-
-                        //}
-                        if ((index_ % 200 == 0 || index_ == count ))
-                        {
-                            b = MySQLHelper.MySQLHelper.ExecuteNoQueryTran(sqlList);
-                            sqlList.Clear();
-                            msg = $"处理{file.Name}文件中的第{index_ }/{count}条数据成功";
-                            Console.WriteLine(msg);
-                            appSittingSet.Log(msg);
-                            //sb.Clear();
-                        }
-                        index_++;
+                        File.Delete(filepath);
                     }
-                    */
-
                     file.MoveTo(file.DirectoryName + "\\bak\\" + file.Name);
                 }
             }

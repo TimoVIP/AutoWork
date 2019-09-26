@@ -103,7 +103,7 @@ namespace GetInfor
                         sql_list.Clear();
                     }
 
-                    Console.WriteLine(string.Format("正在获取第{0}条数据，用户名{1} ",  count + "/" + dt.Rows.Count, item[0]));
+                    Console.WriteLine(string.Format("正在存储第{0}条数据，用户名{1} ",  count + "/" + dt.Rows.Count, item[0]));
                     count++;
                 }
 

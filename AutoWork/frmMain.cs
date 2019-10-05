@@ -3159,7 +3159,7 @@ namespace AutoWork_Plat1
                             string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
                             MyWrite(msg);
                             appSittingSet.Log(msg);
-                        }.
+                        }
                         continue;
                     }
 

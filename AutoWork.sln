@@ -67,6 +67,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "seleniumTest", "seleniumTes
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "批量导入红包数据", "批量导入红包数据\批量导入红包数据.csproj", "{B3210FB4-BCAA-4E17-ABAE-1C4769A774D0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "查看会员信息", "queryInfor\查看会员信息.csproj", "{644A3242-C976-4F94-97AE-A77035B7C441}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -185,6 +187,10 @@ Global
 		{B3210FB4-BCAA-4E17-ABAE-1C4769A774D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B3210FB4-BCAA-4E17-ABAE-1C4769A774D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B3210FB4-BCAA-4E17-ABAE-1C4769A774D0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{644A3242-C976-4F94-97AE-A77035B7C441}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{644A3242-C976-4F94-97AE-A77035B7C441}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{644A3242-C976-4F94-97AE-A77035B7C441}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{644A3242-C976-4F94-97AE-A77035B7C441}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -209,5 +215,6 @@ Global
 		{88D0A996-F2BB-46ED-BFE3-EE3F8092C7E3} = {232359D5-F8C9-476B-93C8-5D831AAB8474}
 		{B8D7EF27-0BF0-4498-8F3E-9AEBD3F9A6FC} = {86DE3FA3-DF4E-429F-9637-20A2F1D33A47}
 		{B3210FB4-BCAA-4E17-ABAE-1C4769A774D0} = {232359D5-F8C9-476B-93C8-5D831AAB8474}
+		{644A3242-C976-4F94-97AE-A77035B7C441} = {232359D5-F8C9-476B-93C8-5D831AAB8474}
 	EndGlobalSection
 EndGlobal

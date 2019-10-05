@@ -28,8 +28,8 @@ namespace GetInfor
 
             ToDB2();
 
-            Console.WriteLine("处理完毕");
-            Console.ReadLine();
+            Console.WriteLine("处理完毕,按任意键退出");
+            Console.ReadKey();
 
         }
 
@@ -62,7 +62,7 @@ namespace GetInfor
                 //    sql_list.Clear();
                 //}
 
-                if (sql_list.Count == 500 || sql_list.Count == dt.Rows.Count)
+                if (sql_list.Count == 500 || sql_list.Count == dt.Rows.Count % 500)
                 {
                     SQLiteHelper.SQLiteHelper.execSql(sql_list);
                     sql_list.Clear();
@@ -97,7 +97,7 @@ namespace GetInfor
                     }
                     sql_list.Add(" INSERT or ignore   INTO detail(Account,Birthday,Email,Id,Mobile,Sex,Wallet,LatestLogin_IP,LatestLogin_time,LatestLogin_Id,BankAccount,BankName,City,Province,BankMemo,RegisterDevice,RegisterUrl ,Name,QQ ) VALUES('" + user.Account + "','" + user.Birthday + "','" + user.Email + "','" + user.Id + "','" + user.Mobile + "','" + user.SexString + "'," + user.Wallet + ",'" + user.LatestLogin_IP + "','" + user.LatestLogin_time + "','" + user.LatestLogin_Id + "','" + user.BankAccount + "','" + user.BankName + "','" + user.City + "','" + user.Province + "','" + user.BankMemo + "','" + user.RegisterDevice + "', '" + user.RegisterUrl + "' ,'" + user.Name + "','" + user.QQ + "' );update infor set status=1 where id=" + item[1].ToString() + ";");
 
-                    if (sql_list.Count == 100 || sql_list.Count==dt.Rows.Count)
+                    if (sql_list.Count == 100 || sql_list.Count==dt.Rows.Count % 100)
                     {
                         SQLiteHelper.SQLiteHelper.execSql(sql_list);
                         sql_list.Clear();

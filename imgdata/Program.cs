@@ -151,6 +151,10 @@ namespace imgdata
 
                                 Console.WriteLine($"开始处理{file.Name}文件中的第{index_ }/{count}条数据");
                                 sqlList.Add($"insert into 9gdata (APPLICNO,NAME,DOB,NATIONALITY,PETITIONER,NODEP,VISATYPE,VALIDITY,HEARINGOFFICER,FOLDERNO,FILENAME,SHEETNAME) VALUES('{dr[0]}','{dr[1]}','{dr[2]}','{dr[3]}','{dr[4]}',0,'{dr[6]}','{dr[7]}','{dr[8]}','{dr[9]}','{dr[10]}','{dr[11]}');");
+                                //if (sqlList.Count==100 || sqlList.Count == drr.Length % 100)
+                                //{
+
+                                //}
                                 if ((index_ % 50 == 0 || index_ == count ))
                                 {
                                     b = MySQLHelper.MySQLHelper.ExecuteNoQueryTran(sqlList);

@@ -36,7 +36,8 @@ namespace GetInfor
         private static bool ToDB()
         {
             //sql = "select id from infor order by id desc limit 1;";
-            sql = "select id from infor order by rowid desc limit 1;";
+            //sql = "select id from infor order by rowid desc limit 1;";
+            sql = "select max(id) from infor ";
             string maxid = SQLiteHelper.SQLiteHelper.execScalarSql(sql);
             maxid = maxid == "" ? "0" : maxid;
             //sql= "select  DISTINCT(username),id from e_submissions where `status`=1 and addtime>  '"+ 1555384291 + "' ORDER BY id desc;";
@@ -95,7 +96,7 @@ namespace GetInfor
                         SQLiteHelper.SQLiteHelper.execSql(sql);
                         continue;
                     }
-                    sql_list.Add(" INSERT or ignore   INTO detail(Account,Birthday,Email,Id,Mobile,Sex,Wallet,LatestLogin_IP,LatestLogin_time,LatestLogin_Id,BankAccount,BankName,City,Province,BankMemo,RegisterDevice,RegisterUrl ,Name,QQ ) VALUES('" + user.Account + "','" + user.Birthday + "','" + user.Email + "','" + user.Id + "','" + user.Mobile + "','" + user.SexString + "'," + user.Wallet + ",'" + user.LatestLogin_IP + "','" + user.LatestLogin_time + "','" + user.LatestLogin_Id + "','" + user.BankAccount + "','" + user.BankName + "','" + user.City + "','" + user.Province + "','" + user.BankMemo + "','" + user.RegisterDevice + "', '" + user.RegisterUrl + "' ,'" + user.Name + "','" + user.QQ + "' );update infor set status=1 where id=" + item[1].ToString() + ";");
+                    sql_list.Add("REPLACE INTO detail(Account,Birthday,Email,Id,Mobile,Sex,Wallet,LatestLogin_IP,LatestLogin_time,LatestLogin_Id,BankAccount,BankName,City,Province,BankMemo,RegisterDevice,RegisterUrl ,Name,QQ ) VALUES('" + user.Account + "','" + user.Birthday + "','" + user.Email + "','" + user.Id + "','" + user.Mobile + "','" + user.SexString + "'," + user.Wallet + ",'" + user.LatestLogin_IP + "','" + user.LatestLogin_time + "','" + user.LatestLogin_Id + "','" + user.BankAccount + "','" + user.BankName + "','" + user.City + "','" + user.Province + "','" + user.BankMemo + "','" + user.RegisterDevice + "', '" + user.RegisterUrl + "' ,'" + user.Name + "','" + user.QQ + "' );update infor set status=1 where id=" + item[1].ToString() + ";");
 
                     if (sql_list.Count == 100 || sql_list.Count==dt.Rows.Count % 100)
                     {

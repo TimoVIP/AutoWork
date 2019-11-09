@@ -21,8 +21,9 @@ namespace AutoWork_Plat1
     public delegate void ClsListItem();
     public partial class frmMain : Form
     {
-
+        static string platno;
         static string platname;
+
         static int[] interval;
         static int maxValue;
         private static string[] FiliterGroups;
@@ -91,6 +92,7 @@ namespace AutoWork_Plat1
                 maxValue = int.Parse(myConfig["MaxValue"].ToString());
                 memberLevel = myConfig["MemberLevel"].ToString().Split(new char[] { '|', '@' }, StringSplitOptions.RemoveEmptyEntries);
                 platname = myConfig["platname"].ToString();
+                platno = myConfig["platno"].ToString();
                 AutoCls = myConfig["AutoCls"].ToString().Split('|');
                 Prob = myConfig["Prob"].ToString().Split('|');
                 mailbody =string.Format( myConfig["mailbody"].ToString(),platname).Split(new char[] { '|', '@' }, StringSplitOptions.RemoveEmptyEntries);
@@ -216,12 +218,18 @@ namespace AutoWork_Plat1
             //}
 
             //BBIN糖果派对1/2
-            if (actInfo[20] == "1")
+            if (platno=="1" &&  actInfo[20] == "1")
             {
                 platGPK.needsocket = true;
                 sched.ScheduleJob(JobBuilder.Create<MyJob12>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval[6]).RepeatForever()).Build());
             }
 
+            //双十一(超值存送)
+            if (platno == "2" && actInfo[20] == "1")
+            {
+                sched.ScheduleJob(JobBuilder.Create<MyJob9>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval[7]).RepeatForever()).Build());
+            }
+            
             //开始运行
             sched.Start();
         }
@@ -1800,7 +1808,7 @@ namespace AutoWork_Plat1
 
 
         /// <summary>
-        /// 五一七天乐 登陆有礼
+        /// 五一七天乐 登陆有礼 \周年庆-账号价值\
         /// </summary>
         [DisallowConcurrentExecution]
         public class MyJob8 : IJob
@@ -2052,7 +2060,7 @@ namespace AutoWork_Plat1
         }
 
         /// <summary>
-        /// 五一七天乐 存款即送
+        /// 五一七天乐 存款即送  \周年庆-运筹帷幄\  双十一(超值存送)
         /// </summary>
         [DisallowConcurrentExecution]
         public class MyJob9 : IJob
@@ -2060,8 +2068,9 @@ namespace AutoWork_Plat1
             public void Execute(IJobExecutionContext context)
             {
                 //DateTime dt = DateTime.Parse("2019/05/01 00:00:01");
-                DateTime dt = DateTime.Parse("2019/05/18 00:00:01");
-                List<betData> list = platACT.getActData(actInfo[21]);
+                //DateTime dt = DateTime.Parse("2019/05/18 00:00:01");
+                DateTime dt = DateTime.Parse("2019/11/11 00:00:01");
+                List<betData> list = platACT.getActData(actInfo[18]);
                 //List<betData> list = new List<betData>();
                 //list.Add(new betData() { username = "zr97987", bbid = "1470906", betTime = "2019-04-29 18:47", aid = actInfo[21] });
                 //list.Add(new betData() { username = "mg1995", bbid = "1492880", betTime = "2019-05-01 20:50", aid = actInfo[21] });
@@ -2072,14 +2081,14 @@ namespace AutoWork_Plat1
                 }
                 if (list.Count == 0)
                 {
-                    MyWrite(actInfo[22] + "没有新的注单，等待下次执行 ");
+                    MyWrite(actInfo[19] + "没有新的注单，等待下次执行 ");
                     return;
                 }
 
                 foreach (var item in list)
                 {
-                    item.aid = actInfo[21];
-                    item.aname = actInfo[22];
+                    item.aid = actInfo[18];
+                    item.aname = actInfo[19];
                     //判断是否提交过 同一用户  只能一次
                     string sql = "select * from record where pass=1 and aid =" + item.aid+ " and LOWER(username)='" + item.username.ToLower() + "'  ";
                     if (SQLiteHelper.SQLiteHelper.recorderDbCheck(sql))
@@ -2208,17 +2217,30 @@ namespace AutoWork_Plat1
                     //计算送的钱
                     decimal hb = 0;
                     bool ok = false;
-                    if (bb.betMoney>=10 )
+                    //if (bb.betMoney>=10 )
+                    //{
+                    //    hb= 10;
+                    //    ok = true;
+                    //    bb.Audit = (bb.betMoney + 10) * 5;
+                    //}
+                    //if (bb.betMoney >= 20 )
+                    //{
+                    //    hb= 20;
+                    //    ok = true;
+                    //    bb.Audit = (bb.betMoney + 20) * 9;
+                    //}
+
+                    if (bb.betMoney>=11 )
                     {
-                        hb= 10;
+                        hb= 11;
                         ok = true;
-                        bb.Audit = (bb.betMoney + 10) * 5;
+                        bb.Audit = (bb.betMoney + 11) * 5;
                     }
-                    if (bb.betMoney >= 20 )
+                    if (bb.betMoney >= 22 )
                     {
-                        hb= 20;
+                        hb= 22;
                         ok = true;
-                        bb.Audit = (bb.betMoney + 20) * 9;
+                        bb.Audit = (bb.betMoney + 22) * 9;
                     }
 
 
@@ -2260,14 +2282,14 @@ namespace AutoWork_Plat1
                         if (ok)
                         {
                             //送 10
-                            bb.betMoney = 10;
+                            bb.betMoney = 11;
                             bb.passed = true;
                         }
                         else
                         {
                             //存款不符合要求
                             item.passed = false;
-                            item.msg = "此次存款不符合条件 最低10元 R";
+                            item.msg = "此次存款不符合条件 最低11元 R";
                             bool r1 = platACT.confirmAct(item);
                             if (r1)
                             {
@@ -2287,17 +2309,17 @@ namespace AutoWork_Plat1
                         if (bb.total_money>=1)
                         {
                             //有记录>1 >20 就送
-                            if (hb==20)
+                            if (hb==22)
                             {
                                 //送 20
-                                bb.betMoney = 20;
+                                bb.betMoney = 22;
                                 bb.passed = true;
                             }
                             else
                             {
-                                //存款不足 5.1号前有过存款记录，此次最低存20元才又送
+                                //存款不足 5.1号前有过存款记录，此次最低存22元才又送
                                 item.passed = false;
-                                item.msg = "此次需要最低存款20元才能参与活动，不符合条件 R";
+                                item.msg = "此次需要最低存款22元才能参与活动，不符合条件 R";
                                 bool r1 = platACT.confirmAct(item);
                                 if (r1)
                                 {
@@ -2434,7 +2456,7 @@ namespace AutoWork_Plat1
 
 
         /// <summary>
-        /// 520礼惠五月 登陆有礼
+        /// 520礼惠五月 登陆有礼 js
         /// </summary>
         [DisallowConcurrentExecution]
         public class MyJob10 : IJob
@@ -2710,7 +2732,7 @@ namespace AutoWork_Plat1
 
 
         /// <summary>
-        /// 520礼惠五月 存款即送
+        /// 520礼惠五月 存款即送 js
         /// </summary>
         [DisallowConcurrentExecution]
         public class MyJob11 : IJob

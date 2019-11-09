@@ -33,8 +33,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "其他项目", "其他项�
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GetInfor", "GetInfor\GetInfor.csproj", "{BCA551A2-38ED-43DB-AA32-E77FA26E83CC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppSignAPI", "AppSignAPI\AppSignAPI.csproj", "{A30403D7-4EC5-450A-B7C8-00298EDE9B90}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Log4Net", "Log4Net\Log4Net.csproj", "{29A2D744-8344-4C5D-9320-7D8EED049933}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "青苹果充值GPK", "GAC_load\青苹果充值GPK.csproj", "{2B09E152-46FE-498A-92A5-F296AF5E2897}"
@@ -68,6 +66,35 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "批量导入红包数据", "批量导入红包数据\批量导入红包数据.csproj", "{B3210FB4-BCAA-4E17-ABAE-1C4769A774D0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "查看会员信息", "queryInfor\查看会员信息.csproj", "{644A3242-C976-4F94-97AE-A77035B7C441}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "scheduleExecuteSQL", "scheduleExecuteSQL\scheduleExecuteSQL.csproj", "{D1636C87-1A8F-4D69-8244-2B9C6E644D62}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "青苹果充值TST", "青苹果充值TST\青苹果充值TST.csproj", "{BE128436-98EA-4030-BFC0-1611B9FE3194}"
+EndProject
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "WebSite2", "..\..\WebSites\WebSite2\", "{AD1C0780-5F0E-460B-B92B-0C30104E8BA4}"
+	ProjectSection(WebsiteProperties) = preProject
+		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.6.1"
+		ProjectReferences = "{c47bdecb-d9e8-4723-80fb-d1b8d4f77423}|TimoControl.dll;{1955A126-44D7-4381-B0DC-00F58AD93D6E}|BaseFun.dll;{6B6FF48F-5095-413E-8C9D-20E8FC36E9DC}|MySQLHelper.dll;{73CE189D-2285-4C40-9B2C-5F0E2675C5AA}|SQLiteHelper.dll;"
+		Debug.AspNetCompiler.VirtualPath = "/localhost_36086"
+		Debug.AspNetCompiler.PhysicalPath = "..\..\WebSites\WebSite2\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_36086\"
+		Debug.AspNetCompiler.Updateable = "true"
+		Debug.AspNetCompiler.ForceOverwrite = "true"
+		Debug.AspNetCompiler.FixedNames = "false"
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.VirtualPath = "/localhost_36086"
+		Release.AspNetCompiler.PhysicalPath = "..\..\WebSites\WebSite2\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_36086\"
+		Release.AspNetCompiler.Updateable = "true"
+		Release.AspNetCompiler.ForceOverwrite = "true"
+		Release.AspNetCompiler.FixedNames = "false"
+		Release.AspNetCompiler.Debug = "False"
+		VWDPort = "36086"
+		SlnRelativePath = "..\..\WebSites\WebSite2\"
+		DefaultWebSiteLanguage = "Visual C#"
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "获取http数据订单到GPK", "GetHttpData2GPK\获取http数据订单到GPK.csproj", "{013C58F4-F51E-47F6-B706-92C3ED9CAD8C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -127,10 +154,6 @@ Global
 		{BCA551A2-38ED-43DB-AA32-E77FA26E83CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BCA551A2-38ED-43DB-AA32-E77FA26E83CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BCA551A2-38ED-43DB-AA32-E77FA26E83CC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A30403D7-4EC5-450A-B7C8-00298EDE9B90}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A30403D7-4EC5-450A-B7C8-00298EDE9B90}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A30403D7-4EC5-450A-B7C8-00298EDE9B90}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A30403D7-4EC5-450A-B7C8-00298EDE9B90}.Release|Any CPU.Build.0 = Release|Any CPU
 		{29A2D744-8344-4C5D-9320-7D8EED049933}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{29A2D744-8344-4C5D-9320-7D8EED049933}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{29A2D744-8344-4C5D-9320-7D8EED049933}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -191,6 +214,22 @@ Global
 		{644A3242-C976-4F94-97AE-A77035B7C441}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{644A3242-C976-4F94-97AE-A77035B7C441}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{644A3242-C976-4F94-97AE-A77035B7C441}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D1636C87-1A8F-4D69-8244-2B9C6E644D62}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D1636C87-1A8F-4D69-8244-2B9C6E644D62}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D1636C87-1A8F-4D69-8244-2B9C6E644D62}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D1636C87-1A8F-4D69-8244-2B9C6E644D62}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BE128436-98EA-4030-BFC0-1611B9FE3194}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE128436-98EA-4030-BFC0-1611B9FE3194}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE128436-98EA-4030-BFC0-1611B9FE3194}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE128436-98EA-4030-BFC0-1611B9FE3194}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AD1C0780-5F0E-460B-B92B-0C30104E8BA4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AD1C0780-5F0E-460B-B92B-0C30104E8BA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AD1C0780-5F0E-460B-B92B-0C30104E8BA4}.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{AD1C0780-5F0E-460B-B92B-0C30104E8BA4}.Release|Any CPU.Build.0 = Debug|Any CPU
+		{013C58F4-F51E-47F6-B706-92C3ED9CAD8C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{013C58F4-F51E-47F6-B706-92C3ED9CAD8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{013C58F4-F51E-47F6-B706-92C3ED9CAD8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{013C58F4-F51E-47F6-B706-92C3ED9CAD8C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -202,7 +241,6 @@ Global
 		{1C1302AF-1E42-4323-9B7D-B7E4000FAAF3} = {232359D5-F8C9-476B-93C8-5D831AAB8474}
 		{2300351E-7DD7-4BB7-BDCA-8D7BEB6621CD} = {232359D5-F8C9-476B-93C8-5D831AAB8474}
 		{BCA551A2-38ED-43DB-AA32-E77FA26E83CC} = {232359D5-F8C9-476B-93C8-5D831AAB8474}
-		{A30403D7-4EC5-450A-B7C8-00298EDE9B90} = {232359D5-F8C9-476B-93C8-5D831AAB8474}
 		{2B09E152-46FE-498A-92A5-F296AF5E2897} = {232359D5-F8C9-476B-93C8-5D831AAB8474}
 		{DFC0C485-3DBE-4FED-A90A-494BFDA3E7E0} = {232359D5-F8C9-476B-93C8-5D831AAB8474}
 		{7A711D02-9FF2-4F8F-B583-44A9EE3E40AB} = {7DBA79D2-7659-4E71-9DAD-1F511E91AE49}
@@ -216,5 +254,9 @@ Global
 		{B8D7EF27-0BF0-4498-8F3E-9AEBD3F9A6FC} = {86DE3FA3-DF4E-429F-9637-20A2F1D33A47}
 		{B3210FB4-BCAA-4E17-ABAE-1C4769A774D0} = {232359D5-F8C9-476B-93C8-5D831AAB8474}
 		{644A3242-C976-4F94-97AE-A77035B7C441} = {232359D5-F8C9-476B-93C8-5D831AAB8474}
+		{D1636C87-1A8F-4D69-8244-2B9C6E644D62} = {232359D5-F8C9-476B-93C8-5D831AAB8474}
+		{BE128436-98EA-4030-BFC0-1611B9FE3194} = {232359D5-F8C9-476B-93C8-5D831AAB8474}
+		{AD1C0780-5F0E-460B-B92B-0C30104E8BA4} = {232359D5-F8C9-476B-93C8-5D831AAB8474}
+		{013C58F4-F51E-47F6-B706-92C3ED9CAD8C} = {232359D5-F8C9-476B-93C8-5D831AAB8474}
 	EndGlobalSection
 EndGlobal

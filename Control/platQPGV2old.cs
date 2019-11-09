@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace TimoControl
 {
-    public static  class platQPGV2
+    public static  class platQPGV2old
     {
         private static string urlbase { get; set; }
         private static string acc { get; set; }
@@ -30,64 +30,6 @@ namespace TimoControl
         /// 登录
         /// </summary>
         /// <returns></returns>
-        //public static bool login()
-        //{
-        //    try
-        //    {
-        //        string s1 = appSittingSet.readAppsettings("QPG");
-        //        acc = s1.Split('|')[0];
-        //        pwd = s1.Split('|')[1];
-        //        urlbase = s1.Split('|')[2];
-        //        mainAccount = acc.Split('@')[1];
-        //        string h = appSittingSet.readAppsettings("Hours");
-        //        Hours = h==""? 1: int.Parse(h);
-        //        string dep = appSittingSet.readAppsettings("deposit_status");
-        //        deposit_status = dep == "" ? 0 : int.Parse(dep);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        appSittingSet.Log("活动站获取配置文件失败" + ex.Message);
-        //        return false;
-        //    }
-
-
-        //    try
-        //    {
-        //        pwd = MD5Encrypt(pwd);//加密
-        //        ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-        //        string url = $"{urlbase}v3/api/merchant/merchantcenter/subAccount/loginOfSubAccount?subAccount={acc}&password={pwd}";
-        //        HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
-        //        request.Method = "POST";
-        //        request.ContentLength = 0;
-        //        HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-        //        StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
-        //        string ret_html = reader.ReadToEnd();
-        //        // {"code":200,"message":"操作成功","transNo":"898f964a9bc561e2","data":{"token":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlblNhbHQiOiI1YmM4NjFlZGQ1YWMzNmRiZmY2NDdlMDFlMmY0N2VhZTc0ZTJhYWE0IiwiaWZTdWJBY2NvdW50TG9naW4iOnRydWUsInVzZXJOYW1lIjoiSlFSQHhwajExMSIsInVzZXJSb2xlIjoibWVyY2hhbnQiLCJ1c2VySWQiOiIiLCJzaWduVGltZSI6MTU2MDQxMzE4MTIzOSwiZXhwaXJlcyI6ODY0MDAwMDAsImV4cCI6MTU2MDQ5OTU4MSwibmJmIjoxNTYwNDEzMTgxfQ.Ui1RJL3jcMdBiroUZEef_ewGAw6-3tncnw8HiwLyF2c","roleList":["1","1_1","2","2_0","2_0_0","2_0_1","2_1","2_1_0","2_1_1"],"role":"SUB_ACCOUNT","backendGrantListForSubAcct":[],"mainAccount":"xpj111","subAccount":"JQR@xpj111"}}
-        //        cookie = new CookieContainer();
-        //        cookie.Add(response.Cookies);
-        //        reader.Close();
-        //        reader.Dispose();
-        //        response.Dispose();
-        //        request.Abort();
-
-        //        JObject jo = (JObject)JsonConvert.DeserializeObject(ret_html.ToString());
-        //        if (jo["message"].ToString() == "操作成功")
-        //        {
-        //            subAccount = jo["data"]["subAccount"].ToString();
-        //            mainAccount = subAccount.Split('@')[1];
-        //            token = jo["data"]["token"].ToString();
-        //            transNo = jo["transNo"].ToString();
-        //            return true;
-        //        }
-        //        else
-        //            return false;
-        //    }
-        //    catch (WebException ex)
-        //    {
-        //        appSittingSet.Log(string.Format("登录失败：{0}   ", ex.Message));
-        //        return false;
-        //    }
-        //}
         public static bool login()
         {
             try
@@ -111,32 +53,15 @@ namespace TimoControl
 
             try
             {
-                //pwd  = appSittingSet.md5(pwd);//加密
-
+                pwd = MD5Encrypt(pwd);//加密
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-                string url = $"{urlbase}v1/api/q/accountSub/loginpassword";
+                string url = $"{urlbase}v3/api/merchant/merchantcenter/subAccount/loginOfSubAccount?subAccount={acc}&password={pwd}";
                 HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
                 request.Method = "POST";
-
-                var obj = new { sub_account = acc, password = appSittingSet.sha256(pwd), md5_login_pwd = appSittingSet.md5(pwd) };
-                string postdata = JsonConvert.SerializeObject(obj);
-                //request.ProtocolVersion = HttpVersion.Version11;
-                //ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | SecurityProtocolType.Tls11;
-                ////证书错误
-                //ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
-                //request.CookieContainer = cookie;
-
-                byte[] bytes = Encoding.UTF8.GetBytes(postdata);
-                request.ContentLength = bytes.Length;
-                Stream newStream = request.GetRequestStream();
-                newStream.Write(bytes, 0, bytes.Length);
-                newStream.Close();
-
-
+                request.ContentLength = 0;
                 HttpWebResponse response = (HttpWebResponse)request.GetResponse();
                 StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
                 string ret_html = reader.ReadToEnd();
-                //{"code":200,"message":"OK","errorNo":200,"msgDebug":"OK","transNo":"","data":{"token":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlblNhbHQiOiIwOWE5MWI1YWI5MGNkYmMzMTA2NmUyNTM1MjhkZjQ4M2Y5MjY4ODVmIiwiaWZTdWJBY2NvdW50TG9naW4iOnRydWUsInVzZXJOYW1lIjoieHBqMjIyQHhwajExMSIsInVzZXJSb2xlIjoibWVyY2hhbnQiLCJ1c2VySWQiOiJ4cGoyMjJAeHBqMTExIiwic2lnblRpbWUiOjE1NzI5NTQzNzIzNDAsImV4cGlyZXMiOjI4ODAwMDAwLCJleHAiOjE1NzI5ODMxNzIsIm5iZiI6MTU3Mjk1NDM3Mn0.63iavZ8XYkTJwTsrotN8tD_Zt02hgRJ7z0LCwgQDSkk","roleList":["1,1_1,2,2_0,2_0_0,2_0_1,2_1,2_1_0,2_1_1"],"role":"SUB_ACCOUNT","mainAccount":"xpj111","mainQAccount":"xpj111","subAccount":"xpj222@xpj111","backendGrantListForSubAcct":null}}
                 // {"code":200,"message":"操作成功","transNo":"898f964a9bc561e2","data":{"token":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlblNhbHQiOiI1YmM4NjFlZGQ1YWMzNmRiZmY2NDdlMDFlMmY0N2VhZTc0ZTJhYWE0IiwiaWZTdWJBY2NvdW50TG9naW4iOnRydWUsInVzZXJOYW1lIjoiSlFSQHhwajExMSIsInVzZXJSb2xlIjoibWVyY2hhbnQiLCJ1c2VySWQiOiIiLCJzaWduVGltZSI6MTU2MDQxMzE4MTIzOSwiZXhwaXJlcyI6ODY0MDAwMDAsImV4cCI6MTU2MDQ5OTU4MSwibmJmIjoxNTYwNDEzMTgxfQ.Ui1RJL3jcMdBiroUZEef_ewGAw6-3tncnw8HiwLyF2c","roleList":["1","1_1","2","2_0","2_0_0","2_0_1","2_1","2_1_0","2_1_1"],"role":"SUB_ACCOUNT","backendGrantListForSubAcct":[],"mainAccount":"xpj111","subAccount":"JQR@xpj111"}}
                 cookie = new CookieContainer();
                 cookie.Add(response.Cookies);
@@ -146,7 +71,7 @@ namespace TimoControl
                 request.Abort();
 
                 JObject jo = (JObject)JsonConvert.DeserializeObject(ret_html.ToString());
-                if (jo["message"].ToString() == "操作成功" || jo["message"].ToString() == "OK")
+                if (jo["message"].ToString() == "操作成功")
                 {
                     subAccount = jo["data"]["subAccount"].ToString();
                     mainAccount = subAccount.Split('@')[1];
@@ -163,6 +88,7 @@ namespace TimoControl
                 return false;
             }
         }
+
         public static List<betData> getActData()
         {
 
@@ -217,11 +143,10 @@ namespace TimoControl
                             b.bbid = item["orderNo"].ToString().Trim();
                             b.username = item["subNo"].ToString().Trim();
                             b.betMoney = decimal.Parse(item["quan"].ToString().Trim()) / 10000;
-                            b.Memo = item["Remark"] ==null?"" : item["Remark"].ToString().Trim();
+                            b.Memo = item["Remark"].ToString().Trim();
 
                             //没有备注的加上
-                            //if (b.Memo.Length == 0 && item["DepositStatus"].ToString() == "3")
-                            if (b.Memo.Length == 0 && item["deposit_status"].ToString() == "3")
+                            if (item["Remark"].ToString().Trim().Length == 0 && item["DepositStatus"].ToString() == "3")
                                 list.Add(b);
                         }
                     }
@@ -240,11 +165,6 @@ namespace TimoControl
                 //    login();
                 //    return null;
                 //}
-                if (ex.Message.Contains("返回错误"))
-                {
-                    //需要重新登录
-                    login();
-                }
                 appSittingSet.Log("获取列表失败：" + ex.Message);
                 return null;
             }
@@ -268,18 +188,14 @@ namespace TimoControl
             {
                 //插入本地数据库
                 SQLiteHelper.SQLiteHelper.execSql($"insert  or ignore  into record values({0},'{b.bbid}','{b.username}',datetime(CURRENT_TIMESTAMP,'localtime'),0,{(b.passed ? 1 : 0)});");
-                string msg = $"订单{b.bbid}用户{b.username}金额{b.betMoney}处理完毕，处理为 {(b.passed ? "通过" : "不通过")}，回复消息 {b.msg} {DateTime.Now.ToString()}";
+                string msg = $"订单{b.bbid}用户{b.username}处理完毕，处理为 {(b.passed ? "通过" : "不通过")}，回复消息 {b.msg} {DateTime.Now.ToString()}";
                 Console.WriteLine(msg);
                 appSittingSet.Log(msg);
             }
             return r;
         }
 
-        /// <summary>
-        /// 添加备注
-        /// </summary>
-        /// <param name="b"></param>
-        /// <returns></returns>
+
         public static bool addRemark(betData b)
         {
             try
@@ -287,7 +203,6 @@ namespace TimoControl
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
                 //"https://b.gac.top/v1/api/q/funding/webMerchant/setOrderRemark";
                 string url = $"{urlbase}v1/api/q/funding/webMerchant/setOrderRemark";
-
                 HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
                 request.Method = "POST";
                 request.Headers.Add("logntoken", token);
@@ -335,18 +250,13 @@ namespace TimoControl
 
         }
 
-        /// <summary>
-        /// 更改状态为 已经处理
-        /// </summary>
-        /// <param name="b"></param>
-        /// <returns></returns>
         public static bool changeStatus(betData b)
         {
             try
             {
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-                 //string url = $"{urlbase}v3/api/merchant/merchantcenter/oc/manualchantOrder?tradeNo={b.bbid}&synStatus=4";
-                string url = $"{urlbase}v1/api/q/merchantpay/merchant/merchantPayOrder/manualScore";
+                 string url = $"{urlbase}v3/api/merchant/merchantcenter/oc/manualchantOrder?tradeNo={b.bbid}&synStatus=4";
+
                 HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
                 request.Method = "POST";
                 request.Headers.Add("busiType", "merchant");
@@ -365,12 +275,6 @@ namespace TimoControl
                 request.ContentLength = 0;
                 //request.Host = urlbase.Replace("https://", "");
 
-                string postdata = JsonConvert.SerializeObject(new { synStatus = 6, tradeNo = b.bbid });
-                byte[] bytes = Encoding.UTF8.GetBytes(postdata);
-                request.ContentLength = bytes.Length;
-                Stream newStream = request.GetRequestStream();
-                newStream.Write(bytes, 0, bytes.Length);
-                newStream.Close();
 
                 //request.CookieContainer.Add(new Cookie("sidebarStatus", "0", "", ""));
                 //string postdata = JsonConvert.SerializeObject(new { from = mainAccount, OrderID = b.bbid, OrderRemark = b.msg });
@@ -394,14 +298,34 @@ namespace TimoControl
                     bool f = login();
                 }
 
-                return ret_html.Contains("操作成功") || ret_html.Contains("OK");
+                return ret_html.Contains("操作成功");
             }
             catch (WebException ex)
             {
-                string msg = $"更改状态失败：用户 {b.username} 单{b.betno} 错误{ex.Message}";
+                string msg = $"添加备注失败：用户 {b.username} 单{b.betno} 错误{ex.Message}";
                 appSittingSet.Log(msg);
                 return false;
             }
         }
+
+        public static string MD5Encrypt(string str)
+        {
+            MD5 md5 = MD5.Create();
+            // 将字符串转换成字节数组
+            byte[] byteOld = Encoding.UTF8.GetBytes(str);
+            // 调用加密方法
+            byte[] byteNew = md5.ComputeHash(byteOld);
+            // 将加密结果转换为字符串
+            StringBuilder sb = new StringBuilder();
+            foreach (byte b in byteNew)
+            {
+                // 将字节转换成16进制表示的字符串，
+                sb.Append(b.ToString("x2"));
+            }
+            // 返回加密的字符串
+            return sb.ToString();
+        }
+
+
     }
 }

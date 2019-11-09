@@ -503,12 +503,16 @@ namespace TestDomo_console
 
 
 
-            object jo = JsonConvert.DeserializeObject("[]");
-            JArray ja = JArray.FromObject(jo);
-            foreach (var item in ja)
-            {
-                Console.WriteLine(item["Label"].ToString());
-            }
+            //object jo = JsonConvert.DeserializeObject("[]");
+            //JArray ja = JArray.FromObject(jo);
+            //foreach (var item in ja)
+            //{
+            //    Console.WriteLine(item["Label"].ToString());
+            //}
+
+            b =  platQPGV2.login();
+           List<betData> list =  platQPGV2.getActData();
+
                 Console.ReadLine();
 
         }

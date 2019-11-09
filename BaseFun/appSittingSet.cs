@@ -327,21 +327,35 @@ namespace BaseFun
 
         }
 
-        public static string md5(string code, int len)
+        /// <summary>
+        /// md5加密
+        /// </summary>
+        /// <param name="code"></param>
+        /// <param name="len"></param>
+        /// <param name="upper"></param>
+        /// <returns></returns>
+        public static string md5(string code, int len=32,bool upper = false)
         {
+            string tmp;
             if (len == 32)
-                return System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(code, "MD5").ToLower();
+                tmp= System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(code, "MD5");
             else
-                return System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(code, "MD5").ToLower().Substring(8, 16);
+                tmp= System.Web.Security.FormsAuthentication.HashPasswordForStoringInConfigFile(code, "MD5").Substring(8, 16);
+
+            if (!upper)
+                tmp = tmp.ToLower();
+            else
+                tmp = tmp.ToUpper();
+            return tmp;
         }
 
         /// <summary>
-        /// 获取SHA256加密
+        /// 获取SHA512加密
         /// </summary>
         /// <param name="s">待价密字符</param>
         /// <param name="upper">是否大写</param>
         /// <returns></returns>
-        public static string getSHA512(string s,bool upper)
+        public static string sha512(string s,bool upper=false)
         {
             byte[] result = new SHA512Managed().ComputeHash(Encoding.Default.GetBytes(s));
 
@@ -354,6 +368,28 @@ namespace BaseFun
                     sb.Append(result[i].ToString("x2"));
             }
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// SHA256加密 返回密文
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public static string sha256(string s,bool upper = false)
+        {
+
+            byte[] hash = SHA256.Create().ComputeHash(Encoding.UTF8.GetBytes(s));
+
+            StringBuilder builder = new StringBuilder();
+            for (int i = 0; i < hash.Length; i++)
+            {
+                if (upper)
+                    builder.Append(hash[i].ToString("X2"));
+                else
+                    builder.Append(hash[i].ToString("x2"));
+            }
+
+            return builder.ToString();
         }
     }
 }

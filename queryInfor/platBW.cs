@@ -1,5 +1,5 @@
 ﻿using BaseFun;
-using OpenQA.Selenium;
+//using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using System;
 using System.IO;
@@ -9,6 +9,8 @@ using System.Text;
 using System.Threading;
 using HtmlAgilityPack;
 using System.Data;
+using System.Collections.Generic;
+using System.Collections;
 
 namespace queryInfor
 {
@@ -21,14 +23,36 @@ namespace queryInfor
         public static string pwd2 { get; set; }
         public static string otp { get; set; }
 
+        public static string PHPSESSID { get; set; }
         private static CookieContainer cookie { get; set; } = new CookieContainer();
         private static string token { get; set; }
-        private static IWebDriver selenium { get; set; }
+        //private static IWebDriver selenium { get; set; }
         private static string Authorization { get; set; }
 
         private static HttpWebRequest myReq = null;
         private static HttpWebResponse wr = null;
         private static CredentialCache mycache = new CredentialCache();
+
+        /// <summary>
+        /// 游戏编号
+        /// </summary>
+        public static Dictionary<string, string> dic_gameids = new Dictionary<string, string>();
+
+        //public static Dictionary<string, string> dic_channel = new Dictionary<string, string>();
+
+        /// <summary>
+        /// 最近一笔兑换成功记录的时间
+        /// </summary>
+        private static string latest_dhsj { get; set; } = "";
+
+        /// <summary>
+        /// 最近一笔充值成功记录的时间
+        /// </summary>
+        private static string latest_czsj { get; set; } = "";
+
+
+        #region 不用
+        /*
         public static bool login_()
         {
             string s1, s2;
@@ -137,6 +161,8 @@ namespace queryInfor
             }
         }
 
+        */
+        #endregion
 
         public static async void HTTP_GET()
         {
@@ -177,8 +203,15 @@ namespace queryInfor
         /// 登录
         /// </summary>
         /// <returns></returns>
-        public static bool login()
+        public static bool login(out string resualt)
         {
+            //获取用户名、密码 等资料
+            Hashtable config = appSittingSet.readConfig("appconfig");
+            //一层账号
+            acc1 = config["bw1"].ToString().Split('|')[0];
+            pwd1 = config["bw1"].ToString().Split('|')[1];
+            urlbase = config["bw1"].ToString().Split('|')[2];
+            PHPSESSID = config["PHPSESSID"].ToString();
             try
             {
                 myReq = (HttpWebRequest)WebRequest.Create($"{urlbase}admin.php/user/publics/signin.html");
@@ -191,7 +224,7 @@ namespace queryInfor
                 Authorization = "Basic " + Convert.ToBase64String(new ASCIIEncoding().GetBytes(acc1 + ":" + pwd1));
                 myReq.Headers.Add("Authorization", Authorization);
 
-                cookie.Add(new System.Net.Cookie("PHPSESSID", "547df0afd6f63b8baa88358d107b89fb", "/", "bkk.e9xz3mq8.xyz"));
+                cookie.Add(new System.Net.Cookie("PHPSESSID", PHPSESSID, "/", urlbase.Split(':')[1].Replace("/","")));
                 myReq.CookieContainer = cookie;
 
                 wr = (HttpWebResponse)myReq.GetResponse();
@@ -240,7 +273,7 @@ namespace queryInfor
                     //提交数据
                     myReq = (HttpWebRequest)WebRequest.Create($"{urlbase}admin.php/user/publics/signin.html");
                     myReq.Method = "POST";
-                    myReq.ContentType = "application/x-www-form-urlencoded";
+                    myReq.ContentType = "application/x-www-form-urlencoded; charset=UTF-8";
 
                     //mycache.Add(new Uri(urlbase), "Basic", new NetworkCredential(acc, pwd));
                     myReq.Credentials = mycache;
@@ -274,15 +307,26 @@ namespace queryInfor
                     if (!content.Contains("登录成功"))
                     {
                         appSittingSet.Log("登陆失败" + content);
+                        resualt = "google 验证码不对";
                         return false;
                     }
-                    //myReq = (HttpWebRequest)WebRequest.Create($"{urlbase}admin.php/gameplayer/index/info/user_id/2800776.html");
+
+
+                    //跳转到主页 必须步骤
                     myReq = (HttpWebRequest)WebRequest.Create($"{urlbase}admin.php/admin/index/index.html");
                     myReq.Method = "GET";
                     myReq.Credentials = mycache;
                     myReq.Headers.Add("Authorization", Authorization);
                     myReq.Headers.Add("Upgrade-Insecure-Requests", "1");
+                    //myReq.Headers.Add("Sec-Fetch-Mode", "navigate");
+                    //myReq.Headers.Add("Sec-Fetch-Site", "same-origin");
+                    //myReq.Headers.Add("Sec-Fetch-User", "?1");
+                    //myReq.Host = urlbase.Replace("https://", "").Replace("/", "");
+
                     myReq.CookieContainer = cookie;
+                    myReq.KeepAlive = true;
+                    myReq.Referer = $"{urlbase}admin.php/user/publics/signin.html";
+                    myReq.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36";
 
                     wr = (HttpWebResponse)myReq.GetResponse();
                     receiveStream = wr.GetResponseStream();
@@ -290,23 +334,30 @@ namespace queryInfor
                     content = reader.ReadToEnd();
 
                     if (content.Contains("欢迎登陆后台") && content.Contains("退出帐号"))
+                    {
+                        resualt = "登陆成功";
                         return true;
+                    }
                     else
+                        resualt = "请先通过浏览器登陆一遍，复制浏览器中 Cookie: PHPSESSID=53b551625f315ea2e16e3716a0a70e47 这个部分替换config中的内容";
                         return false;
 
                 }
                 else
                 {
-                    return false;
+                        resualt = "登陆成功";
+                        return false;
                 }
             }
             catch (Exception ex)
             {
+                resualt = "基本验证失败";
                 appSittingSet.Log(ex.Message);
                 return false;
             }
 
         }
+
 
         /// <summary>
         /// 获取基本信息
@@ -342,11 +393,14 @@ namespace queryInfor
 
             //HtmlNode node1 = htmlDocument.DocumentNode.SelectSingleNode("//*[@id='builder-table-main']");
             HtmlNodeCollection node2 = htmlDocument.DocumentNode.SelectNodes("//*[@id='builder-table-main']//tr");
+            string display = "";
+
             if (node2==null)
             {
-                return htmlDocument.DocumentNode.SelectSingleNode("/html/body/div[1]/div/div/h1").InnerText;
+                display = "用户不存在\r\n"+htmlDocument.DocumentNode.SelectSingleNode("/html/body/div[1]/div/div/h1").InnerText;
+                return display;
             }
-            string display = "";
+
             foreach (HtmlNode item in node2)
             {
                 foreach (HtmlNode c in item.ChildNodes)
@@ -359,28 +413,7 @@ namespace queryInfor
                 display = display.TrimEnd(':');
                 display += "\r\n";
             }
-            /*
-            if (node1 != null)
-            {
-                content = "";
-                node1 = node1.SelectSingleNode("//*[@id='builder-table-main']//tbody");
 
-                foreach (HtmlNode row in node1.SelectNodes("//tr"))
-                {
-                    if (row.ChildNodes[1].Name.ToLower() == "th")
-                    {
-                        continue;
-                    }
-                    content += $"{row.ChildNodes[1].ChildNodes[1].InnerText.Replace("\r\n", "").Replace(" ", "").Trim()}:{row.ChildNodes[3].ChildNodes[1].InnerText.Replace("\r\n", "").Replace(" ", "").Trim()}\r\n";
-                    //content += $"{row.InnerText.Replace("\r\n","").Replace(" ","").Trim()}\r\n";
-                    //content += row.SelectNodes("//td")[0].InnerText.Replace("\r\n", "").Trim() + ":" + row.SelectNodes("//td")[1].InnerText.Replace("\r\n", "").Trim() + "/r/n";
-                }
-                //return node1.OuterHtml;
-                return content;
-            }
-            else
-                return htmlDocument.DocumentNode.InnerText.Replace(" ","");
-                */
             return display;
         }
 
@@ -392,11 +425,11 @@ namespace queryInfor
         /// <param name="page">第几页</param>
         /// <param name="pagesize">页大小</param>
         /// <returns></returns>
-        public static DataTable getJBZS(string id,DateTime d1, DateTime d2,int page=1,int pagesize=100)
+        public static DataTable getJBZS(string id,DateTime d1, DateTime d2, out string s ,int page=1,int pagesize=100)
         {
-            string url = $"{urlbase}admin.php/user/log/index.html?_s=type%3D4%7Coper_id%3D%7Cuser_id%3D{id}%7Ccreate_time%3D{d1.ToString("yyyy-MM-dd")}+-+{d2.ToString("yyyy-MM-dd")}%7Cis_export%3D&_o=type%3Deq%7Coper_id%3Deq%7Cuser_id%3Deq%7Ccreate_time%3Dbetween+time%7Cis_export%3Deq&page={page}&list_rows={pagesize}";
+            string url = $"{urlbase}admin.php/user/log/index.html?_s=type%3D4%7Coper_id%3D%7Cuser_id%3D{id}%7Ccreate_time%3D{d1.ToString("yyyy-MM-dd HH:mm:ss")}+-+{d2.ToString("yyyy-MM-dd HH:mm:ss")}%7Cis_export%3D&_o=type%3Deq%7Coper_id%3Deq%7Cuser_id%3Deq%7Ccreate_time%3Dbetween+time%7Cis_export%3Deq&page={page}&list_rows={pagesize}";
             //string url = $"{urlbase}admin.php/gameplayer/index/cunk/group/tab3/user_id/{id}.html?_s=roomid=|logtype=8|create_time=|is_history=&_o=roomid=eq|logtype=eq|create_time=between%20time|is_history=eq&page={page}&list_rows={pagesize}";
-            //string url = $"{urlbase}admin.php/user/log/index.html?_s=type=4|oper_id=|user_id={id}|create_time={d1.ToString("yyyy-MM-dd")} - {d2.ToString("yyyy-MM-dd")}|is_export=_o: type =eq|oper_id=eq|user_id=eq|create_time=between time|is_export=eq&page={page}&list_rows={pagesize}";
+            //string url = $"{urlbase}admin.php/user/log/index.html?_s=type=4|oper_id=|user_id={id}|create_time={d1.ToString("yyyy-MM-dd HH:mm:ss")} - {d2.ToString("yyyy-MM-dd HH:mm:ss")}|is_export=_o: type =eq|oper_id=eq|user_id=eq|create_time=between time|is_export=eq&page={page}&list_rows={pagesize}";
             myReq = (HttpWebRequest)WebRequest.Create(url);
             //mycache = new CredentialCache();
             //mycache.Add(new Uri(urlbase), "Basic", new NetworkCredential(acc1, pwd1));
@@ -429,7 +462,10 @@ namespace queryInfor
             {
                 dt.Columns.Add(item.InnerText.Replace("\r\n", "").Replace(" ", "").Trim());
             }
-
+            s = "";
+            int num = 0;
+            double d = 0;
+           
             //获取内容
             HtmlNodeCollection node_trow = htmlDocument.DocumentNode.SelectNodes("//*[@id='builder-table-main']/tbody/tr");
             if (node_trow.Count==1 && node_trow[0].InnerHtml.Contains("暂无数据"))
@@ -446,7 +482,10 @@ namespace queryInfor
                     dataRow[e] = hnc[e].InnerText.Replace("\r\n", "").Trim();
                 }
                 dt.Rows.Add(dataRow);
+                num += 1;
+                d += double.Parse(dataRow[4].ToString());
             }
+            s = $"订单数:{num}，金额:{d}";
             return dt;
         }
 
@@ -459,15 +498,9 @@ namespace queryInfor
         /// <returns></returns>
         public static DataTable getYHDH(string id,DateTime d1, DateTime d2,int page=1,int pagesize=100)
         {
-            string url = $"{urlbase}/admin.php/gameplayer/gameuser/exchangerecord.html?_s=search_month=|date_at={d1.ToString("yyyy-MM-dd")}%20-%20{d2.ToString("yyyy-MM-dd")}|check_time=|status=|ex_type_id=|is_agent_pay=|ex_channel=|user_type=|auto_handle=|special_status=|UserID={id}|OrderID=|OrderNo=|receive_id=|is_export=&_o=search_month=eq|date_at=between%20time|check_time=between%20time|status=eq|ex_type_id=eq|is_agent_pay=eq|ex_channel=eq|user_type=eq|auto_handle=eq|special_status=eq|UserID=eq|OrderID=eq|OrderNo=eq|receive_id=eq|is_export=eq&page={page}&list_rows={pagesize}";
-            //string url = $"{urlbase}admin.php/gameplayer/index/exchange/group/tab9/user_id/{id}.html?_s=create_time%3D%7Ccheck_time%3D%7Cexchange_table%3D%7Cstatus%3D%7Cexchannel%3D%7COrderID%3D%7COrderNo%3D&_o=create_time%3Dbetween+time%7Ccheck_time%3Dbetween+time%7Cexchange_table%3Deq%7Cstatus%3Deq%7Cexchannel%3Deq%7COrderID%3Deq%7COrderNo%3Deq&group=tab9&user_id={id}&page={page}&list_rows={pagesize}";
-            //string url = $"{urlbase}admin.php/gameplayer/index/exchange/group/tab9/user_id/2041149.html?_s=create_time=|check_time=|exchange_table=|status=|exchannel=|OrderID=|OrderNo=&_o=create_time=between%20time|check_time=between%20time|exchange_table=eq|status=eq|exchannel=eq|OrderID=eq|OrderNo=eq";
-            //string url = $"{urlbase}admin.php/gameplayer/gameuser/exchangerecord.html?_s=search_month=|date_at={d1.ToString("yyyy-MM-dd")}%20-%20{d2.ToString("yyyy-MM-dd")}|check_time=|status=1|ex_type_id=|is_agent_pay=|ex_channel=|user_type=|auto_handle=|special_status=|UserID=2550179|OrderID=|OrderNo=|receive_id=|is_export=&_o=search_month=eq|date_at=between%20time|check_time=between%20time|status=eq|ex_type_id=eq|is_agent_pay=eq|ex_channel=eq|user_type=eq|auto_handle=eq|special_status=eq|UserID=eq|OrderID=eq|OrderNo=eq|receive_id=eq|is_export=eq";
-         /*测试*///url = $"{urlbase}admin.php/gameplayer/index/cunk/group/tab3/user_id/{id}.html?_s=roomid=|logtype=1|create_time=|is_history=&_o=roomid=eq|logtype=eq|create_time=between%20time|is_history=eq&page={page}&list_rows={pagesize}";
-            //url = $"{urlbase}/admin.php/gameplayer/index/cunk/group/tab3/user_id/{id}.html?_s=roomid%3D%7Clogtype%3D1%7Ccreate_time%3D%7Cis_history%3D&_o=roomid%3Deq%7Clogtype%3Deq%7Ccreate_time%3Dbetween+time%7Cis_history%3Deq&group=tab3&user_id=2464475&page=1&list_rows=1000";
+            string url = $"{urlbase}admin.php/gameplayer/gameuser/exchangerecord.html?_s=search_month=|date_at={d1.ToString("yyyy-MM-dd HH:mm:ss")}%20-%20{d2.ToString("yyyy-MM-dd HH:mm:ss")}|check_time=|status=2|ex_type_id=|is_agent_pay=|ex_channel=|user_type=|auto_handle=|special_status=|UserID={id}|OrderID=|OrderNo=|receive_id=|is_export=&_o=search_month=eq|date_at=between%20time|check_time=between%20time|status=eq|ex_type_id=eq|is_agent_pay=eq|ex_channel=eq|user_type=eq|auto_handle=eq|special_status=eq|UserID=eq|OrderID=eq|OrderNo=eq|receive_id=eq|is_export=eq&page={page}&list_rows={pagesize}";
+
             myReq = (HttpWebRequest)WebRequest.Create(url);
-            //mycache = new CredentialCache();
-            //mycache.Add(new Uri(urlbase), "Basic", new NetworkCredential(acc1, pwd1));
             myReq.Credentials = mycache;
             myReq.Headers.Add("Authorization", Authorization);
             myReq.CookieContainer = cookie;
@@ -498,6 +531,7 @@ namespace queryInfor
                 dt.Columns.Add(item.InnerText.Replace("\r\n", "").Replace(" ", "").Trim());
             }
 
+
             //获取内容
             HtmlNodeCollection node_trow = htmlDocument.DocumentNode.SelectNodes("//*[@id='builder-table-main']/tbody/tr");
             if (node_trow.Count==1 && node_trow[0].InnerHtml.Contains("暂无数据"))
@@ -514,7 +548,10 @@ namespace queryInfor
                     dataRow[e] = hnc[e].InnerText.Replace("\r\n", "").Trim();
                 }
                 dt.Rows.Add(dataRow);
+
             }
+            //时间
+            latest_dhsj = dt.Rows[0][7].ToString();
             return dt;
         }
 
@@ -528,8 +565,13 @@ namespace queryInfor
         /// <returns></returns>
         public static DataTable getYHCZ(string id,DateTime d1, DateTime d2,out string s ,int page=1,int pagesize=100)
         {
-            string url = $"{urlbase}admin.php/gameplayer/gameuser/rechargerecord.html?_s=date_at={d1.ToString("yyyy-MM-dd")}%20-%20{d2.ToString("yyyy-MM-dd")}|create_ymd=|channel_id=|order_status=|user_status=|plat_form=|merchant_id=|recharge_channel=|pay_time=|UserID={id}|OrderID=|OrderNo=|is_export=&_o=date_at=between%20time|create_ymd=eq|channel_id=eq|order_status=eq|user_status=eq|plat_form=eq|merchant_id=eq|recharge_channel=eq|pay_time=between%20time|UserID=eq|OrderID=eq|OrderNo=eq|is_export=eq&page={page}&list_rows={pagesize}";
-            //string url = $"{urlbase}admin.php/gameplayer/index/recharge/group/tab4/user_id/{id}.html?_s=create_time={d1.ToString("yyyy-MM-dd")}%20-%20{d2.ToString("yyyy-MM-dd")}|recharge_table=|order_status=1&_o=create_time=between%20time|recharge_table=eq|order_status=eq&page={page}&list_rows={pagesize}";
+            if (latest_dhsj!="")
+            {
+                d1 = DateTime.Parse(latest_dhsj);
+            }
+            //string url = $"{urlbase}admin.php/gameplayer/gameuser/rechargerecord.html?_s=date_at%3D2019-10-22+-+2019-10-23%7Ccreate_ymd%3D%7Cchannel_id%3D%7Corder_status%3D1%7Cuser_status%3D%7Cplat_form%3D%7Cmerchant_id%3D%7Crecharge_channel%3D%7Cpay_time%3D%7CUserID%3D2989719%7COrderID%3D%7COrderNo%3D%7Cis_export%3D&_o=date_at%3Dbetween+time%7Ccreate_ymd%3Deq%7Cchannel_id%3Deq%7Corder_status%3Deq%7Cuser_status%3Deq%7Cplat_form%3Deq%7Cmerchant_id%3Deq%7Crecharge_channel%3Deq%7Cpay_time%3Dbetween+time%7CUserID%3Deq%7COrderID%3Deq%7COrderNo%3Deq%7Cis_export%3Deq&page=1&list_rows=100";
+            string url = $"{urlbase}admin.php/gameplayer/gameuser/rechargerecord.html?_s=date_at={d1.ToString("yyyy-MM-dd HH:mm:ss")}%20-%20{d2.ToString("yyyy-MM-dd HH:mm:ss")}|create_ymd=|channel_id=|order_status=|user_status=|plat_form=|merchant_id=|recharge_channel=|pay_time=|UserID={id}|OrderID=|OrderNo=|is_export=&_o=date_at=between%20time|create_ymd=eq|channel_id=eq|order_status=eq|user_status=eq|plat_form=eq|merchant_id=eq|recharge_channel=eq|pay_time=between%20time|UserID=eq|OrderID=eq|OrderNo=eq|is_export=eq&page={page}&list_rows={pagesize}";
+            //string url = $"{urlbase}admin.php/gameplayer/index/recharge/group/tab4/user_id/{id}.html?_s=create_time={d1.ToString("yyyy-MM-dd HH:mm:ss")}%20-%20{d2.ToString("yyyy-MM-dd HH:mm:ss")}|recharge_table=|order_status=1&_o=create_time=between%20time|recharge_table=eq|order_status=eq&page={page}&list_rows={pagesize}";
             myReq = (HttpWebRequest)WebRequest.Create(url);
             myReq.Credentials = mycache;
             myReq.Headers.Add("Authorization", Authorization);
@@ -578,7 +620,224 @@ namespace queryInfor
                 }
                 dt.Rows.Add(dataRow);
             }
+
+
+            //获取渠道列表数据字典
+            //if (dic_channel.Count == 0)
+            //{
+
+            //    HtmlNodeCollection node_channel = htmlDocument.DocumentNode.SelectNodes("//*[@id='search_channel']/option");
+            //    foreach (HtmlNode item in node_channel)
+            //    {
+
+            //        string nid = item.GetAttributeValue("value", "");
+            //        string nvalue = item.InnerText.Replace(" ", "");
+            //        if (nid != "" && nvalue != "")
+            //        {
+            //            dic_channel.Add(nvalue, nid);
+            //        }
+            //    }
+            //}
+            //充值时间
+            latest_czsj = dt.Rows[0][20].ToString();
             return dt;
         }
+
+        /// <summary>
+        /// 查询用户总游戏记录
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="d1"></param>
+        /// <param name="d2"></param>
+        /// <param name="page"></param>
+        /// <param name="pagesize"></param>
+        /// <returns></returns>
+        public static DataTable getYHZYXJL(string id,DateTime d1, DateTime d2,int page=1,int pagesize=100)
+        {
+            if (latest_czsj != "")
+            {
+                d1 = DateTime.Parse(latest_czsj);
+            }
+            string url = $"{urlbase}admin.php/gameplayer/index/game_statics/group/tab8/user_id/{id}.html?_s=create_time%3D{d1.ToString("yyyy-MM-dd HH:mm:ss")}+-+{d2.ToString("yyyy-MM-dd HH:mm:ss")}%7Cgame_id%3D&_o=create_time%3Dbetween+time%7Cgame_id%3Deq&group=tab8&user_id={id}&page={page}&list_rows={pagesize}";
+            myReq = (HttpWebRequest)WebRequest.Create(url);
+            myReq.Credentials = mycache;
+            myReq.Headers.Add("Authorization", Authorization);
+            myReq.CookieContainer = cookie;
+
+            wr = (HttpWebResponse)myReq.GetResponse();
+            Stream receiveStream = wr.GetResponseStream();
+            StreamReader reader = new StreamReader(receiveStream, Encoding.UTF8);
+            string content = reader.ReadToEnd();
+            //myReq.Abort();
+            reader.Close();
+            reader.Dispose();
+            receiveStream.Close();
+            receiveStream.Dispose();
+            wr.Close();
+            wr.Dispose();
+
+            DataTable dt = new DataTable();
+
+            HtmlDocument htmlDocument = new HtmlDocument();
+
+            htmlDocument.LoadHtml(content);
+
+            
+            //获取表头
+            HtmlNodeCollection node_thead = htmlDocument.DocumentNode.SelectNodes("//*[@id='builder-table-head']/table/thead/tr/th");
+
+            foreach (HtmlNode item in node_thead)
+            {
+                dt.Columns.Add(item.InnerText.Replace("\r\n", "").Replace(" ", "").Trim());
+            }
+            // s = htmlDocument.DocumentNode.SelectSingleNode("//*[@id='main-container']/div[2]/div[1]/p").InnerText.Replace("\r\n", "").Trim().Replace("&nbsp;", "").Replace("当前查询","").Replace("兑换", "").Replace("    ", " ");
+            //获取内容
+            HtmlNodeCollection node_trow = htmlDocument.DocumentNode.SelectNodes("//*[@id='builder-table-main']/tbody/tr");
+            if (node_trow.Count==1 && node_trow[0].InnerHtml.Contains("暂无数据"))
+            {
+                //没有数据
+                return dt;
+            }
+            foreach (HtmlNode item in node_trow)
+            {
+                HtmlNodeCollection hnc = item.SelectNodes("td");
+                DataRow dataRow = dt.NewRow();
+                for (int e = 0; e <hnc.Count; e++)
+                {
+                    dataRow[e] = hnc[e].InnerText.Replace("\r\n", "").Trim();
+                }
+                dt.Rows.Add(dataRow);
+            }
+
+            //获取游戏列表数据字典
+            //HtmlNodeCollection node_gameids = htmlDocument.DocumentNode.SelectSingleNode("//*[@id='search_game_id']").ChildNodes;
+            if (dic_gameids.Count == 0)
+            {
+
+                HtmlNodeCollection node_gameids = htmlDocument.DocumentNode.SelectNodes("//*[@id='search_game_id']/option");
+                foreach (HtmlNode item in node_gameids)
+                {
+
+                    string nid = item.GetAttributeValue("value", "");
+                    string nvalue = item.InnerText.Replace(" ", "");
+                    if (nid != "" && nvalue != "")
+                    {
+                        dic_gameids.Add(nvalue, nid);
+                    }
+
+
+                    //HtmlNodeCollection hnc = item.SelectNodes("td");
+                    //DataRow dataRow = dt.NewRow();
+                    //for (int e = 0; e <hnc.Count; e++)
+                    //{
+                    //    dataRow[e] = hnc[e].InnerText.Replace("\r\n", "").Trim();
+                    //}
+                    //dt.Rows.Add(dataRow);
+                }
+            }
+            return dt;
+        }
+
+        /// <summary>
+        /// 用户游戏记录
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="d1"></param>
+        /// <param name="d2"></param>
+        /// <param name="page"></param>
+        /// <param name="pagesize"></param>
+        /// <returns></returns>
+        public static DataTable getYHYXJL(string id,DateTime d1, DateTime d2,string gameid,int page=1,int pagesize=100)
+        {
+
+            string url = $"{urlbase}admin.php/gameplayer/index/gamerecord/group/tab5/user_id/{id}.html?_s=create_time%3D{d1.ToString("yyyy-MM-dd HH:mm:ss")}+-+{d2.ToString("yyyy-MM-dd HH:mm:ss")}%7Cgame_id%3D{gameid}%7Cis_history%3D&_o=create_time%3Dbetween+time%7Cgame_id%3Deq%7Cis_history%3Deq&group=tab5&user_id={id}&page={page}&list_rows={pagesize}";
+            //string url = $"{urlbase}admin.php/gameplayer/index/game_statics/group/tab8/user_id/{id}.html?_s=create_time%3D{d1.ToString("yyyy-MM-dd HH:mm:ss")}+-+{d2.ToString("yyyy-MM-dd HH:mm:ss")}%7Cgame_id%3D&_o=create_time%3Dbetween+time%7Cgame_id%3Deq&group=tab8&user_id={id}&page={page}&list_rows={pagesize}";
+            myReq = (HttpWebRequest)WebRequest.Create(url);
+            myReq.Credentials = mycache;
+            myReq.Headers.Add("Authorization", Authorization);
+            myReq.CookieContainer = cookie;
+
+            wr = (HttpWebResponse)myReq.GetResponse();
+            Stream receiveStream = wr.GetResponseStream();
+            StreamReader reader = new StreamReader(receiveStream, Encoding.UTF8);
+            string content = reader.ReadToEnd();
+            //myReq.Abort();
+            reader.Close();
+            reader.Dispose();
+            receiveStream.Close();
+            receiveStream.Dispose();
+            wr.Close();
+            wr.Dispose();
+
+            DataTable dt = new DataTable();
+
+            HtmlDocument htmlDocument = new HtmlDocument();
+
+            htmlDocument.LoadHtml(content);
+
+            //获取表头
+            HtmlNodeCollection node_thead = htmlDocument.DocumentNode.SelectNodes("//*[@id='builder-table-head']/table/thead/tr/th");
+
+            foreach (HtmlNode item in node_thead)
+            {
+                dt.Columns.Add(item.InnerText.Replace("\r\n", "").Replace(" ", "").Trim());
+            }
+            // s = htmlDocument.DocumentNode.SelectSingleNode("//*[@id='main-container']/div[2]/div[1]/p").InnerText.Replace("\r\n", "").Trim().Replace("&nbsp;", "").Replace("当前查询","").Replace("兑换", "").Replace("    ", " ");
+            //获取内容
+            HtmlNodeCollection node_trow = htmlDocument.DocumentNode.SelectNodes("//*[@id='builder-table-main']/tbody/tr");
+            if (node_trow.Count==1 && node_trow[0].InnerHtml.Contains("暂无数据"))
+            {
+                //没有数据
+                return dt;
+            }
+            foreach (HtmlNode item in node_trow)
+            {
+                HtmlNodeCollection hnc = item.SelectNodes("td");
+                DataRow dataRow = dt.NewRow();
+                for (int e = 0; e <hnc.Count; e++)
+                {
+                    dataRow[e] = hnc[e].InnerText.Replace("\r\n", "").Trim();
+                }
+                dt.Rows.Add(dataRow);
+            }
+            return dt;
+        }
+
+        /// <summary>
+        /// 获取用户渠道 汉字
+        /// </summary>
+        /// <param name="uid"></param>
+        /// <returns></returns>
+        public static string getChannel(string uid)
+        {
+            string url = $"{urlbase}admin.php/gameplayer/index/index.html?_s=type=user_id|keyword={uid}|channel=|reg_time=|login_time=|category=|usertype=|min_times=|max_times=|wincount=|lostcount=|min_gold=|max_gold=|min_recharge=|max_recharge=|min_exchange=|max_exchange=|min_waste=|max_waste=&_o=type=eq|keyword=eq|channel=eq|reg_time=between%20time|login_time=between%20time|category=eq|usertype=eq|min_times=eq|max_times=eq|wincount=eq|lostcount=eq|min_gold=eq|max_gold=eq|min_recharge=eq|max_recharge=eq|min_exchange=eq|max_exchange=eq|min_waste=eq|max_waste=eq";
+            myReq = (HttpWebRequest)WebRequest.Create(url);
+            myReq.Credentials = mycache;
+            myReq.Headers.Add("Authorization", Authorization);
+            myReq.CookieContainer = cookie;
+
+            wr = (HttpWebResponse)myReq.GetResponse();
+            Stream receiveStream = wr.GetResponseStream();
+            StreamReader reader = new StreamReader(receiveStream, Encoding.UTF8);
+            string content = reader.ReadToEnd();
+            //myReq.Abort();
+            reader.Close();
+            reader.Dispose();
+            receiveStream.Close();
+            receiveStream.Dispose();
+            wr.Close();
+            wr.Dispose();
+
+            HtmlDocument htmlDocument = new HtmlDocument();
+
+            htmlDocument.LoadHtml(content);
+            HtmlNode node = htmlDocument.DocumentNode.SelectSingleNode("//*[@id='builder-table-main']/tbody/tr/td[6]/div/a");
+            //if (node != null)
+            //    return node.InnerText;
+            //else
+            //    return "";
+            return node == null ? "" : node.InnerText;
+        }
+
     }
 }

@@ -1976,5 +1976,35 @@ X - Requested - With: XMLHttpRequest
 
             return flag;
         }
+
+        /// <summary>
+        /// 根据订单号查询 用户名 金额
+        /// </summary>
+        /// <param name="bb"></param>
+        /// <returns></returns>
+        public static betData ThirdPartyPaymentDTPPGetDetail(betData bb)
+        {
+            try
+            {
+                string postUrl = "ThirdPartyPayment/DTPPGetDetail";
+                string postData = "{\"id\":\"" + bb.bbid + "\"}";
+                string postRefere = "ThirdPartyPayment/"+bb.bbid;
+                JObject jo = GetResponse<JObject>(postUrl, postData, "POST", postRefere);
+
+                decimal d = 0;
+                decimal.TryParse(jo["Detail"]["Amount"].ToString(), out d);
+
+                bb.betMoney = d;
+                bb.username = jo["Detail"]["Account"].ToString();
+                return bb;
+            }
+            catch (Exception ex)
+            {
+                //如果 操作超时 重新登录一下GPK
+                string msg = "查询账户信息(钱包)失败 " + ex.Message;
+                appSittingSet.Log(msg);
+                return null;
+            }
+        }
     }
 }

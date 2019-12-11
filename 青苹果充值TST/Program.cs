@@ -78,11 +78,13 @@ namespace GAC_load
 
                 foreach (var item in list)
                 {
+
                     //操作成功 确认 测试
                     //item.passed = true;
                     //platQPGV2.confirmAct(item);
                     //continue;
-                    item.betMoney = (1 + rate) * item.betMoney;
+                    //item.betMoney = (1 + rate) * item.betMoney;//四舍五入
+                    item.betMoney = Math.Round((1 + rate) * item.betMoney, 2, MidpointRounding.AwayFromZero);
                     //金额是否超出 
                     if (item.betMoney > max)
                     {

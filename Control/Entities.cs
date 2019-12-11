@@ -85,6 +85,40 @@ namespace TimoControl
         /// 投注金额
         /// </summary>
         public int hisBetMoney { get; set; }
+
+        /// <summary>
+        /// 投注金额
+        /// </summary>
+        public decimal BetAmount { get; set; }
+        /// <summary>
+        /// 单数
+        /// </summary>
+        public int BetRecordCount { get; set; }
+        /// <summary>
+        /// 有效投注
+        /// </summary>
+        public decimal Commissionable { get; set; }
+        /// <summary>
+        /// 损益
+        /// </summary>
+        public decimal Payoff { get; set; }
+        /// <summary>
+        /// 存款次数
+        /// </summary>
+        public int DepositTimes { get; set; }
+        /// <summary>
+        /// 存款金额
+        /// </summary>
+        public decimal DepositTotal { get; set; }
+        /// <summary>
+        /// 取款次数
+        /// </summary>
+        public int WithdrawTimes { get; set; }
+        /// <summary>
+        /// 取款金额
+        /// </summary>
+        public decimal WithdrawTotal { get; set; }
+
     }
 
     /// <summary>

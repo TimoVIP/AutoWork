@@ -229,7 +229,8 @@ namespace AutoWork_Plat1
             {
                 sched.ScheduleJob(JobBuilder.Create<MyJob9>().Build(), TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(interval[7]).RepeatForever()).Build());
             }
-            
+
+
             //开始运行
             sched.Start();
         }
@@ -875,7 +876,7 @@ namespace AutoWork_Plat1
                         bb.gamename = "";
                         foreach (var _s in _list)
                         {
-                            bb.gamename += "&types=" + string.Join("&types=", _s.Replace("\"", "").Split(',').Skip(1).ToArray());
+                            bb.gamename += "&types=" + string.Join("&types=", _s.Replace("\"", "").Split(',').ToArray());
                         }
 
                         bb.lastCashTime = DateTime.Now.Date.AddDays(-4).ToString("yyyy/MM/dd");
@@ -3253,7 +3254,6 @@ namespace AutoWork_Plat1
                 }
             }
         }
-
 
 
         #endregion

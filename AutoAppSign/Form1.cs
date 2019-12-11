@@ -495,7 +495,7 @@ namespace AutoAppSign
                     bb.lastOprTime = DateTime.Now.Date.ToString("yyyy/MM/dd");
                     foreach (var s in KindCategories)
                     {
-                        bb.gamename += "&types=" + string.Join("&types=", platGPK.KindCategories[int.Parse(s)].Replace("\"", "").Split(',').Skip(1).ToArray());
+                        bb.gamename += "&types=" + string.Join("&types=", platGPK.KindCategories[int.Parse(s)].Replace("\"", "").Split(',').ToArray());
                     }
                     bb = platGPK.GetDetailInfo(bb);
 

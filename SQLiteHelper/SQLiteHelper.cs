@@ -117,6 +117,16 @@ namespace SQLiteHelper
             m_dbConnection.Close();
             return o == null ? "" : o.ToString();
         }
+        public static T execScalarSql <T>(string sql)
+        {
+            SQLiteConnection m_dbConnection = get_dbConnection();
+
+            SQLiteCommand command = new SQLiteCommand(sql, m_dbConnection);
+            object o = command.ExecuteScalar();
+            command.Dispose();
+            m_dbConnection.Close();
+            return o!=null? (T)Convert.ChangeType(o, typeof(T)) : default(T);
+        }
 
         public static DataTable getDataTableBySql(string sql)
         {

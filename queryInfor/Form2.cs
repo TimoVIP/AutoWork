@@ -51,8 +51,7 @@ namespace queryInfor
             DateTimeChoser.AddTo(textBox1, DateTime.Now.AddDays(-3));
             DateTimeChoser.AddTo(textBox2, DateTime.Now);
         }
-
-        private void button1_Click(object sender, EventArgs e)
+        private void btnLogin_Click(object sender, EventArgs e)
         {
             if (otp.Text.Trim().Length < 6)
             {
@@ -69,15 +68,16 @@ namespace queryInfor
             appSittingSet.writeAppsettings("BW2", $"{platBW.acc2}|{platBW.pwd2}|{platBW.urlbase}");
 
             //打开浏览器 登陆
-            string msg ="";
-             islogin = platBW.login(out msg);
+            string msg = "";
+            islogin = platBW.login(out msg);
             lbmsg.Text = msg;
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        private void btnExit_Click(object sender, EventArgs e)
         {
             Application.Exit();
         }
+
 
         private void button5_Click(object sender, EventArgs e)
         {
@@ -105,13 +105,13 @@ namespace queryInfor
             //显示基础信息
             if (uid != uid_old)
             {
-                s = platBW.getUserinfor(uid);
-
+                //s = platBW.getUserinfor(uid);
+                Hashtable ht = platBW.getUserinfor(uid, out s);
                 if (s.Contains("用户不存在"))
                 {
                     return;
                 }
-                s += "所属渠道：" + platBW.getChannel(uid);
+                //s += "所属渠道：" + platBW.getChannel(uid);
                 uid_old = uid;
                 tbInfor.Text = s;
             }
@@ -123,12 +123,12 @@ namespace queryInfor
 
 
             //1显示兑换记录
-            dataGridView3.DataSource = platBW.getYHDH(uid, d1, d2);
-
+            dataGridView3.DataSource = platBW.getYHDH(uid, d1, d2,out s);
+            groupBox3.Text = "兑换记录  "+s;
             //2显示充值记录
             s = "";
             dataGridView2.DataSource = platBW.getYHCZ(uid, d1, d2,out s);
-            groupBox5.Text = "充值记录      " +s;
+            groupBox5.Text = "充值记录  " +s;
 
 
             //显示 总游戏记录
@@ -228,7 +228,7 @@ namespace queryInfor
         {
             if (e.KeyCode== Keys.Enter)
             {
-                button1_Click(sender, e);
+                btnLogin_Click(sender, e);
             }
         }
 
@@ -260,5 +260,7 @@ namespace queryInfor
                 }
             }
         }
+
+
     }
 }

@@ -9,6 +9,7 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace TimoControl
 {
@@ -301,7 +302,8 @@ namespace TimoControl
                 request.CookieContainer = cookie;
                 request.ContentLength = 0;
 
-                string postdata = JsonConvert.SerializeObject(new { from = mainAccount, OrderID = b.bbid, OrderRemark = b.msg });
+                //string postdata = JsonConvert.SerializeObject(new { from = mainAccount, OrderID = b.bbid, OrderRemark = b.msg });
+                string postdata = JsonConvert.SerializeObject(new { OrderID = b.bbid, from = mainAccount, OrderRemark = HttpUtility.UrlEncode(b.msg, Encoding.UTF8) });
                 byte[] bytes = Encoding.UTF8.GetBytes(postdata);
                 request.ContentLength = bytes.Length;
                 Stream newStream = request.GetRequestStream();

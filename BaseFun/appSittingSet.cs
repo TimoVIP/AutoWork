@@ -9,6 +9,7 @@ using System.Net;
 using System.Net.Mail;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Configuration;
@@ -60,6 +61,30 @@ namespace BaseFun
             }
         }
 
+        public static T readAppsettings<T>(string key)
+        {
+            if (HttpContext.Current != null)
+            {
+                if (WebConfigurationManager.AppSettings[key] == null)
+                    return default(T);
+                else
+                    return (T)Convert.ChangeType(WebConfigurationManager.AppSettings[key], typeof(T)) ;
+            }
+            else
+            {
+                if (ConfigurationManager.AppSettings[key] == null)
+                {
+                    if (readConfig() == null)
+                    {
+                        return default(T); ;
+                    }
+                    object a = readConfig()[key];
+                    return a == null ? default(T) : (T)Convert.ChangeType(a, typeof(T));
+                }
+                else
+                    return (T)Convert.ChangeType(ConfigurationManager.AppSettings[key], typeof(T)); 
+            }
+        }
         /// <summary>
         /// 写AppSet节点
         /// </summary>
@@ -327,6 +352,21 @@ namespace BaseFun
 
         }
 
+
+        /// <summary>
+        /// 获取时间戳
+        /// </summary>
+        /// <returns></returns>
+        public static string GetTimeStamp(int length=10)
+        {
+            TimeSpan ts = DateTime.Now - new DateTime(1970, 1, 1, 0, 0, 0, 0);
+            if (length==10)
+                return Convert.ToInt64(ts.TotalSeconds).ToString();
+            else
+                return Convert.ToInt64(ts.TotalMilliseconds).ToString();
+        }
+
+
         /// <summary>
         /// md5加密
         /// </summary>
@@ -391,5 +431,80 @@ namespace BaseFun
 
             return builder.ToString();
         }
+
+        #region 汉字转换数字
+        /// <summary>
+        /// 转换数字
+        /// </summary>
+        private static long CharToNumber(char c)
+        {
+            switch (c)
+            {
+                case '一': return 1;
+                case '二': return 2;
+                case '三': return 3;
+                case '四': return 4;
+                case '五': return 5;
+                case '六': return 6;
+                case '七': return 7;
+                case '八': return 8;
+                case '九': return 9;
+                case '零': return 0;
+                default: return -1;
+            }
+        }
+
+        /// <summary>
+        /// 转换单位
+        /// </summary>
+        private static long CharToUnit(char c)
+        {
+            switch (c)
+            {
+                case '十': return 10;
+                case '百': return 100;
+                case '千': return 1000;
+                case '万': return 10000;
+                case '亿': return 100000000;
+                default: return 1;
+            }
+        }
+        /// <summary>
+        /// 将中文数字转换阿拉伯数字 //执行ParseCnToInt("一千二百三十五")结果为1235
+        /// </summary>
+        /// <param name="cnum">汉字数字</param>
+        /// <returns>长整型阿拉伯数字</returns>
+        public static long ParseCnToInt(string cnum)
+        {
+            cnum = Regex.Replace(cnum, "\\s+", "");
+            long firstUnit = 1;//一级单位                
+            long secondUnit = 1;//二级单位 
+            long tmpUnit = 1;//临时单位变量
+            long result = 0;//结果
+            for (int i = cnum.Length - 1; i > -1; --i)//从低到高位依次处理
+            {
+                tmpUnit = CharToUnit(cnum[i]);//取出此位对应的单位
+                if (tmpUnit > firstUnit)//判断此位是数字还是单位
+                {
+                    firstUnit = tmpUnit;//是的话就赋值,以备下次循环使用
+                    secondUnit = 1;
+                    if (i == 0)//处理如果是"十","十一"这样的开头的
+                    {
+                        result += firstUnit * secondUnit;
+                    }
+                    continue;//结束本次循环
+                }
+                else if (tmpUnit > secondUnit)
+                {
+                    secondUnit = tmpUnit;
+                    continue;
+                }
+                result += firstUnit * secondUnit * CharToNumber(cnum[i]);//如果是数字,则和单位想乘然后存到结果里
+            }
+            return result;
+        }
+
+        #endregion
+
     }
 }

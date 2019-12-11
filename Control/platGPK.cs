@@ -9,6 +9,7 @@ using System.Net;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
+using System.Web;
 using WebSocketSharp;
 
 namespace TimoControl
@@ -521,28 +522,28 @@ namespace TimoControl
         /// </summary>
         /// <param name="Account"></param>
         /// <returns></returns>
-        public static betData MemberGetDetail(betData bb)
-        {
-            try
-            {
-                string postUrl = "Member/GetDetail";
-                string postData = "{\"account\":\"" + bb.username + "\"}";
-                string postRefere = "MemberDeposit";
-                JObject jo = GetResponse<JObject>(postUrl, postData, "POST", postRefere);
+        //public static betData MemberGetDetail(betData bb)
+        //{
+        //    try
+        //    {
+        //        string postUrl = "Member/GetDetail";
+        //        string postData = "{\"account\":\"" + bb.username + "\"}";
+        //        string postRefere = "MemberDeposit";
+        //        JObject jo = GetResponse<JObject>(postUrl, postData, "POST", postRefere);
 
-                decimal d = 0;
-                decimal.TryParse(jo["Member"]["Wallet"].ToString(), out d);
-                bb.subtotal = d;
-                return bb;
-            }
-            catch (Exception ex)
-            {
-                //如果 操作超时 重新登录一下GPK
-                string msg = "查询账户信息(钱包)失败 " + ex.Message;
-                appSittingSet.Log(msg);
-                return null;
-            }
-        }
+        //        decimal d = 0;
+        //        decimal.TryParse(jo["Member"]["Wallet"].ToString(), out d);
+        //        bb.subtotal = d;
+        //        return bb;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        //如果 操作超时 重新登录一下GPK
+        //        string msg = "查询账户信息(钱包)失败 " + ex.Message;
+        //        appSittingSet.Log(msg);
+        //        return null;
+        //    }
+        //}
 
         /// <summary>
         /// 查询是否有注单记录
@@ -783,8 +784,8 @@ namespace TimoControl
             {
                 //                string postdata =string.Format( "?account={0}&begin={1}&end={2}&isMember=true&orderBy=Commissionable&reverse=true&skip=0&take=100&types=BBINprobability&types=BBINFish30&types=BBINFish38&types=AgEbr&types=AgHsr&types=AgYoPlay&types=Mg2Slot&types=Mg2Html5&types=Pt2Slot&types=GpiSlot3D&types=GpiSlotR&types=GnsSlot&types=PrgSlot&types=SgSlot&types=Rg2Fish&types=Rg2Slot&types=JdbSlot&types=JdbFish&types=HabaSlot&types=Cq9Slot&types=Cq9Fish&types=NetEntSlot&types=GdSlot&types=Pt3Slot&types=RedTigerSlot&types=GameArtSlot&types=Mw2Slot&types=PgSlot&types=RedTiger2Slot&types=LgVirtualSport&types=Mg3Slot&types=IsbSlot&types=PtsSlot&types=PngSlot&types=City761Fish&types=FsSlot&types=FsFish&types=FsArcade&types=KaSlot&types=JsSlot&types=JsFish&types=GtiSlot&types=PlsSlot&types=AeSlot",bb.username, DateTime.Now.AddDays(-DateTime.Now.Day + 1).ToString("yyyy/MM/dd"),DateTime.Now.Date.ToString("yyyy/MM/dd"));                                                                                                     
                 //string postdata = string.Format("?account={0}&begin={1}&end={2}&isMember=true&orderBy=Commissionable&reverse=true&skip=0&take=100&types=BBINprobability&types=BBINFish30&types=BBINFish38&types=AgEbr&types=AgHsr&types=AgYoPlay&types=Mg2Slot&types=Mg2Html5&types=Pt2Slot&types=GpiSlot3D&types=GpiSlotR&types=GnsSlot&types=PrgSlot&types=SgSlot&types=Rg2Fish&types=Rg2Slot&types=JdbSlot&types=JdbFish&types=HabaSlot&types=Cq9Slot&types=Cq9Fish&types=NetEntSlot&types=GdSlot&types=Pt3Slot&types=RedTigerSlot&types=GameArtSlot&types=Mw2Slot&types=PgSlot&types=RedTiger2Slot&types=LgVirtualSport&types=Mg3Slot&types=IsbSlot&types=PtsSlot&types=PngSlot&types=City761Fish&types=FsSlot&types=FsFish&types=FsArcade&types=KaSlot&types=JsSlot&types=JsFish&types=GtiSlot&types=PlsSlot&types=AeSlo", bb.username, DateTime.Now.AddDays(-DateTime.Now.Day + 1).ToString("yyyy/MM/dd"), DateTime.Now.Date.ToString("yyyy/MM/dd"));
-                string postdata =string.Format("?account={0}&begin={1}&end={2}&isMember=true&orderBy=Commissionable&reverse=true&skip=0&take=100{3}", bb.username, bb.lastCashTime,bb.lastOprTime,bb.gamename);
-                request = WebRequest.Create(url_gpk_base + "Statistics/GetDetailInfo" +postdata) as HttpWebRequest;
+                string postdata =string.Format("?_={4}&account={0}&begin={1}&end={2}&isMember=true&orderBy=Commissionable&reverse=true&skip=0&take=100{3}", bb.username, bb.lastCashTime,bb.lastOprTime, bb.gamename,appSittingSet.GetTimeStamp(13));
+                request = WebRequest.Create(url_gpk_base + "Statistics/GetDetailInfo" + postdata) as HttpWebRequest;
                 request.Method = "GET";
                 request.UserAgent = "Mozilla/4.0";
                 request.KeepAlive = true;
@@ -801,6 +802,10 @@ namespace TimoControl
                 response = (HttpWebResponse)request.GetResponse();
                 reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
                 string ret_html = reader.ReadToEnd();
+                if (ret_html=="")
+                {
+                    return null;
+                }
                 JObject jo = JObject.Parse(ret_html);
                 //如果为空 
                 if ((bool)jo["IsSuccess"] == false)
@@ -813,7 +818,12 @@ namespace TimoControl
                 decimal amount = 0;
                 decimal.TryParse(ja[0]["Commissionable"].ToString(), out amount);
                 bb.total_money = amount;
-                
+                bb.Commissionable = amount;
+                bb.BetRecordCount = Convert.ToInt32(ja[0]["BetRecordCount"]);
+                decimal.TryParse(ja[0]["BetAmount"].ToString(), out amount);
+                bb.BetAmount = amount;
+                decimal.TryParse(ja[0]["Payoff"].ToString(), out amount);
+                bb.Payoff = amount;
                 return bb;
             }
             catch (WebException ex)
@@ -1629,7 +1639,32 @@ namespace TimoControl
             }
             //list.Add(GameCategories_all.Remove(GameCategories_all.Length - 1, 1).ToString());
             //list.Add(GameCategories_ele.Remove(GameCategories_ele.Length - 1, 1).ToString());
+            return list;
+        }
 
+        public static List<List<string>> GetKindCategories2()
+        {
+            List<List<string>> list = new List<List<string>>();
+            
+            StringBuilder sb;
+            JArray ja = GetResponse<JArray>("BetRecord/GetKindCategories", "", "POST", "BetRecord");
+            if (ja == null)
+            {
+                return list;
+            }
+
+            foreach (var c in ja)
+            {
+                JArray jab = JArray.FromObject(c["Categories"]);
+                sb = new StringBuilder();
+                List<string> list_in = new List<string>();
+                foreach (var item in jab)
+                {
+                    sb.AppendFormat("\"{0}\",", item["PropertyName"].ToString());
+                    list_in.Add(item["PropertyName"].ToString());
+                }
+                list.Add(list_in);
+            }
             return list;
         }
 
@@ -1686,187 +1721,6 @@ namespace TimoControl
             }
         }
 
-
-        public static bool RedEnvelopeManagement_GetExcelSum(string filename)
-        {
-            /*
-             http://sts.tjuim.com/RedEnvelopeManagement/GetExcelSum
-             Accept: application/json, text/plain, * /
-            *
-Accept - Encoding: gzip, deflate
-Accept - Language: zh - CN,zh; q = 0.9,en; q = 0.8
-Connection: keep - alive
-Content - Length: 36857
-Content - Type: multipart / form - data; boundary = ----WebKitFormBoundaryyAEoA89yo9jimDkf
-Cookie: language = zh - CN; master = 16fea91d95894b91888ff8f7b41f923a; .ASPXAUTHFORMASTER = 7D143BCC3ED7B137F51E0987A39C4948D6C1EC60587F6C3A9B9C1914ECE073B8DC2AB350D07A8AAFA0F0AFC71E0D94DFA143D00E33AB7592F7DE4F53872C17C3053B04120CE7280B613BDB2571DA0503C64CA75380944A1DD864EE7C272D0DCA44289FC9DA4FAE26F6125A5C7B0557ADC07DA6D5F3B0ACF98936E5D16ABC8A6BA49371BCE9F04B5FFE220F7046020047933022A3AF007D01A05E28004A925EB1708A443A3D8258DB7052D2F3B052A613CBC03FE836691B935059602B7329508BFB0A31FE88F3FF4EEC920728EA18F12051586C79CB40CBB3B32658A3B31A2B7895DCA0ADDC750BEC3FD426E20D0FAC5E25AF59D4; td_cookie = 328096336
-Host: sts.tjuim.com
-Origin: http://sts.tjuim.com
-            Referer: http://sts.tjuim.com/RedEnvelopeManagement/Create
-            User - Agent: Mozilla / 5.0(Windows NT 10.0; Win64; x64) AppleWebKit / 537.36(KHTML, like Gecko) Chrome / 76.0.3809.100 Safari / 537.36
-X - Requested - With: XMLHttpRequest
-
-
-                FileBase: (binary)
-                 */
-            bool flag = false;
-            HttpWebRequest request = null;
-            HttpWebResponse response = null;
-            StreamReader reader = null;
-            try
-            {
-                //提交数据
-                request = WebRequest.Create(url_gpk_base + "RedEnvelopeManagement/GetExcelSum") as HttpWebRequest;
-                request.Method = "POST";
-                request.UserAgent = "Mozilla/4.0";
-                request.KeepAlive = true;
-                request.Accept = "application/json, text/plain, */*";
-                //request.ContentType = "multipart/form-data; boundary=----WebKitFormBoundaryX4DPbIHLA2CmUH0w";//发送的是json数据 注意
-                request.Host = url_gpk_base.Replace("http://", "").Replace("/", "");
-                request.Referer = url_gpk_base + "/RedEnvelopeManagement/Create";
-                request.Headers.Add("Origin", url_gpk_base);
-                request.Headers.Add("X-Requested-With", "XMLHttpRequest");
-                //string postdata = "";
-                //var obj1 = new { AccountsString = bb.username, Amount = bb.betMoney, AmountString = bb.betMoney, Audit = bb.Audit, AuditType = bb.AuditType, DepositToken = ret_html, IsReal = bb.isReal, Memo = bb.Memo, Password = pwd, PortalMemo = bb.PortalMemo, TimeStamp = (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000, Type = bb.Type };
-
-
-                //var obj1 = new { AccountsString = bb.username, Amount = bb.betMoney, AuditType = "None", DepositToken = ret_html, Memo = bb.aname, Password = pwd, PortalMemo = bb.aname, TimeStamp = (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000, Type = 5 };
-                //postdata = "{\"AccountsString\":\"" + bb.username + "\",\"Type\":5,\"DepositToken\":\"" + ret_html + "\",\"AuditType\":\"None\",\"Amount\":" + bb.betMoney + ",\"IsReal\":false,\"PortalMemo\":\"" + aname + "-" + bb.gamename + "-" + bb.betno + "\",\"Memo\":\"" + aname + "-" + bb.gamename + "-" + bb.betno + "\",\"Password\":\"" + pwd + "\",\"TimeStamp\":" + (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000 + "}";
-                //postdata = JsonConvert.SerializeObject(obj1);
-                //需要稽核
-                //if (aname.Contains("消除") || aname.Contains("幸运")  || aname.Contains("APP")|| aname.Contains("救援") || bb.needAudit)
-                //if(bb.needAudit)
-                //{
-                //    if (bb.betAudit==0)
-                //    {
-                //        bb.betAudit = 1;
-                //    }
-                //    var obj2 = new { AccountsString = bb.username, Amount = bb.betMoney, Audit = bb.betMoney * bb.betAudit , AuditType = "Discount", DepositToken = ret_html, Memo = bb.aname, Password = pwd, PortalMemo = bb.aname, TimeStamp = (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000, Type = 5 };
-                //    postdata = JsonConvert.SerializeObject(obj2);
-                //}
-
-                //设置请求头、cookie
-                request.CookieContainer = cookie;
-
-                //发送文件
-                //string formDataBoundary = String.Format("----------{0:N}", Guid.NewGuid());
-                //string contentType = "multipart/form-data; boundary=" + formDataBoundary;
-                ////byte[] formData =
-                //    Stream formDataStream = new System.IO.MemoryStream();
-
-                //string postData = string.Format("--{0}\r\nContent-Disposition: form-data; name=\"{1}\"\r\n\r\n{2}",boundary,param.Key,param.Value);
-                //formDataStream.Write(encoding.GetBytes(postData), 0, encoding.GetByteCount(postData));
-
-                /*
-                //1
-                string boundary = "---------------------------" + DateTime.Now.Ticks.ToString("x");
-                byte[] boundarybytes = Encoding.ASCII.GetBytes("\r\n--" + boundary + "\r\n");
-                request.ContentType= "multipart/form-data; boundary=" + boundary;
-                Stream stream = request.GetRequestStream();
-                string formdataTemplate = "Content-Disposition: form-data; name=\"{0}\"\r\n\r\n{1}";
-
-                stream.Write(boundarybytes, 0, boundarybytes.Length);
-                byte[] formitembytes = Encoding.UTF8.GetBytes(filename);
-                stream.Write(formitembytes, 0, formitembytes.Length);
-                stream.Write(boundarybytes, 0, boundarybytes.Length);
-                string headerTemplate = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\nContent-Type: {2}\r\n\r\n";
-                string header = string.Format(headerTemplate, "file", Path.GetFileName(filename), Path.GetExtension(filename));
-                byte[] headerbytes = Encoding.UTF8.GetBytes(header);
-                stream.Write(headerbytes, 0, headerbytes.Length);
-
-                FileStream fileStream = new FileStream(filename, FileMode.Open, FileAccess.Read);
-                byte[] buffer = new byte[4096];
-                int bytesRead = 0;
-                while ((bytesRead = fileStream.Read(buffer, 0, buffer.Length)) != 0)
-                    stream.Write(buffer, 0, bytesRead);
-                fileStream.Close();
-
-                byte[] trailer = Encoding.ASCII.GetBytes("\r\n--" + boundary + "--\r\n");
-                stream.Write(trailer, 0, trailer.Length);
-                stream.Close();
-                //1
-                */
-
-                //2
-                //"multipart/form-data; boundary=----WebKitFormBoundarybDKJa9ZpJWmQg1xV"
-                string boundary = DateTime.Now.Ticks.ToString("X"); // 随机分隔线
-                boundary = "----WebKitFormBoundarybDKJa9ZpJWmQg1xV";
-                request.ContentType = "multipart/form-data; boundary=" + boundary;
-                byte[] itemBoundaryBytes = Encoding.UTF8.GetBytes("\r\n--" + boundary + "\r\n");
-                byte[] endBoundaryBytes = Encoding.UTF8.GetBytes("\r\n--" + boundary + "--\r\n");
-                Stream postStream = request.GetRequestStream();
-                postStream.Write(itemBoundaryBytes, 0, itemBoundaryBytes.Length);
-
-
-               string sbHeader =$"Content-Disposition:form-data;name=\"FileBase\";filename=\"{filename.Substring(filename.LastIndexOf("\\") + 1)}\"\r\nContent-Type:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet\r\n\r\n\r\n";
-                byte[] postHeaderBytes = Encoding.UTF8.GetBytes(sbHeader);
-
-                FileStream fs = new FileStream(filename, FileMode.Open, FileAccess.Read);
-                byte[] bArr = new byte[fs.Length];
-                fs.Read(bArr, 0, bArr.Length);
-                fs.Close();
-                postStream.Write(postHeaderBytes, 0, postHeaderBytes.Length);
-                postStream.Write(bArr, 0, bArr.Length);
-
-                postStream.Write(itemBoundaryBytes, 0, itemBoundaryBytes.Length);
-                postStream.Write(endBoundaryBytes, 0, endBoundaryBytes.Length); //结束标志
-                postStream.Close();
-
-
-                //2
-
-                response = (HttpWebResponse)request.GetResponse();
-                reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
-                string ret_html = reader.ReadToEnd();
-                // {"ReturnObject":null,"IsSuccess":false,"ErrorMessage":"DEPOSITIMPORT_FileErrorPattern"}
-
-                //{"TotalMemberCount":5,"TotalAmount":103.44,"TotalAudit":103.44,"FailCount":0}
-
-
-
-
-
-                /*
-                //发送数据
-                //byte[] bytes = Encoding.UTF8.GetBytes(postdata);
-                FileStream fileStream = new FileStream(filename, FileMode.Open, FileAccess.Read);
-                byte[] bytes = new byte[fileStream.Length];
-                fileStream.Read(bytes, 0, (int)fileStream.Length);
-
-                request.ContentLength = fileStream.Length;
-
-                Stream newStream = request.GetRequestStream();
-                newStream.Write(bytes, 0, bytes.Length);
-                newStream.Flush();
-                newStream.Close();
-
-                response = (HttpWebResponse)request.GetResponse();
-                reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
-                object ret_html = reader.ReadToEnd();
-
-                if (response.StatusCode == HttpStatusCode.OK)
-                {
-                    flag = true;
-                }
-
-
-                */
-                if (ret_html.Contains("TotalMemberCount") && ret_html.Contains("TotalAmount"))
-                {
-                    flag = true;
-                }
-
-                response.Close();
-                response.Dispose();
-                return flag;
-            }
-            catch (WebException ex)
-            {
-                appSittingSet.Log($"导入数据失败：文件名 {filename}");
-                flag = false;
-            }
-
-            return flag;
-        }
         public static bool RedEnvelopeManagement_GetExcelSum(string filename,Dictionary<string,string> postData)
         {
             bool flag = false;
@@ -1996,6 +1850,37 @@ X - Requested - With: XMLHttpRequest
 
                 bb.betMoney = d;
                 bb.username = jo["Detail"]["Account"].ToString();
+                return bb;
+            }
+            catch (Exception ex)
+            {
+                //如果 操作超时 重新登录一下GPK
+                string msg = "查询账户信息(钱包)失败 " + ex.Message;
+                appSittingSet.Log(msg);
+                return null;
+            }
+        }
+
+        public static betData MemberGetDepositWithdrawInfo(Gpk_UserDetail u)
+        {
+            try
+            {
+                string postUrl = "Member/GetDepositWithdrawInfo";
+                string postData = "{\"id\":\"" + u.Id+ "\"}";
+                string postRefere = "Member/" + u.Account;
+                JObject jo = GetResponse<JObject>(postUrl, postData, "POST", postRefere);
+
+                decimal d = 0;
+                int e = 0;
+                decimal.TryParse(jo["DepositTotal"].ToString(), out d);
+                int.TryParse(jo["DepositTimes"].ToString(), out e);
+                betData bb = new betData();
+                bb.DepositTimes = e;
+                bb.DepositTotal = d;
+                decimal.TryParse(jo["WithdrawTotal"].ToString(), out d);
+                int.TryParse(jo["WithdrawTimes"].ToString(), out e);
+                bb.WithdrawTimes = e;
+                bb.WithdrawTotal = d;
                 return bb;
             }
             catch (Exception ex)

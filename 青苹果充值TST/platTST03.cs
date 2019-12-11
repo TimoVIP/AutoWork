@@ -124,7 +124,7 @@ namespace GAC_load
         {
             try
             {
-                //是否充值过了 直接确认掉
+                //是否充值过了                     本地存在，直接确认掉
                 string sql = $"select * from record where status=1 and order_no ='{b.bbid}'";
                 if (SQLiteHelper.SQLiteHelper.recorderDbCheck(sql))
                 {
@@ -169,18 +169,15 @@ namespace GAC_load
                 //查看返回信息
 
                 if (isAlertExist() && selenium.SwitchTo().Alert().Text.Contains("查无此帐号"))
-                    {
-                        selenium.SwitchTo().Alert().Accept();
-                        //没有 用户记录
-                        b.passed = false;
-                        b.msg = "账户不存在";
-                        platQPGV2.confirmAct(b);
-                        return;
-                    }
-                    //else
-                    //{
+                {
+                    selenium.SwitchTo().Alert().Accept();
+                    //没有 用户记录
+                    b.passed = false;
+                    b.msg = "账户不存在";
+                    platQPGV2.confirmAct(b);
+                    return;
+                }
 
-                    //}
 
 
                 //selenium.SwitchTo().Alert().Accept();

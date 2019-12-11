@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // 有关程序集的一般信息由以下
 // 控制。更改这些特性值可修改
 // 与程序集关联的信息。
-[assembly: AssemblyTitle("5号彩票入款")]
-[assembly: AssemblyDescription("5号彩票入款")]
+[assembly: AssemblyTitle("AutoAct")]
+[assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("联系QQ：29857287 Timo")]
-[assembly: AssemblyProduct("AutoWork_Plat_5hao")]
-[assembly: AssemblyCopyright("Copyright ©  2018 Timo")]
+[assembly: AssemblyCompany("")]
+[assembly: AssemblyProduct("AutoAct")]
+[assembly: AssemblyCopyright("Copyright ©  2019")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // 如果此项目向 COM 公开，则下列 GUID 用于类型库的 ID
-[assembly: Guid("4d02a5d6-7971-4bc5-b77f-b399d5a716e0")]
+[assembly: Guid("63209543-ddcf-4c95-9f58-2211651d44c2")]
 
 // 程序集的版本信息由下列四个值组成: 
 //

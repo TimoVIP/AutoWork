@@ -419,14 +419,14 @@ namespace TestDomo_console
             foreach (var s in KindCategories)
             {
 
-                bb.gamename += "&types=" + string.Join("&types=", platGPK.KindCategories[int.Parse(s)].Replace("\"","").Split(',').Skip(1).ToArray());
+                bb.gamename += "&types=" + string.Join("&types=", platGPK.KindCategories[int.Parse(s)].Replace("\"","").Split(',').ToArray());
             }
 
             bb1 = platGPK.GetDetailInfo(bb);
             bb.gamename = "";
             foreach (var s in platGPK.KindCategories)
             {
-                bb.gamename += "&types=" + string.Join("&types=", s.Replace("\"", "").Split(',').Skip(1).ToArray());
+                bb.gamename += "&types=" + string.Join("&types=", s.Replace("\"", "").Split(',').ToArray());
             }
             bb2 = platGPK.GetDetailInfo(bb);
 

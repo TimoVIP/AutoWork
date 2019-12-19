@@ -333,7 +333,12 @@ namespace BaseFun
         /// </summary>
         /// <param name="timeStamp"></param>
         /// <returns></returns>
-        public static string unixTimeToTime(string timeStamp)
+        public static string unixTimeToTimeString(string timeStamp)
+        {
+            return unixTimeToTime(timeStamp).ToString("yyyy/MM/dd HH:mm:ss");//转为了string格式
+        }
+
+        public static DateTime unixTimeToTime(string timeStamp)
         {
             DateTime dtStart = TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1));
             long lTime;
@@ -347,11 +352,8 @@ namespace BaseFun
             }
             TimeSpan toNow = new TimeSpan(lTime);
             DateTime daTime = dtStart.Add(toNow);
-            string time = daTime.ToString("yyyy/MM/dd HH:mm:ss");//转为了string格式
-            return time;
-
+            return daTime;
         }
-
 
         /// <summary>
         /// 获取时间戳
@@ -506,5 +508,61 @@ namespace BaseFun
 
         #endregion
 
+        #region 加解密
+
+        ///<summary><![CDATA[字符串DES加密函数]]></summary> 
+        ///<param name="str"><![CDATA[被加密字符串 ]]></param> 
+        ///<param name="key"><![CDATA[密钥 ]]></param>  
+        ///<returns><![CDATA[加密后字符串]]></returns> 
+        public static string desEncode(string str, string key= "1234567890123456")
+        {
+            try
+            {
+                DESCryptoServiceProvider provider = new DESCryptoServiceProvider();
+                provider.Key = Encoding.ASCII.GetBytes(key.Substring(0, 8));
+                provider.IV = Encoding.ASCII.GetBytes(key.Substring(0, 8));
+                byte[] bytes = Encoding.GetEncoding("GB2312").GetBytes(str);
+                MemoryStream stream = new MemoryStream();
+                CryptoStream stream2 = new CryptoStream(stream, provider.CreateEncryptor(), CryptoStreamMode.Write);
+                stream2.Write(bytes, 0, bytes.Length);
+                stream2.FlushFinalBlock();
+                StringBuilder builder = new StringBuilder();
+                foreach (byte num in stream.ToArray())
+                {
+                    builder.AppendFormat("{0:X2}", num);
+                }
+                stream.Close();
+                return builder.ToString();
+            }
+            catch (Exception) { return "xxxx"; }
+        }
+        ///<summary><![CDATA[字符串DES解密函数]]></summary> 
+        ///<param name="str"><![CDATA[被解密字符串 ]]></param> 
+        ///<param name="key"><![CDATA[密钥 ]]></param>  
+        ///<returns><![CDATA[解密后字符串]]></returns>   
+        public static string desDecode(string str, string key= "1234567890123456")
+        {
+            try
+            {
+                DESCryptoServiceProvider provider = new DESCryptoServiceProvider();
+                provider.Key = Encoding.ASCII.GetBytes(key.Substring(0, 8));
+                provider.IV = Encoding.ASCII.GetBytes(key.Substring(0, 8));
+                byte[] buffer = new byte[str.Length / 2];
+                for (int i = 0; i < (str.Length / 2); i++)
+                {
+                    int num2 = Convert.ToInt32(str.Substring(i * 2, 2), 0x10);
+                    buffer[i] = (byte)num2;
+                }
+                MemoryStream stream = new MemoryStream();
+                CryptoStream stream2 = new CryptoStream(stream, provider.CreateDecryptor(), CryptoStreamMode.Write);
+                stream2.Write(buffer, 0, buffer.Length);
+                stream2.FlushFinalBlock();
+                stream.Close();
+                return Encoding.GetEncoding("GB2312").GetString(stream.ToArray());
+            }
+            catch (Exception) { return ""; }
+        }
+
+        #endregion
     }
 }

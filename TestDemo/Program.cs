@@ -17,7 +17,7 @@ namespace TestDemo
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            //Application.Run(new Form1());
+            Application.Run(new Form2());
 
             //bool b = platQPGV2.login();
             //List<betData> list = platQPGV2.getActData();

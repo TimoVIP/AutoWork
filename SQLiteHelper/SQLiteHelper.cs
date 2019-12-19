@@ -26,7 +26,7 @@ namespace SQLiteHelper
             }
             catch (SQLiteException ex)
             {
-                appSittingSet.Log("数据库打开失败" + ex.Message);
+                appSittingSet.Log("数据库打开失败" + ex.Message+ex.ToString());
             }
             return m_dbConnection;
         }
@@ -100,9 +100,9 @@ namespace SQLiteHelper
             catch (SQLiteException ex)
             {
                 trans.Rollback();
+                appSittingSet.Log("数据库执行SQL错误" + ex.Message + ex.ErrorCode + command.CommandText);
                 command.Dispose();
                 m_dbConnection.Close();
-                appSittingSet.Log("数据库执行SQL错误" + ex.Message);
                 return false;
             }
         }

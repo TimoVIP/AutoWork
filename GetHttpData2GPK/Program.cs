@@ -171,8 +171,9 @@ namespace GetHttpData2GPK
                         else
                         {
                             //组织信息
-                            bb.Audit = bb.betMoney;
+
                             bb.betMoney = bb.betMoney * rate;
+                            bb.Audit = bb.betMoney;
                             bb.AuditType = "Discount";
                             bb.Memo = "笔笔存送" + bb.bbid;
                             bb.Type = 5;

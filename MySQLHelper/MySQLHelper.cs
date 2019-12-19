@@ -30,6 +30,7 @@ namespace MySQLHelper
             }
             catch (MySqlException ex)
             {
+                appSittingSet.Log(ex.Message+ex.ToString());
                 throw;
             }
 
@@ -51,7 +52,8 @@ namespace MySQLHelper
             }
             catch (SqlException ex)
             {
-                throw new Exception(ex.Message);
+                //throw new Exception(ex.Message);
+                appSittingSet.Log(ex.Message + ex.ToString());
             }
             finally
             {
@@ -83,10 +85,11 @@ namespace MySQLHelper
                     cmd.Parameters.Clear();
                     return rows;
                 }
-                catch (SqlException e)
+                catch (SqlException ex)
                 {
                     connection.Close();
-                    throw e;
+                    appSittingSet.Log(ex.Message + ex.ToString());
+                    throw;
                 }
                 finally
                 {
@@ -118,15 +121,16 @@ namespace MySQLHelper
                 tx.Commit();
                 return true;
             }
-            catch
+            catch(Exception ex)
             {
                 tx.Rollback();
-                return false;
+                appSittingSet.Log(ex.Message + ex.ToString());
+                throw;
             }
         }
 
         /// <summary>
-        /// 执行SQL语句，返回影响的记录数
+        /// 执行SQL语句数组，返回影响的记录数
         /// </summary>
         /// <param name="SQLString">SQL语句</param>
         /// <returns>影响的记录数</returns>
@@ -147,10 +151,11 @@ namespace MySQLHelper
                 }
                 return rows;
             }
-            catch (SqlException e)
+            catch (SqlException ex)
             {
                 connection.Close();
-                throw e;
+                appSittingSet.Log(ex.Message + ex.ToString());
+                throw;
             }
             finally
             {
@@ -173,10 +178,11 @@ namespace MySQLHelper
                     MySqlDataReader sdr = cmd.ExecuteReader();
                     return sdr.HasRows;
                 }
-                catch (SqlException e)
+                catch (SqlException ex)
                 {
                     connection.Close();
-                    throw e;
+                    appSittingSet.Log(ex.Message + ex.ToString());
+                    throw;
                 }
                 finally
                 {
@@ -205,25 +211,26 @@ namespace MySQLHelper
         /// <returns></returns>
         public static object GetScalar(string SQLString)
         {
-            MySqlConnection connection = conn();
-            using (MySqlCommand cmd = new MySqlCommand(SQLString, connection))
+            try
             {
-                try
+                MySqlConnection connection = conn();
+                using (MySqlCommand cmd = new MySqlCommand(SQLString, connection))
                 {
                     object o = cmd.ExecuteScalar();
                     return o;
                 }
-                catch (SqlException e)
-                {
-                    connection.Close();
-                    throw e;
-                }
-                finally
-                {
-                    cmd.Dispose();
-                    connection.Close();
-                }
             }
+            catch (SqlException ex)
+            {
+                appSittingSet.Log(ex.Message + ex.ToString());
+                return null;
+            }
+        }
+
+        public static T GetScalar<T>(string SQLString)
+        {
+            object o = GetScalar(SQLString);
+            return o != null ? (T)Convert.ChangeType(o, typeof(T)) : default(T);
         }
     }
 }

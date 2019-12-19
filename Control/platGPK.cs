@@ -400,23 +400,34 @@ namespace TimoControl
         /// <returns></returns>
         public static betData MemberTransactionSearch(betData bb)
         {
+            return MemberTransactionSearch(bb,true);
+        }
+
+        public static betData MemberTransactionSearch(betData bb,bool calcTime=true)
+        {
             string postUrl = "MemberTransaction/Search";
             string postData = "{\"Account\":\"" + bb.username + "\",\"IsReal\":\"" + bb.isReal + "\",\"Types\":" + JsonConvert.SerializeObject(bb.Types);
             //string ss = JsonConvert.SerializeObject(bb.Types);
             if (bb.lastOprTime != null && bb.lastOprTime != "")
             {
-                DateTime d1;
-                DateTime.TryParse(bb.lastOprTime, out d1);
-                bb.lastOprTime = d1.AddMinutes(2).AddHours(-12).ToString("yyyy/MM/dd HH:mm:ss");
+                if (calcTime)
+                {
+                    DateTime d1;
+                    DateTime.TryParse(bb.lastOprTime, out d1);
+                    bb.lastOprTime = d1.AddMinutes(2).AddHours(-12).ToString("yyyy/MM/dd HH:mm:ss");
+                }
                 postData = postData + ",\"TimeBegin\":\"" + bb.lastOprTime + "\"";
             }
 
             if (bb.betTime != null && bb.betTime != "")
             {
                 //时间-12 变为美东时间
-                DateTime d2;
-                DateTime.TryParse(bb.betTime, out d2);
-                bb.betTime = d2.AddMinutes(2).AddHours(-12).ToString("yyyy/MM/dd HH:mm:ss");
+                if (calcTime)
+                {
+                    DateTime d2;
+                    DateTime.TryParse(bb.betTime, out d2);
+                    bb.betTime = d2.AddMinutes(2).AddHours(-12).ToString("yyyy/MM/dd HH:mm:ss");
+                }
                 postData = postData + ",\"TimeEnd\":\"" + bb.betTime + "\"";
             }
             postData = postData + "}";
@@ -1120,9 +1131,6 @@ namespace TimoControl
         {
             Gpk_UserDetail dd = null;
 
-            try
-            {
-
                 string postUrl = "Member/GetDetail";
                 string postData = "{\"account\":\"" + username + "\"}";
                 string postRefere = "MemberDeposit";
@@ -1141,7 +1149,9 @@ namespace TimoControl
                     dd.MemberLevelSettingId = jo["Member"]["MemberLevelSettingId"].ToString();
                     dd.Name = jo["Member"]["Name"].ToString();
                     dd.QQ = jo["Member"]["QQ"].ToString();
-                    dd.JoinTime =DateTime.Parse( jo["Member"]["JoinTime"].ToString());//注册时间
+                    dd.JoinTime = DateTime.Parse(jo["Member"]["JoinTime"].ToString());//注册时间 在反序列化已经转换了
+                    //dd.JoinTime = appSittingSet.unixTimeToTime( jo["Member"]["JoinTime"].ToString());//注册时间
+
                     //17点00分 2019年7月6日 增加 timo
                     dd.Balance = decimal.Parse(jo["Member"]["Balance"].ToString());
                     //dd.YuebaoPrincipal = decimal.Parse(jo["Member"]["YuebaoPrincipal"].ToString());//15点49分取消功能
@@ -1168,26 +1178,6 @@ namespace TimoControl
                 }
 
                 return dd;
-            }
-            catch (Exception ex)
-            {
-                //如果 操作超时 重新登录一下GPK
-                string msg = "查询账户信息详细信息失败，用户为： " + username + " " + ex.Message;
-                appSittingSet.Log(msg);
-                return dd;
-            }
-            //try
-            //{
-            //    string sql = " INSERT INTO detail(Account,Birthday,Email,Id,Mobile,Sex,Wallet,LatestLogin_IP,LatestLogin_time,LatestLogin_Id,BankAccount,BankName,City,Province,BankMemo,RegisterDevice,RegisterUrl  ) VALUES('"+dd.Account+"','"+dd.Birthday + "','"+dd.Email + "','"+dd.Id + "','"+dd.Mobile + "','"+dd.SexString + "',"+dd.Wallet + ",'"+dd.LatestLogin_IP + "','"+dd.LatestLogin_time + "','"+dd.LatestLogin_Id + "','"+dd.BankAccount + "','"+dd.BankName + "','"+ dd.City + "','"+dd.Province + "','"+dd.BankMemo + "','"+dd.RegisterDevice + "', '"+dd.RegisterUrl + "'  );";
-            //    //appSittingSet.txtLog(sql);
-            //    bool f = appSittingSet.execSql(sql);
-            //    return f;
-            //}
-            //catch (Exception ex)
-            //{
-            //    appSittingSet.txtLog(ex.Message);
-            //    return false;
-            //}
         }
 
         /// <summary>

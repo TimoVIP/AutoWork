@@ -21,6 +21,7 @@ using System.Xml.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
+using BaseFun;
 
 namespace TestDomo_console
 {
@@ -510,9 +511,16 @@ namespace TestDomo_console
             //    Console.WriteLine(item["Label"].ToString());
             //}
 
-            b =  platQPGV2.login();
-           List<betData> list =  platQPGV2.getActData();
+            // b =  platQPGV2.login();
+            //List<betData> list =  platQPGV2.getActData();
 
+            string a = Console.ReadLine();
+            a = "Server=47.244.160.251;user id=cdata;password=rZaG6x6NDWHRckys;Database=cdata;Port=3306;";
+            a = appSittingSet.desEncode(a);
+            Console.WriteLine(a);
+
+            //a = appSittingSet.Decode(a);
+            //Console.WriteLine(a);
                 Console.ReadLine();
 
         }

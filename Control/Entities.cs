@@ -162,6 +162,11 @@ namespace TimoControl
 
         public decimal YuebaoPrincipal { get; set; }
         public decimal Balance { get; set; }
+
+        public string state { get; set; }
+
+        public string DiscountSettingName { get; set; }
+        public string MemberLevelSettingName { get; set; }
     }
 
     /// <summary>
@@ -200,6 +205,20 @@ namespace TimoControl
         /// </summary>
         public decimal TotalPayoff { get; set; }
     }
+
+    /// <summary>
+    /// 存取款信息
+    /// </summary>
+    public class DepositWithdrawInfo
+    {
+        public int DepositTimes { get; set; }
+        public double DepositTotal { get; set; }
+
+        public int WithdrawTimes { get; set; }
+        public double WithdrawTotal { get; set; }
+    }
+
+
     /// <summary>
     /// 5hao站 用户存款信息--银行
     /// </summary>

@@ -71,6 +71,84 @@ namespace TimoControl
                         {
                             b.gamename = item["Value"].ToString().Trim();
                         }
+                        if (item["Label"].ToString().Contains("签到天数"))
+                        {
+                            string t = item["Value"].ToString().Trim();
+                            int ts = 0;
+                            if (!int.TryParse(t, out ts))
+                            {
+                                if (t.Contains("一"))
+                                {
+                                    ts = 1;
+                                }
+                                else if (t.Contains("二"))
+                                {
+                                    ts = 2;
+                                }
+                                else if (t.Contains("三"))
+                                {
+                                    ts = 3;
+                                }
+                                else if (t.Contains("四"))
+                                {
+                                    ts = 4;
+                                }
+                                else if (t.Contains("五"))
+                                {
+                                    ts = 5;
+                                }
+                                else if (t.Contains("六"))
+                                {
+                                    ts = 6;
+                                }
+                                else if (t.Contains("七"))
+                                {
+                                    ts = 7;
+                                }
+                                else if (t.Contains("八"))
+                                {
+                                    ts = 8;
+                                }
+                                else if (t.Contains("九"))
+                                {
+                                    ts = 9;
+                                }
+                                else if (t.Contains("十"))
+                                {
+                                    ts = 10;
+                                }
+                            }
+                            //if (ts>7)
+                            //{
+                            //    ts = 7;
+                            //}
+                            b.PortalMemo = ts.ToString();
+                        }
+                        if (item["Label"].ToString().Contains("活动方案"))
+                        {
+                            string t = item["Value"].ToString().Trim();
+                            int ts = 1;
+                            if (!int.TryParse(t, out ts))
+                            {
+                                if (t.Contains("一"))
+                                {
+                                    ts = 1;
+                                }
+                                else if (t.Contains("二"))
+                                {
+                                    ts = 2;
+                                }
+                                else
+                                {
+                                    ts = 1;
+                                }
+                            }
+                            //if (ts>2)
+                            //{
+                            //    ts = 1;
+                            //}
+                            b.Memo = ts.ToString().Trim();
+                        }
                     }
 
                     b.bbid = dr["id"].ToString();
@@ -100,11 +178,21 @@ namespace TimoControl
         /// <returns></returns>
         public static betData getActData2_time(betData bb)
         {
-            if (bb.betTime=="")
+            string sql = $"select  id,account,addtime,applyfrom,ActivityId  from Give where Account='{bb.username}' AND ActivityId={bb.aid} AND  `Status`=1 ";
+            if (bb.betTime!="")
             {
-                bb.betTime = DateTime.Now.Date.AddDays(1).ToString("yyyy-MM-dd");
+                //bb.betTime = DateTime.Now.Date.AddDays(1).ToString("yyyy-MM-dd");
+                sql += $" and AddTime<'{bb.betTime}'  ";
             }
-            string sql = $"select  id,account,addtime,applyfrom,ActivityId  from Give where Account='{bb.username}' AND ActivityId={bb.aid} AND  `Status`=1 and AddTime<'{bb.betTime}'  ORDER BY id desc LIMIT 1 ;";
+            if (bb.lastOprTime!="")
+            {
+                sql += $" and AddTime >'{bb.lastOprTime}'  ";
+            }
+
+            sql += "  ORDER BY id desc LIMIT 1 ;";
+            bb.Memo = "";
+            bb.PortalMemo = "";
+
             DataTable dt = MySQLHelper.MySQLHelper.Query(sql).Tables[0];
             if (dt.Rows.Count>0)
             {
@@ -113,7 +201,7 @@ namespace TimoControl
                 JArray ja = JArray.FromObject(jo);
                 foreach (var item in ja)
                 {
-                    if (item["Label"].ToString().Contains("天数"))
+                    if (item["Label"].ToString().Contains("签到天数"))
                     {
                         string t = item["Value"].ToString().Trim();
                         int ts = 0;
@@ -162,7 +250,7 @@ namespace TimoControl
                         }
                         bb.PortalMemo = ts.ToString();
                     }
-                    if (item["Label"].ToString().Contains("方案"))
+                    if (item["Label"].ToString().Contains("活动方案"))
                     {
                         string t = item["Value"].ToString().Trim();
                         int ts = 0;

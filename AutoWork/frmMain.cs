@@ -782,6 +782,7 @@ namespace AutoWork_Plat1
                     }
 
                     //获取上一次的时间
+                    //item.betTime = DateTime.Now.Date.AddDays(1).ToString("yyyy-MM-dd");
                     betData bb = platACT.getActData2_time(item);
                     if (bb == null)
                     {

@@ -995,11 +995,13 @@ namespace AutoWork_Plat1
                     }
 
                     //判断是否提交过 同一用户 所有游戏 一天只能一次
-                    string sql = "select * from record where pass=1 and aid =" + actInfo[9] + " and LOWER(username)='" + item.username.ToLower() + "'   and subtime > '" + DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd") + " 00:00:01' and  subtime < '" + DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd") + " 23:59:59' ";
+                    //string sql = "select * from record where pass=1 and aid =" + actInfo[9] + " and LOWER(username)='" + item.username.ToLower() + "'   and subtime > '" + DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd") + " 00:00:01' and  subtime < '" + DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd") + " 23:59:59' ";
+                    string sql = "select * from record where pass=1 and aid =" + actInfo[9] + " and LOWER(username)='" + item.username.ToLower() + "'  ";
+
                     if (SQLiteHelper.SQLiteHelper.recorderDbCheck(sql))
                     {
                         item.passed = false;
-                        item.msg = "您好，同一账号一天内只能申请一次，申请不通过！R";
+                        item.msg = "您好，同一账号只能申请一次，申请不通过！R";
                         platACT.confirmAct(item);
                         MyWrite(item.msg);
                         continue;
@@ -1531,7 +1533,8 @@ namespace AutoWork_Plat1
                     }
                     if (bb.betMoney >= 50)
                     {
-                        bb.betMoney = bb.betMoney * (decimal)0.05;
+                        bb.betMoney = bb.betMoney * (decimal)0.02;
+                        //bb.betMoney = bb.betMoney * (decimal)0.05;
                         bb.passed = true;
                     }
                     else

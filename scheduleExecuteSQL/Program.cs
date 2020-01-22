@@ -68,7 +68,7 @@ namespace scheduleExecuteSQL
 
             //间隔10秒
             IJobDetail anotherjob = JobBuilder.Create<job_log_write>().WithIdentity("EricAnotherJob", "EricGroup").Build();
-            ITrigger anothertrigger = TriggerBuilder.Create().WithIdentity("EricAnotherTrigger", "EricGroup").WithSimpleSchedule(x => x.WithIntervalInHours(1).RepeatForever()).Build();
+            ITrigger anothertrigger = TriggerBuilder.Create().WithIdentity("EricAnotherTrigger", "EricGroup").WithSimpleSchedule(x => x.WithIntervalInHours(int.Parse(config["Interval"].ToString())).RepeatForever()).Build();
             await sched.ScheduleJob(anotherjob, anothertrigger);
         }
 

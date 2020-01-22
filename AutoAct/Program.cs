@@ -597,9 +597,9 @@ namespace AutoAct
 
                     //查询投注记录  
                     betData bb = item;
-                    item.gamename = null;
-                    item.lastCashTime = DateTime.Now.Date.ToString("yyyy/MM/dd");
-                    item.lastOprTime = DateTime.Now.Date.ToString("yyyy/MM/dd");
+                    item.gamename = null; //
+                    item.lastCashTime = DateTime.Now.AddHours(-12).Date.ToString("yyyy/MM/dd");
+                    item.lastOprTime = DateTime.Now.AddHours(-12).Date.ToString("yyyy/MM/dd");
                     foreach (var s in appSittingSet.readAppsettings(prefix + "游戏类别").Split(','))
                     {
                         item.gamename += "&types=" + string.Join("&types=", platGPK.KindCategories[int.Parse(s)].Replace("\"", "").Split(',').ToArray());
@@ -761,8 +761,8 @@ namespace AutoAct
                     //查询投注记录  
                     betData bb = item;
                     item.gamename = null;
-                    item.lastCashTime = DateTime.Now.Date.ToString("yyyy/MM/dd");
-                    item.lastOprTime = DateTime.Now.Date.ToString("yyyy/MM/dd");
+                    item.lastCashTime = DateTime.Now.AddHours(-12).Date.ToString("yyyy/MM/dd");
+                    item.lastOprTime = DateTime.Now.AddHours(-12).Date.ToString("yyyy/MM/dd");
                     foreach (var s in appSittingSet.readAppsettings(prefix + "游戏类别").Split(','))
                     {
                         item.gamename += "&types=" + string.Join("&types=", platGPK.KindCategories[int.Parse(s)].Replace("\"", "").Split(',').ToArray());
@@ -823,6 +823,27 @@ namespace AutoAct
                         ActFromDB.confirmAct(item);
                         MyWrite(item.msg);
                         continue;
+                    }
+
+                    //同一天内，已经送过的钱数、关卡数
+
+                    //string dt_ = DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd");
+                     sql = $"select  sum(chargemoney) from record where pass=1 and aid ={ item.aid} and LOWER(username)='{ item.username.ToLower()}'   and subtime > '{dt_ } 00:00:01' and  subtime < '{ dt_ } 23:59:59' order by rowid desc limit 1; ";
+                    decimal tm = SQLiteHelper.SQLiteHelper.execScalarSql<decimal>(sql);//int null 0
+
+                    for (int i = 0; i < arr3.Length; i++)
+                    {
+                        if (tm>=arr3[i])
+                        {
+                            item.betno = (arr3.Length - i).ToString();
+                            break;
+                        }
+                        else
+                        {
+                            //第一次
+                            item.betno = "1";
+
+                        }
                     }
 
 
@@ -1251,5 +1272,144 @@ namespace AutoAct
             }
         }
 
+        /// <summary>
+        /// 元旦送
+        /// </summary>
+        [DisallowConcurrentExecution]
+        public class yds : IJob
+        {
+            public Task Execute(IJobExecutionContext context)
+            {
+                string prefix = context.Trigger.Description;
+
+                List<betData> list = ActFromDB.getActData(myConfig[prefix + "活动编号"].ToString());
+                if (list == null)
+                {
+                    MyWrite(myConfig[prefix + "活动名称"].ToString() + " 没有获取到记录，等待下次执行 ");
+                    return Task.CompletedTask;
+                }
+                if (list.Count == 0)
+                {
+                    MyWrite(myConfig[prefix + "活动名称"].ToString() + "没有新的记录，等待下次执行 ");
+                    return Task.CompletedTask;
+                }
+                foreach (var item in list)
+                {
+                    item.aname = myConfig[prefix + "活动名称"].ToString();
+
+                    string sql = string.Format(appSittingSet.readConfig()["sql_give_select"].ToString(), item.username, item.aid);
+                    object o = MySQLHelper.MySQLHelper.GetScalar(sql);
+                    if (o != null)
+                    {
+                        DateTime dt;
+                        DateTime.TryParse(o.ToString(), out dt);
+                        if (dt.AddHours(-12).Date==DateTime.Now.Date)
+                        {
+                            item.passed = false;
+                            item.msg = "您好，同一账号只能申请一次，申请不通过！R";
+                            bool b = ActFromDB.confirmAct(item);
+                            if (b)
+                            {
+                                string msg = string.Format("用户{0}处理完毕，处理为 {1}，回复消息 {2}", item.username, item.passed ? "通过" : "不通过", item.msg);
+                                MyWrite(msg);
+                                appSittingSet.Log(msg);
+                            }
+                            continue;
+                        }
+                    }
+
+                    //获取详细信息
+                    Gpk_UserDetail userinfo = platGPK.GetUserDetail(item.username);
+                    if (userinfo == null)
+                    {
+                        //账号不存在？
+                        item.passed = false;
+                        item.msg = "经查询，您的账号有误！ R";
+                        ActFromDB.confirmAct(item);
+                        string msg = $"活动{item.aname}用户{item.username}处理完毕，处理为 {(item.passed ? "通过" : "不通过")}，回复消息 {item.msg}";
+                        MyWrite(msg);
+                        continue;
+                    }
+
+                    //判断 层级是否在 列表之中
+                    foreach (var s in FiliterGroups)
+                    {
+                        if (userinfo.MemberLevelSettingId == s)
+                        {
+                            item.passed = false;
+                            item.msg = "经查询，您的账号目前不享有此优惠！ R";
+                            break;
+                        }
+                    }
+                    if (!item.passed)
+                    {
+                        //回填失败
+                        ActFromDB.confirmAct(item);
+                        MyWrite(item.msg);
+                        continue;
+                    }
+
+
+                    //总存款要 100/ 1000 +
+                    //item.lastOprTime = DateTime.Now.ToString("yyyy/MM/dd 00:00:00");
+                    //item.betTime = DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss");
+                    betData bb1 = platGPK.MemberTransactionSearch(item,false);
+                    if (bb1 == null)
+                    {
+                        continue;
+                    }
+
+
+                    //计算 活动赠送金额
+                    decimal ck1 = Convert.ToDecimal(myConfig[prefix + "有效存款1"]);
+                    decimal ck2 = Convert.ToDecimal(myConfig[prefix + "有效存款2"]);
+                    decimal zs1 = Convert.ToDecimal(myConfig[prefix + "赠送金额1"]);
+                    decimal zs2 = Convert.ToDecimal(myConfig[prefix + "赠送金额2"]);
+                    decimal jh1 = Convert.ToDecimal(myConfig[prefix + "稽核倍数1"]);
+                    decimal jh2 = Convert.ToDecimal(myConfig[prefix + "稽核倍数2"]);
+
+                    if (bb1.betMoney >= ck2 && bb1.betMoney <=ck2+ 1 && bb1.betTimes>=1)
+                    {
+                        //满足>=1次 存款金额大于1000
+                        bb1.Audit = (bb1.betMoney + zs2) * jh2;
+                        bb1.betMoney = zs2;
+                        bb1.passed = true;
+
+                    }
+                    else if (bb1.betMoney >= ck1&& bb1.betMoney <= ck1+ 1&& bb1.betTimes >= 1)
+                    {
+                        //满足 >=1次 100
+                        bb1.Audit = (bb1.betMoney + zs1) * jh1;
+                        bb1.betMoney = zs1;
+                        bb1.passed = true;
+                    }
+                    else
+                    {
+                        item.passed = false;
+                        item.msg = "经查询，统计期间您并没有达到最低存款要求！ R";
+                        ActFromDB.confirmAct(item);
+                        string msg = $"活动{item.aname}用户{item.username}处理完毕，处理为 {(item.passed ? "通过" : "不通过")}，回复消息 {item.msg}";
+                        MyWrite(msg);
+                        continue;
+                    }
+                    
+
+                    //加钱  提交数据
+                    item.AuditType = "Discount";
+                    item.Audit = bb1.Audit;
+                    item.Memo = item.aname;
+                    item.Type = 5;
+
+                    bool fr = platGPK.MemberDepositSubmit(item);
+                    //回填
+                    item.msg = "恭喜您"+item.username+"，您申请的<" + item.aname + ">已通过活动专员的检验";
+                    ActFromDB.confirmAct(item);
+                    MyWrite(item.msg);
+                    continue;
+
+                }
+                return Task.CompletedTask;
+            }
+        }
     }
 }

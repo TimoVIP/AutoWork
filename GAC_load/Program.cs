@@ -86,6 +86,16 @@ namespace GAC_load
                         continue;
                     }
 
+                    //1号平台限制 层级
+                    if (appSittingSet.readAppsettings("platno") == "1" && appSittingSet.readAppsettings("MemberLevelSettingId") == userinfo.MemberLevelSettingId)
+                    {
+                        item.Audit = item.betMoney * 10;
+                    }
+                    else
+                    {
+                        item.Audit = item.betMoney;
+                    }
+
                     //金额是否超出 
                     if (item.betMoney > max)
                     {
@@ -100,7 +110,7 @@ namespace GAC_load
                     item.Memo =  item.Memo;
                     item.msg = $"充值{item.betMoney}";
                     item.AuditType = "Deposit";
-                    item.Audit = item.betMoney;
+
                     item.Type = 4;//人工存入
                     item.isReal = true;
                     //加钱 充值的部分 

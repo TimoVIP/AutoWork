@@ -37,6 +37,14 @@ namespace MySQLHelper
         }
 
         /// <summary>
+        /// 判断链接状态
+        /// </summary>
+        /// <returns></returns>
+        public static bool IsOpen()
+        {
+            return conn().State == ConnectionState.Open;
+        }
+        /// <summary>
         /// 执行查询语句，返回DataSet
         /// </summary>
         /// <param name="SQLString">查询语句</param>

@@ -208,8 +208,34 @@ namespace MySQLHelper
         /// <returns></returns>
         public static int GetCount(string SQLString)
         {
-            object o = GetScalar(SQLString);
-            return o == null ? 0 : (int)o;
+            //object o = GetScalar(SQLString);
+            //return o == null ? 0 : (int)o;
+            MySqlConnection connection = conn();
+            using (MySqlCommand cmd = new MySqlCommand(SQLString, connection))
+            {
+                try
+                {
+                    int i = 0;
+                    MySqlDataReader sdr = cmd.ExecuteReader();
+                    while (sdr.Read())
+                    {
+                        i++;
+                    }
+                    sdr.Close();
+                    return i;
+                }
+                catch (SqlException ex)
+                {
+                    connection.Close();
+                    appSittingSet.Log(ex.Message + ex.ToString());
+                    throw;
+                }
+                finally
+                {
+                    cmd.Dispose();
+                    connection.Close();
+                }
+            }
         }
 
         /// <summary>

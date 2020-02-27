@@ -118,6 +118,7 @@ namespace TimoControl
                 string url = $"{urlbase}v1/api/q/accountSub/loginpassword";
                 HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
                 request.Method = "POST";
+                request.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36";
 
                 var obj = new { sub_account = acc, password = appSittingSet.sha256(pwd), md5_login_pwd = appSittingSet.md5(pwd) };
                 string postdata = JsonConvert.SerializeObject(obj);
@@ -160,7 +161,7 @@ namespace TimoControl
             }
             catch (WebException ex)
             {
-                appSittingSet.Log(string.Format("登录失败：{0}   ", ex.Message));
+                appSittingSet.Log(string.Format("QPG登录失败：{0}   ", ex.Message));
                 return false;
             }
         }
@@ -177,6 +178,8 @@ namespace TimoControl
 
                 HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
                 request.Method = "POST";
+                request.Proxy = GlobalProxySelection.GetEmptyWebProxy();
+                request.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36";
                 request.Headers.Add("logntoken", token);
                 request.Headers.Add("username", subAccount);
                 request.Headers.Add("userrole", "merchant");
@@ -246,7 +249,7 @@ namespace TimoControl
                     //需要重新登录
                     login();
                 }
-                appSittingSet.Log("获取列表失败：" + ex.Message);
+                appSittingSet.Log("QPG获取列表失败：" + ex.Message);
                 return null;
             }
 
@@ -291,6 +294,8 @@ namespace TimoControl
 
                 HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
                 request.Method = "POST";
+                request.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36";
+
                 request.Headers.Add("logntoken", token);
                 request.Headers.Add("username", subAccount);
                 request.Headers.Add("userrole", "merchant");
@@ -303,7 +308,8 @@ namespace TimoControl
                 request.ContentLength = 0;
 
                 //string postdata = JsonConvert.SerializeObject(new { from = mainAccount, OrderID = b.bbid, OrderRemark = b.msg });
-                string postdata = JsonConvert.SerializeObject(new { OrderID = b.bbid, from = mainAccount, OrderRemark = HttpUtility.UrlEncode(b.msg, Encoding.UTF8) });
+                //string postdata = JsonConvert.SerializeObject(new { OrderID = b.bbid, from = mainAccount, OrderRemark = HttpUtility.UrlEncode(b.msg, Encoding.UTF8) });
+                string postdata = JsonConvert.SerializeObject(new { OrderID = b.bbid, from = mainAccount, OrderRemark = b.msg, Encoding.UTF8 });
                 byte[] bytes = Encoding.UTF8.GetBytes(postdata);
                 request.ContentLength = bytes.Length;
                 Stream newStream = request.GetRequestStream();
@@ -329,7 +335,7 @@ namespace TimoControl
             }
             catch (WebException ex)
             {
-                string msg = $"添加备注失败：用户 {b.username} 单{b.betno} 错误{ex.Message}";
+                string msg = $"QPG添加备注失败：用户 {b.username} 单{b.betno} 错误{ex.Message}";
                 appSittingSet.Log(msg);
                 return false;
             }
@@ -351,6 +357,7 @@ namespace TimoControl
                 string url = $"{urlbase}v1/api/q/merchantpay/merchant/merchantPayOrder/manualScore";
                 HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
                 request.Method = "POST";
+
                 request.Headers.Add("busiType", "merchant");
                 request.Headers.Add("cliType", "PC");
                 request.Headers.Add("cliV", "1.0.0");
@@ -360,7 +367,7 @@ namespace TimoControl
 
                 request.Headers.Add("Sec-Fetch-Mode", "cors");
                 request.Headers.Add("Sec-Fetch-Site", "same-origin");
-                request.UserAgent = "ozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36";
+                request.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36";
                 request.KeepAlive = true;
                 request.Headers.Add("X-Tk", token);
                 request.CookieContainer = cookie;
@@ -400,7 +407,7 @@ namespace TimoControl
             }
             catch (WebException ex)
             {
-                string msg = $"更改状态失败：用户 {b.username} 单{b.betno} 错误{ex.Message}";
+                string msg = $"QPG更改状态失败：用户 {b.username} 单{b.betno} 错误{ex.Message}";
                 appSittingSet.Log(msg);
                 return false;
             }

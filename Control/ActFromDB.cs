@@ -297,37 +297,46 @@ namespace TimoControl
         /// <returns></returns>
         public static bool confirmAct(betData bb)
         {
-            //更改数据库状态
-            //string sql = $"update Give set Content='{bb.msg}',`Status`={(bb.passed ? 1 : -1)},passtime=now(),HandleMan='robot' where id={bb.bbid};";
-            //int i = MySQLHelper.ExecuteSql(sql);
-
-            List<string> list = new List<string>();
-            //3号台子
-            //list.Add($"update Give set Content='{bb.msg}',`Status`={(bb.passed ? 1 : -1)} where id={bb.bbid};");
-
-            string sql= string.Format(appSittingSet.readConfig()["sql_give_upadte"].ToString(), bb.msg, (bb.passed ? 1 : -1), bb.bbid);
-
-
-            //其他平台
-            //list.Add($"update Give set Content='{bb.msg}',`Status`={(bb.passed ? 1 : -1)},passtime=now(),HandleMan='robot' where id={bb.bbid};");
-            //不需要减少
-            //list.Add($"update activity set NoApplyNum = NoApplyNum-1, AlreadyApplyNum= AlreadyApplyNum+1 where Id={bb.aid};");
-            //bool b =  MySQLHelper.MySQLHelper.ExecuteNoQueryTran(list);
-             int e = MySQLHelper.MySQLHelper.ExecuteSql(sql);
-            bool b = e > 0;
-            //通过的 记录到sqlite数据库
-            if (bb.passed)
+            try
             {
-                //bb.msg = "";
-                sql = $"insert  or ignore into record (username, gamename,betno,chargeMoney,pass,msg,subtime,aid,bbid) values ('{ bb.username}', '{ bb.gamename}','{bb.betno }',{ bb.betMoney },{(bb.passed == true ? 1 : 0) },'{ bb.msg }','{DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd HH:mm:ss") }' , {bb.aid},{bb.bbid})";
-                SQLiteHelper.SQLiteHelper.execSql(sql);
+                //更改数据库状态
+                //string sql = $"update Give set Content='{bb.msg}',`Status`={(bb.passed ? 1 : -1)},passtime=now(),HandleMan='robot' where id={bb.bbid};";
+                //int i = MySQLHelper.ExecuteSql(sql);
+
+                List<string> list = new List<string>();
+                //3号台子
+                //list.Add($"update Give set Content='{bb.msg}',`Status`={(bb.passed ? 1 : -1)} where id={bb.bbid};");
+
+                string sql= string.Format(appSittingSet.readConfig()["sql_give_upadte"].ToString(), bb.msg, (bb.passed ? 1 : -1), bb.bbid);
+
+
+                //其他平台
+                //list.Add($"update Give set Content='{bb.msg}',`Status`={(bb.passed ? 1 : -1)},passtime=now(),HandleMan='robot' where id={bb.bbid};");
+                //不需要减少
+                //list.Add($"update activity set NoApplyNum = NoApplyNum-1, AlreadyApplyNum= AlreadyApplyNum+1 where Id={bb.aid};");
+                //bool b =  MySQLHelper.MySQLHelper.ExecuteNoQueryTran(list);
+                 int e = MySQLHelper.MySQLHelper.ExecuteSql(sql);
+                bool b = e > 0;
+                //通过的 记录到sqlite数据库
+                if (bb.passed)
+                {
+                    //bb.msg = "";
+                    sql = $"insert  or ignore into record (username, gamename,betno,chargeMoney,pass,msg,subtime,aid,bbid) values ('{ bb.username}', '{ bb.gamename}','{bb.betno }',{ bb.betMoney },{(bb.passed == true ? 1 : 0) },'{ bb.msg }','{DateTime.Now.AddHours(-12).ToString("yyyy-MM-dd HH:mm:ss") }' , {bb.aid},{bb.bbid})";
+                    SQLiteHelper.SQLiteHelper.execSql(sql);
+                }
+
+
+                string msg = $"活动{bb.aname}用户{bb.username}订单{bb.betno}优惠金额{bb.betMoney}处理完毕，处理为 {(bb.passed ? "通过" : "不通过")}，回复消息 {bb.msg}";
+                appSittingSet.Log(msg);
+                //return i > 0;
+                return b;
+            }
+            catch (Exception ex)
+            {
+                appSittingSet.Log(ex.Message+ ex.ToString());
+                return false;
             }
 
-
-            string msg = $"活动{bb.aname}用户{bb.username}订单{bb.betno}优惠金额{bb.betMoney}处理完毕，处理为 {(bb.passed ? "通过" : "不通过")}，回复消息 {bb.msg}";
-            appSittingSet.Log(msg);
-            //return i > 0;
-            return b;
         }
 
 

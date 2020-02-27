@@ -513,14 +513,17 @@ namespace TestDomo_console
 
             // b =  platQPGV2.login();
             //List<betData> list =  platQPGV2.getActData();
-
+            Console.Write("请输入otp");
             string a = Console.ReadLine();
-            a = "Server=47.244.160.251;user id=cdata;password=rZaG6x6NDWHRckys;Database=cdata;Port=3306;";
-            a = appSittingSet.desEncode(a);
-            Console.WriteLine(a);
+            //a = "Server=47.244.160.251;user id=cdata;password=rZaG6x6NDWHRckys;Database=cdata;Port=3306;";
+            //a = appSittingSet.desEncode(a);
+            //Console.WriteLine(a);
 
             //a = appSittingSet.Decode(a);
             //Console.WriteLine(a);
+
+            Console.WriteLine(a);
+
                 Console.ReadLine();
 
         }

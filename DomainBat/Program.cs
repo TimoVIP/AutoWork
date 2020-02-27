@@ -56,7 +56,7 @@ namespace DomainBat
             }
             else
             {
-                Console.WriteLine("没有找到对应的.xls文件，按任意键退出");
+                Console.WriteLine("没有找到对应的.xlsx文件，按任意键退出");
                 Console.ReadKey(true);
             }
 

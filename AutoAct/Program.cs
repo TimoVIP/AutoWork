@@ -59,7 +59,7 @@ namespace AutoAct
                 await sched.ScheduleJob(JobBuilder.Create<清除日志>().Build(), TriggerBuilder.Create().WithCronSchedule("1 0 8 * * ? ").Build());
             }
             //登陆
-            if (myConfig["清除N天前日志"].ToString() == "1")
+            if (myConfig["定时登陆账号"].ToString() == "1")
             {
                 await sched.ScheduleJob(JobBuilder.Create<按时登陆>().Build(), TriggerBuilder.Create().WithCronSchedule("10 1 0,6,12,18 * * ? ").Build());
             }
@@ -1408,6 +1408,80 @@ namespace AutoAct
                     continue;
 
                 }
+                return Task.CompletedTask;
+            }
+        }
+
+        /// <summary>
+        /// 元旦送
+        /// </summary>
+        [DisallowConcurrentExecution]
+        public class slyz : IJob
+        {
+            public Task Execute(IJobExecutionContext context)
+            {
+                string prefix = context.Trigger.Description;
+                betData b;
+                //获取活动列表
+                List<int> list_act =  platGPK.ActGetList(myConfig[prefix + "活动编号"].ToString());
+                if (list_act == null)
+                {
+                    MyWrite(myConfig[prefix + "活动名称"].ToString() + " 没有获取到记录，等待下次执行 ");
+                    return Task.CompletedTask;
+                }
+                if (list_act.Count == 0)
+                {
+                    MyWrite(myConfig[prefix + "活动名称"].ToString() + "没有新的记录，等待下次执行 ");
+                    return Task.CompletedTask;
+                }
+
+                //获取用户列表
+                foreach (int item in list_act)
+                {
+                    b = new betData() { bbid = item.ToString(), aid = myConfig[prefix + "活动编号"].ToString() ,aname = myConfig[prefix + "活动名称"].ToString()};
+                    List<int>  list_user= platGPK.ActGetRewardRecords(b);
+                    /*
+                    if (list_user!=null)
+                    {
+                        if (list_user.Count>0)
+                        {
+                            //批量处理
+                            bool r = platGPK.ActSendRewards(list_user, b);
+                            b.msg = $"{b.aname}已经处理{list_user.Count}条数据";
+                            MyWrite(b.msg);
+                        }
+                        else
+                        {
+                            MyWrite(b.aname + "没有新的记录，等待下次执行 ");
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        MyWrite(b.aname+ " 没有获取到记录，等待下次执行 ");
+                        //return Task.CompletedTask;
+                        continue;
+                    }
+                    */
+
+                    if (list_user == null)
+                    {
+                        MyWrite(b.aname+ " 没有获取到记录，等待下次执行 ");
+                        //return Task.CompletedTask;
+                        continue;
+                    }
+                    if (list_user.Count == 0)
+                    {
+                        MyWrite(b.aname + "没有新的记录，等待下次执行 ");
+                        //return Task.CompletedTask;
+                        continue;
+                    }
+                    //批量处理
+                    bool r =  platGPK.ActSendRewards(list_user, b);
+                    b.msg = $"{b.aname}已经处理{list_user.Count}条数据";
+                    MyWrite(b.msg);
+                }
+
                 return Task.CompletedTask;
             }
         }

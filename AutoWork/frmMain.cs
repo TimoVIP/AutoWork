@@ -632,7 +632,7 @@ namespace AutoWork_Plat1
                         if (SQLiteHelper.SQLiteHelper.recorderDbCheck(sql))
                         {
                             bb.passed = false;
-                            bb.msg = "您好，同一游戏一天内只能申请一次，申请不通过！R";
+                            bb.msg = "您好，仅限美东时间当日可申请一次，请勿重复申请哦~ R";
                             platACT.confirmAct(bb);
                             MyWrite(bb.msg);
                             continue;

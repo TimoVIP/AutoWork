@@ -1851,6 +1851,11 @@ namespace TimoControl
             }
         }
 
+        /// <summary>
+        /// 取款次数 信息
+        /// </summary>
+        /// <param name="u"></param>
+        /// <returns></returns>
         public static betData MemberGetDepositWithdrawInfo(Gpk_UserDetail u)
         {
             try
@@ -1879,6 +1884,117 @@ namespace TimoControl
                 string msg = "查询账户信息(钱包)失败 " + ex.Message;
                 appSittingSet.Log(msg);
                 return null;
+            }
+        }
+
+
+        /// <summary>
+        /// 获取活动列表
+        /// </summary>
+        /// <param name="url_part"></param>
+        /// <returns></returns>
+        public static List<int> ActGetList(string url_part)
+        {
+            List<int> list = new List<int>();
+            try
+            {
+                string postUrl = url_part+ "/GetList";
+                string postData = "{\"search\":{\"AllState\":false,\"Status\":[1]},\"skip\":0,\"take\":100}";
+
+                string postRefere = url_part + "?AllState=false&Status=1";
+                JObject jo = GetResponse<JObject>(postUrl, postData, "POST", postRefere);
+
+                if ((bool)jo["IsSuccess"] == true)
+                {
+                    JArray ja = JArray.FromObject(jo["ReturnObject"]);
+                    foreach (var item in ja)
+                    {
+                            list.Add((int)item["Id"]);
+                    }
+
+                }
+                else
+                {
+                    appSittingSet.Log(postData + " 没有记录" + jo["ErrorMessage"]);                        
+                }
+
+                return list;
+
+            }
+            catch (Exception ex)
+            {
+                //如果 操作超时 重新登录一下GPK
+                string msg = "查询活动信息 列表失败 " + ex.Message;
+                appSittingSet.Log(msg);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 获取活动列表用户
+        /// </summary>
+        /// <param name="url_part"></param>
+        /// <returns></returns>
+        public static List<int> ActGetRewardRecords(betData b)
+        {
+            List<int> list = new List<int>();
+            try
+            {
+                string postUrl = b.aid+ "/GetRewardRecords";
+                //string postData = "{\"search\":{\"AllState\":false,\"Status\":[1]},\"skip\":0,\"take\":100}";
+                string postData = JsonConvert.SerializeObject(new { search = new { RewardStatus = new int[1] { 0 }, RewardTypes = new string[4] { "0", "1", "2", "3" }, IsCheckStatus = true }, luckyWheelId = b.bbid, skip = 0, take = 100 });
+
+                string postRefere =$"{ b.aid }/LotteryRecord/{ b.bbid}?RewardStatus=0&IsCheckStatus";
+
+
+                JObject jo = GetResponse<JObject>(postUrl, postData, "POST", postRefere);
+
+                if ((bool)jo["IsSuccess"] == true)
+                {
+                    JArray ja = JArray.FromObject(jo["ReturnObject"]);
+                    foreach (var item in ja)
+                    {
+                            list.Add((int)item["Id"]);
+                    }
+
+                }
+                else
+                {
+                    appSittingSet.Log(postData + " 没有记录" + jo["ErrorMessage"]);                        
+                }
+
+                return list;
+
+            }
+            catch (Exception ex)
+            {
+                //如果 操作超时 重新登录一下GPK
+                string msg = "查询活动信息 用户列表失败 " + ex.Message;
+                appSittingSet.Log(msg);
+                return null;
+            }
+        }
+
+        public static bool ActSendRewards(List<int> list,betData b)
+        {
+            try
+            {
+                string postUrl = b.aid+ "/SendRewards";
+                //string postData = "{\"search\":{\"AllState\":false,\"Status\":[1]},\"skip\":0,\"take\":100}";
+                string postData = JsonConvert.SerializeObject( new { luckyWheelId = b.bbid, recordIds = list.ToArray() });
+
+                string postRefere =$"{ b.aid }/LotteryRecord/{ b.bbid}?RewardStatus=0&IsCheckStatus";
+
+                JObject jo = GetResponse<JObject>(postUrl, postData, "POST", postRefere);
+
+                return (bool)jo["IsSuccess"];
+
+            }
+            catch (Exception ex)
+            {
+                string msg = "查询活动信息 用户列表失败 " + ex.Message;
+                appSittingSet.Log(msg);
+                return false;
             }
         }
     }
